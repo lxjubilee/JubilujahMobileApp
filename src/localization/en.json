@@ -1,0 +1,70 @@
+{
+  "common": {
+    "play": "Play",
+    "pause": "Pause",
+    "shuffle": "Shuffle",
+    "shufflePlay": "Shuffle Play",
+    "download": "Download",
+    "seeAll": "See all",
+    "retry": "Retry",
+    "follow": "Follow",
+    "following": "Following",
+    "save": "Save",
+    "saved": "Saved"
+  },
+  "tabs": {
+    "home": "Home",
+    "browse": "Browse",
+    "search": "Search",
+    "library": "Library"
+  },
+  "home": {
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "loadError": "We couldn't load your music. Pull to refresh or try again."
+  },
+  "search": {
+    "placeholder": "Artists, songs, or albums",
+    "recent": "Recent searches",
+    "clear": "Clear",
+    "noResults": "No results for \"{{query}}\"",
+    "sectionAlbums": "Albums",
+    "sectionArtists": "Artists",
+    "sectionTracks": "Songs"
+  },
+  "album": {
+    "tracks": "{{count}} songs",
+    "addToLibrary": "Add to Library"
+  },
+  "artist": {
+    "monthlyListeners": "{{listeners}} monthly listeners",
+    "popular": "Popular",
+    "discography": "Discography"
+  },
+  "library": {
+    "title": "Your Library",
+    "favorites": "Liked Songs",
+    "albums": "Albums",
+    "artists": "Artists",
+    "downloads": "Downloads",
+    "empty": "Songs and albums you save will appear here."
+  },
+  "downloads": {
+    "title": "Downloads",
+    "empty": "Downloaded music will appear here for offline listening."
+  },
+  "profile": {
+    "title": "Profile",
+    "signIn": "Sign in",
+    "settings": "Settings"
+  },
+  "player": {
+    "queue": "Queue",
+    "upNext": "Up next"
+  },
+  "stub": {
+    "comingSoon": "Coming soon",
+    "description": "This area is wired into the app architecture and ready to be built out."
+  }
+}

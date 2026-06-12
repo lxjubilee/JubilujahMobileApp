@@ -1,25 +1,55 @@
 {
   "expo": {
-    "name": "JubilujahMobileApp",
-    "slug": "JubilujahMobileApp",
+    "name": "Jubilujah",
+    "slug": "jubilujah",
+    "scheme": "jubilujah",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0B0B0F",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0B0B0F",
+      "resizeMode": "contain"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jubileeverse.jubilujah",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
     },
     "android": {
+      "package": "com.jubileeverse.jubilujah",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0B0B0F",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.WAKE_LOCK"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-dev-client",
+      "expo-localization",
+      "expo-asset",
+      "expo-font"
+    ],
+    "extra": {
+      "cdnBaseUrl": "https://cdn.jubileeverse.com",
+      "apiBaseUrl": "https://api.jubileeverse.com/v1",
+      "useMock": true
     }
   }
 }
