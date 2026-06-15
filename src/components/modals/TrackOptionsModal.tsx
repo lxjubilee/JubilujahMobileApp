@@ -1,11 +1,10 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context';
 import { Track } from '@/types';
-import { cdnUrl } from '@/utils';
 import { AppText } from '../common/AppText';
+import { Artwork } from '../common/Artwork';
 
 export interface TrackOption {
   key: string;
@@ -41,10 +40,10 @@ export const TrackOptionsModal: React.FC<TrackOptionsModalProps> = ({
         >
           {track ? (
             <View style={styles.header}>
-              <Image
-                source={{ uri: cdnUrl(track.artwork) }}
+              <Artwork
+                uri={track.artwork}
                 style={[styles.art, { borderRadius: theme.radius.sm }]}
-                contentFit="cover"
+                iconSize={22}
               />
               <View style={styles.headerMeta}>
                 <AppText variant="h3" numberOfLines={1}>

@@ -25,4 +25,13 @@ export {
   toggleShuffle,
 } from './slices/playerSlice';
 export type { RepeatMode } from './slices/playerSlice';
-export { signInSuccess, signOut } from './slices/authSlice';
+export {
+  restoreSession,
+  signIn,
+  verify2FA,
+  signOut,
+  clearSession,
+  clearAuthError,
+  markProfileSelected,
+} from './slices/authSlice';
+export type { AuthUser, AuthStatus } from './slices/authSlice';

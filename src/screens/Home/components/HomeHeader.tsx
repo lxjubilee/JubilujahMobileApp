@@ -1,37 +1,30 @@
 import React from 'react';
 import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context';
-import { AppText, IconButton } from '@/components/common';
+import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
+import { AppText, ProfileButton } from '@/components/common';
 
-/** Filter categories shown as chips under the Home header. */
-export const HOME_FILTERS = [
-  'Home',
-  'Inspire Family',
-  'Children Music',
-  'Faith-Based',
-  'General',
-  'Jubilee Prayers',
-  'Playlists',
-] as const;
+/** The "show everything" chip, always first in the filter row. */
+export const HOME_FILTER_ALL = 'Home';
 
-export type HomeFilter = (typeof HOME_FILTERS)[number];
+/** A Home filter is the "Home" sentinel or a catalog category label. */
+export type HomeFilter = string;
 
 /** Height the chips row collapses from / expands to. */
 export const CHIP_ROW_HEIGHT = 48;
 
 interface HomeHeaderProps {
+  /** Chips to render, e.g. ['Home', 'Inspire Family', …] derived from the feed. */
+  filters: HomeFilter[];
   selected: HomeFilter;
   onSelect: (filter: HomeFilter) => void;
   /** 1 = chips fully visible, 0 = fully collapsed. */
   chipsAnim: Animated.Value;
   /** 0 = transparent/gradient (at top), 1 = solid black (scrolled). */
   bgAnim: Animated.Value;
-  onPressDownloads?: () => void;
-  onPressNotifications?: () => void;
-  notificationCount?: number;
+  /** Opens the profile page. */
+  onPressProfile?: () => void;
 }
 
 /**
@@ -42,26 +35,21 @@ interface HomeHeaderProps {
  * The collapse/solid state is driven by `chipsAnim` / `bgAnim` from the screen.
  */
 export const HomeHeader: React.FC<HomeHeaderProps> = ({
+  filters,
   selected,
   onSelect,
   chipsAnim,
   bgAnim,
-  onPressDownloads,
-  onPressNotifications,
-  notificationCount = 0,
+  onPressProfile,
 }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const [fontsLoaded] = useFonts({ BebasNeue_400Regular });
 
   return (
     <View style={styles.container} pointerEvents="box-none">
-      {/* Soft gradient visible at the top over the hero. */}
-      <LinearGradient
-        colors={['rgba(11,11,15,0.55)', 'rgba(11,11,15,0.2)', 'transparent']}
-        locations={[0, 0.6, 1]}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
+      {/* Solid black header background. */}
+      <View style={[StyleSheet.absoluteFill, styles.solidBg]} pointerEvents="none" />
       {/* Solid black layer that fades in once scrolled. */}
       <Animated.View
         pointerEvents="none"
@@ -70,30 +58,15 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
       <View style={[styles.inner, { paddingTop: insets.top + 6 }]}>
         <View style={styles.topRow}>
-          <AppText variant="h1">Home</AppText>
+          <AppText
+            style={[styles.brand, fontsLoaded ? styles.brandBebas : styles.brandFallback]}
+            allowFontScaling={false}
+          >
+            JUBILUJAH
+          </AppText>
 
           <View style={styles.actions}>
-            <View style={styles.iconWrap}>
-              <IconButton name="download-outline" size={24} onPress={onPressDownloads} />
-              <View style={[styles.checkBadge, { backgroundColor: theme.colors.primary }]}>
-                <Ionicons name="checkmark" size={9} color="#fff" />
-              </View>
-            </View>
-
-            <View style={[styles.iconWrap, styles.bellWrap]}>
-              <IconButton
-                name="notifications-outline"
-                size={24}
-                onPress={onPressNotifications}
-              />
-              {notificationCount > 0 ? (
-                <View style={[styles.countBadge, { backgroundColor: theme.colors.danger }]}>
-                  <AppText variant="caption" style={styles.countText}>
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </AppText>
-                </View>
-              ) : null}
-            </View>
+            <ProfileButton onPress={onPressProfile} />
           </View>
         </View>
 
@@ -115,7 +88,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.chipsRow}
           >
-            {HOME_FILTERS.map((filter) => {
+            {filters.map((filter) => {
               const active = filter === selected;
               return (
                 <Pressable
@@ -124,8 +97,8 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                   style={[
                     styles.chip,
                     {
-                      borderColor: active ? theme.colors.text : theme.colors.border,
-                      backgroundColor: active ? theme.colors.text : 'rgba(30,30,40,0.45)',
+                      borderColor: active ? '#FFFFFF' : 'rgba(255,255,255,0.18)',
+                      backgroundColor: active ? '#FFFFFF' : 'rgba(255,255,255,0.08)',
                     },
                   ]}
                 >
@@ -154,19 +127,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 12,
   },
+  solidBg: { backgroundColor: '#000' },
+  brand: { color: '#E50914' },
+  // Netflix-style condensed, premium wordmark.
+  brandBebas: { fontFamily: 'BebasNeue_400Regular', fontSize: 30, lineHeight: 34, letterSpacing: 2 },
+  brandFallback: { fontSize: 24, lineHeight: 28, fontWeight: '900', letterSpacing: 1.5 },
   actions: { flexDirection: 'row', alignItems: 'center' },
   iconWrap: { position: 'relative' },
-  bellWrap: { marginLeft: 18 },
-  checkBadge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   countBadge: {
     position: 'absolute',
     top: -6,
@@ -182,9 +149,11 @@ const styles = StyleSheet.create({
   chipsWrap: { overflow: 'hidden', justifyContent: 'center' },
   chipsRow: { paddingRight: 16, gap: 10, alignItems: 'center' },
   chip: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 999,
+    height: 40,
+    paddingHorizontal: 18,
+    borderRadius: 8,
     borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

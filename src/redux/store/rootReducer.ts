@@ -14,8 +14,14 @@ import authReducer from '../slices/authSlice';
  *  - library & downloads in full
  *  - player: just user prefs (shuffle/repeat), NOT transient playback state
  *  - search: just recent terms, NOT live query/results
- *  - home: not persisted (always refetched)
+ *  - home: just the resolved feed, so the catalog paints instantly on cold start
+ *    (stale-while-revalidate); `status`/`error` stay transient so it still refetches.
  */
+const persistedHome = persistReducer(
+  { key: 'home', storage: AsyncStorage, whitelist: ['feed'] },
+  homeReducer,
+);
+
 const persistedPlayer = persistReducer(
   { key: 'player', storage: AsyncStorage, whitelist: ['repeatMode', 'shuffle'] },
   playerReducer,
@@ -37,7 +43,7 @@ const persistedDownloads = persistReducer(
 );
 
 export const rootReducer = combineReducers({
-  home: homeReducer,
+  home: persistedHome,
   search: persistedSearch,
   library: persistedLibrary,
   downloads: persistedDownloads,

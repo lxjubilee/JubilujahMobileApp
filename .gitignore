@@ -39,3 +39,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local dev notes / decoded artifacts (not part of the app source)
+SignIn Machinism/
+gradle.decoded.txt

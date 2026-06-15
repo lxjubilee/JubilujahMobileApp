@@ -67,6 +67,10 @@ export interface HomeRail {
   itemType: RailItemType;
   /** IDs referencing albums/artists/playlists, resolved by the repository. */
   itemIds: ID[];
+  /** When set, the rail shows a "See all" action targeting this artist's full album list. */
+  seeAllArtistId?: ID;
+  /** Catalog category label this rail belongs to, used by the Home filter chips. */
+  categoryLabel?: string;
 }
 
 export interface HomeFeed {

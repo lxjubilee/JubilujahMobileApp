@@ -19,8 +19,16 @@ export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   AlbumDetails: { albumId: string };
   ArtistDetails: { artistId: string };
+  AlbumList: { title: string; artistId: string };
   MusicPlayer: undefined;
-  Auth: undefined;
+};
+
+/** Unauthenticated flow: welcome slides / profile gate → sign in → 2FA; plus sign up. */
+export type AuthStackParamList = {
+  Welcome: undefined;
+  SignIn: undefined;
+  TwoFactor: undefined;
+  SignUp: undefined;
 };
 
 /** Per-tab inner stacks (Library nests Downloads + Profile). */
@@ -29,6 +37,11 @@ export type LibraryStackParamList = {
   Downloads: undefined;
   Profile: undefined;
 };
+
+export type AuthStackScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<
+  AuthStackParamList,
+  T
+>;
 
 // Typed screen-prop helpers
 export type RootStackScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<

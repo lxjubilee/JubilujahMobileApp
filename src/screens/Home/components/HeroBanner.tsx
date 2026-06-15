@@ -1,16 +1,14 @@
 import React from 'react';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
-import { AppText } from '@/components/common';
+import { AppText, Artwork } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { toggleSavedAlbum } from '@/redux';
 import { Album } from '@/types';
-import { cdnUrl } from '@/utils';
 
 interface HeroBannerProps {
   album: Album;
@@ -39,24 +37,18 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
   // Dot-separated descriptors built from the album's real metadata.
   const tags = [album.genre, album.year?.toString(), album.artistName].filter(Boolean) as string[];
 
-  // Ambient backdrop color from the catalog (Netflix-style), fading to the app bg.
-  const accent = album.accentColor ?? theme.colors.primary;
-
   return (
     <View style={[styles.container, { paddingTop: insets.top + 120 }]}>
-      {/* Poster-derived ambient tint behind the hero, fading into the background. */}
-      <LinearGradient
-        colors={[accent, accent, theme.colors.background]}
-        locations={[0, 0.35, 1]}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
-      />
-
       <Pressable
         onPress={() => onOpen(album)}
         style={[styles.poster, { width: POSTER_W, height: POSTER_H, borderRadius: theme.radius.lg }]}
       >
-        <Image source={{ uri: cdnUrl(album.cover) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />
+        <Artwork
+          uri={album.cover}
+          accentColor={album.accentColor}
+          style={StyleSheet.absoluteFill}
+          iconSize={64}
+        />
 
         {/* Brand mark in the corner, like the streaming logo on the poster. */}
         <View style={styles.brandMark}>

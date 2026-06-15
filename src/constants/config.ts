@@ -8,6 +8,11 @@ import { ENV } from './env';
  */
 export const CONFIG = {
   USE_MOCK: ENV.USE_MOCK,
+  /** 'mock' | 'manifest' | 'api' — which data source repositories read from. */
+  DATA_SOURCE: ENV.DATA_SOURCE,
+  /** SSO auth API base URL (separate host from the catalog API). */
+  AUTH_BASE_URL: ENV.AUTH_BASE_URL,
+  AUTH_MOBILE_CLIENT_KEY: ENV.AUTH_MOBILE_CLIENT_KEY,
   API_TIMEOUT_MS: 15000,
   /** Simulated network latency for mock responses, to mimic real loading UX. */
   MOCK_LATENCY_MS: 350,

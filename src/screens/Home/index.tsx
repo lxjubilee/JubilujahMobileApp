@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   NativeScrollEvent,
@@ -15,12 +15,12 @@ import { Screen, Loader, AppText } from '@/components/common';
 import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
 import { fetchHomeFeed } from '@/redux';
 import { AlbumRepository } from '@/repositories';
-import { Album, Artist } from '@/types';
+import { Album, Artist, ResolvedRail } from '@/types';
 import { logger } from '@/utils';
 import type { RootStackParamList } from '@/navigation/types';
-import { HeroBanner } from './components/HeroBanner';
+import { HeroCarousel } from './components/HeroCarousel';
 import { Rail } from './components/Rail';
-import { HomeHeader, HomeFilter } from './components/HomeHeader';
+import { HomeHeader, HomeFilter, HOME_FILTER_ALL } from './components/HomeHeader';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,7 +30,32 @@ export const HomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const { playTracks } = usePlayer();
   const { feed, status } = useAppSelector((s) => s.home);
-  const [filter, setFilter] = useState<HomeFilter>('Home');
+  const [filter, setFilter] = useState<HomeFilter>(HOME_FILTER_ALL);
+
+  // Chips = "Home" + each distinct category present in the feed (in feed order).
+  const filters = useMemo<HomeFilter[]>(() => {
+    const labels: string[] = [];
+    for (const rail of feed?.rails ?? []) {
+      if (rail.categoryLabel && !labels.includes(rail.categoryLabel)) {
+        labels.push(rail.categoryLabel);
+      }
+    }
+    return [HOME_FILTER_ALL, ...labels];
+  }, [feed]);
+
+  // Reset to "Home" if the selected category vanishes after a feed refresh.
+  useEffect(() => {
+    if (!filters.includes(filter)) setFilter(HOME_FILTER_ALL);
+  }, [filters, filter]);
+
+  // "Home" shows every rail; any other chip shows only rails in that category.
+  const visibleRails = useMemo(
+    () =>
+      (feed?.rails ?? []).filter(
+        (rail) => filter === HOME_FILTER_ALL || rail.categoryLabel === filter,
+      ),
+    [feed, filter],
+  );
 
   // Animated state for the collapsing header (chips) and its solid background.
   const chipsAnim = useRef(new Animated.Value(1)).current; // 1 = chips visible
@@ -79,21 +104,23 @@ export const HomeScreen: React.FC = () => {
     if (status === 'idle') dispatch(fetchHomeFeed());
   }, [dispatch, status]);
 
-  const openDownloads = useCallback(
-    () =>
-      navigation.navigate('MainTabs', {
-        screen: 'LibraryTab',
-        params: { screen: 'Downloads' },
-      }),
-    [navigation],
-  );
-
   const openAlbum = useCallback(
     (album: Album) => navigation.navigate('AlbumDetails', { albumId: album.id }),
     [navigation],
   );
   const openArtist = useCallback(
     (artist: Artist) => navigation.navigate('ArtistDetails', { artistId: artist.id }),
+    [navigation],
+  );
+  const openProfile = useCallback(
+    () => navigation.navigate('MainTabs', { screen: 'LibraryTab', params: { screen: 'Profile' } }),
+    [navigation],
+  );
+  const openSeeAll = useCallback(
+    (rail: ResolvedRail) => {
+      if (!rail.seeAllArtistId) return;
+      navigation.navigate('AlbumList', { title: rail.title, artistId: rail.seeAllArtistId });
+    },
     [navigation],
   );
 
@@ -147,25 +174,30 @@ export const HomeScreen: React.FC = () => {
           />
         }
       >
-        {feed?.hero ? (
-          <HeroBanner album={feed.hero} onPlay={playAlbum} onOpen={openAlbum} />
+        {feed?.heroes?.length ? (
+          <HeroCarousel albums={feed.heroes} onPlay={playAlbum} onOpen={openAlbum} />
         ) : null}
 
-        {feed?.rails.map((rail) => (
+        {visibleRails.map((rail) => (
           <View key={rail.id} style={styles.railWrap}>
-            <Rail rail={rail} onAlbumPress={openAlbum} onArtistPress={openArtist} />
+            <Rail
+              rail={rail}
+              onAlbumPress={openAlbum}
+              onArtistPress={openArtist}
+              onSeeAll={openSeeAll}
+            />
           </View>
         ))}
       </ScrollView>
 
       {/* Fixed Netflix-style header overlaying the hero. */}
       <HomeHeader
+        filters={filters}
         selected={filter}
         onSelect={setFilter}
         chipsAnim={chipsAnim}
         bgAnim={bgAnim}
-        onPressDownloads={openDownloads}
-        notificationCount={8}
+        onPressProfile={openProfile}
       />
     </Screen>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, FlatList, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,17 +23,18 @@ export const BrowseScreen: React.FC = () => {
   useEffect(() => {
     let active = true;
     AlbumRepository.list()
-      .then((a) => active && setAlbums(a))
+      .then((a) => {
+        if (!active) return;
+        // Dedupe by id — the catalog can list the same album in multiple places,
+        // which would otherwise produce duplicate FlatList keys.
+        const unique = Array.from(new Map(a.map((album) => [album.id, album])).values());
+        setAlbums(unique);
+      })
       .finally(() => active && setLoading(false));
     return () => {
       active = false;
     };
   }, []);
-
-  const genres = useMemo(
-    () => Array.from(new Set(albums.map((a) => a.genre).filter(Boolean))) as string[],
-    [albums],
-  );
 
   if (loading) {
     return (
@@ -54,9 +55,6 @@ export const BrowseScreen: React.FC = () => {
         ListHeaderComponent={
           <View style={styles.header}>
             <AppText variant="display">{t('tabs.browse')}</AppText>
-            <AppText variant="bodySm" color="textMuted" style={styles.genres}>
-              {genres.join(' • ')}
-            </AppText>
           </View>
         }
         renderItem={({ item }) => (
@@ -74,7 +72,6 @@ export const BrowseScreen: React.FC = () => {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: GAP, paddingBottom: 24 },
   header: { paddingTop: 8, paddingBottom: 16 },
-  genres: { marginTop: 8 },
   column: { gap: GAP, marginBottom: GAP },
 });
 

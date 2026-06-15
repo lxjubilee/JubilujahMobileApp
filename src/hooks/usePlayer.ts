@@ -4,6 +4,7 @@ import {
   useAppSelector,
   setQueue,
   setCurrentTrack,
+  setIsPlaying,
   cycleRepeatMode,
   toggleShuffle,
 } from '@/redux';
@@ -56,15 +57,33 @@ export function usePlayer() {
     [playTracks],
   );
 
-  const toggle = useCallback(() => playbackQueue.toggle(), []);
-  const next = useCallback(
-    () => (isExpoGo ? undefined : TrackPlayer.skipToNext().catch(() => undefined)),
-    [],
+  // Optimistic: flip the icon immediately, then let the engine confirm via events.
+  const toggle = useCallback(() => {
+    dispatch(setIsPlaying(!isPlaying));
+    return playbackQueue.toggle();
+  }, [dispatch, isPlaying]);
+
+  // Optimistic: move to the neighbouring track in the queue right away.
+  const stepTo = useCallback(
+    (delta: number) => {
+      if (currentTrack && queue.length) {
+        const idx = queue.findIndex((t) => t.id === currentTrack.id);
+        const target = queue[idx + delta];
+        if (idx >= 0 && target) dispatch(setCurrentTrack(target));
+      }
+    },
+    [currentTrack, queue, dispatch],
   );
-  const previous = useCallback(
-    () => (isExpoGo ? undefined : TrackPlayer.skipToPrevious().catch(() => undefined)),
-    [],
-  );
+
+  const next = useCallback(() => {
+    stepTo(1);
+    return isExpoGo ? undefined : TrackPlayer.skipToNext().catch(() => undefined);
+  }, [stepTo]);
+
+  const previous = useCallback(() => {
+    stepTo(-1);
+    return isExpoGo ? undefined : TrackPlayer.skipToPrevious().catch(() => undefined);
+  }, [stepTo]);
   const seekTo = useCallback(
     (pos: number) => (isExpoGo ? undefined : TrackPlayer.seekTo(pos)),
     [],

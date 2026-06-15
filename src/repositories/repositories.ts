@@ -4,12 +4,28 @@ import { pickByIds } from '@/utils';
 import { MusicDataSource } from './DataSource';
 import { MockDataSource } from './MockDataSource';
 import { ApiDataSource } from './ApiDataSource';
+import { ManifestDataSource } from './ManifestDataSource';
 
 /**
  * Single factory deciding which data source backs every repository.
- * THIS is the swap point: flip CONFIG.USE_MOCK (app.json `extra.useMock`).
+ * THIS is the swap point: set CONFIG.DATA_SOURCE (app.json `extra.dataSource`):
+ *  - 'mock'     → bundled JSON (offline dev),
+ *  - 'manifest' → live CDN catalog manifest (cdn.jubileeverse.com),
+ *  - 'api'      → future REST backend.
  */
-const dataSource: MusicDataSource = CONFIG.USE_MOCK ? new MockDataSource() : new ApiDataSource();
+function createDataSource(): MusicDataSource {
+  switch (CONFIG.DATA_SOURCE) {
+    case 'manifest':
+      return new ManifestDataSource();
+    case 'api':
+      return new ApiDataSource();
+    case 'mock':
+    default:
+      return new MockDataSource();
+  }
+}
+
+const dataSource: MusicDataSource = createDataSource();
 
 /**
  * HomeRepository turns the raw home config (rails of ids) into a fully-resolved
@@ -30,6 +46,8 @@ export const HomeRepository = {
           id: rail.id,
           title: rail.title,
           itemType: rail.itemType,
+          seeAllArtistId: rail.seeAllArtistId,
+          categoryLabel: rail.categoryLabel,
           artists: pickByIds(artists, rail.itemIds),
         };
       }
@@ -37,12 +55,15 @@ export const HomeRepository = {
         id: rail.id,
         title: rail.title,
         itemType: rail.itemType,
+        seeAllArtistId: rail.seeAllArtistId,
+        categoryLabel: rail.categoryLabel,
         albums: pickByIds(albums, rail.itemIds),
       };
     });
 
-    const hero = albums.find((a) => a.id === config.heroAlbumId);
-    return { hero, rails };
+    const heroIds = config.heroAlbumIds?.length ? config.heroAlbumIds : [config.heroAlbumId];
+    const heroes = pickByIds(albums, heroIds);
+    return { heroes, rails };
   },
 };
 

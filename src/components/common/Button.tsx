@@ -36,7 +36,7 @@ export const Button: React.FC<ButtonProps> = ({
       : variant === 'secondary'
         ? theme.colors.surface
         : 'transparent';
-  const fg = variant === 'primary' ? '#000' : theme.colors.text;
+  const fg = variant === 'primary' ? '#FFFFFF' : theme.colors.text;
   const borderStyle =
     variant === 'ghost' ? { borderWidth: 1, borderColor: theme.colors.border } : null;
 

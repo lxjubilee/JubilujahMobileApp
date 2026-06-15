@@ -1,15 +1,15 @@
-import React from 'react';
-import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
+import React, { useState } from 'react';
+import { Dimensions, FlatList, Modal, Pressable, Share, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/context';
-import { AppText, IconButton } from '@/components/common';
+import { AppText, Artwork, IconButton } from '@/components/common';
 import { ProgressBar } from '@/components/player';
+import { TrackRow } from '@/components/cards';
+import { TrackOptionsModal, TrackOption } from '@/components/modals';
 import { useAppDispatch, useAppSelector, usePlayer, useSafeProgress } from '@/hooks';
 import { toggleFavoriteTrack } from '@/redux';
-import { cdnUrl } from '@/utils';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -20,12 +20,26 @@ export const MusicPlayerScreen: React.FC = () => {
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
-  const { currentTrack, isPlaying, repeatMode, shuffle, toggle, next, previous, seekTo, cycleRepeat, toggleShuffle } =
-    usePlayer();
+  const {
+    currentTrack,
+    queue,
+    isPlaying,
+    repeatMode,
+    shuffle,
+    toggle,
+    next,
+    previous,
+    seekTo,
+    cycleRepeat,
+    toggleShuffle,
+    playFrom,
+  } = usePlayer();
   const { position, duration } = useSafeProgress(500);
   const isFavorite = useAppSelector((s) =>
     currentTrack ? s.library.favoriteTrackIds.includes(currentTrack.id) : false,
   );
+  const [queueOpen, setQueueOpen] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
 
   if (!currentTrack) {
     return (
@@ -38,9 +52,43 @@ export const MusicPlayerScreen: React.FC = () => {
 
   const repeatActive = repeatMode !== 'off';
 
+  const onShare = () => {
+    void Share.share({
+      message: `${currentTrack.title} — ${currentTrack.artistName}\nListen on Jubilujah: jubilujah://track/${currentTrack.id}`,
+    });
+  };
+
+  // Overflow ("•••") menu actions for the current track.
+  const trackOptions: TrackOption[] = [
+    {
+      key: 'like',
+      label: isFavorite ? 'Remove from Liked Songs' : 'Like',
+      icon: isFavorite ? 'heart' : 'heart-outline',
+      onPress: (t) => dispatch(toggleFavoriteTrack(t)),
+    },
+    {
+      key: 'album',
+      label: 'Go to album',
+      icon: 'albums-outline',
+      onPress: (t) => navigation.navigate('AlbumDetails', { albumId: t.albumId }),
+    },
+    {
+      key: 'artist',
+      label: 'Go to artist',
+      icon: 'person-outline',
+      onPress: (t) => navigation.navigate('ArtistDetails', { artistId: t.artistId }),
+    },
+    {
+      key: 'share',
+      label: 'Share',
+      icon: 'share-outline',
+      onPress: () => onShare(),
+    },
+  ];
+
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Image source={{ uri: cdnUrl(currentTrack.artwork) }} style={StyleSheet.absoluteFill} contentFit="cover" blurRadius={60} />
+      <Artwork uri={currentTrack.artwork} style={StyleSheet.absoluteFill} blurRadius={60} iconSize={0} />
       <LinearGradient colors={['rgba(11,11,15,0.4)', '#0B0B0F']} style={StyleSheet.absoluteFill} />
 
       <View style={styles.header}>
@@ -48,14 +96,14 @@ export const MusicPlayerScreen: React.FC = () => {
         <AppText variant="label" color="textSecondary">
           {currentTrack.albumName}
         </AppText>
-        <IconButton name="ellipsis-horizontal" size={24} />
+        <IconButton name="ellipsis-horizontal" size={24} onPress={() => setOptionsOpen(true)} />
       </View>
 
       <View style={styles.artWrap}>
-        <Image
-          source={{ uri: cdnUrl(currentTrack.artwork) }}
+        <Artwork
+          uri={currentTrack.artwork}
           style={[styles.art, { width: ART, height: ART, borderRadius: theme.radius.lg }]}
-          contentFit="cover"
+          iconSize={Math.round(ART * 0.3)}
         />
       </View>
 
@@ -114,10 +162,61 @@ export const MusicPlayerScreen: React.FC = () => {
         </View>
 
         <View style={styles.footer}>
-          <IconButton name="share-outline" size={22} color={theme.colors.iconMuted} />
-          <IconButton name="list" size={22} color={theme.colors.iconMuted} />
+          <IconButton name="share-outline" size={22} color={theme.colors.iconMuted} onPress={onShare} />
+          <IconButton
+            name="list"
+            size={22}
+            color={theme.colors.iconMuted}
+            onPress={() => setQueueOpen(true)}
+          />
         </View>
       </View>
+
+      {/* Up-next queue sheet. */}
+      <Modal
+        visible={queueOpen}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setQueueOpen(false)}
+      >
+        <Pressable style={styles.queueBackdrop} onPress={() => setQueueOpen(false)}>
+          <Pressable
+            style={[styles.queueSheet, { backgroundColor: theme.colors.backgroundElevated }]}
+          >
+            <View style={styles.queueHeader}>
+              <AppText variant="h2">Up next</AppText>
+              <IconButton name="close" size={24} onPress={() => setQueueOpen(false)} />
+            </View>
+            <FlatList
+              data={queue}
+              keyExtractor={(t) => t.id}
+              contentContainerStyle={styles.queueList}
+              renderItem={({ item }) => (
+                <TrackRow
+                  track={item}
+                  isActive={currentTrack.id === item.id}
+                  onPress={() => {
+                    void playFrom(queue, item.id);
+                    setQueueOpen(false);
+                  }}
+                />
+              )}
+              ListEmptyComponent={
+                <AppText color="textMuted" style={styles.queueEmpty}>
+                  The queue is empty.
+                </AppText>
+              }
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Overflow options for the current track. */}
+      <TrackOptionsModal
+        track={optionsOpen ? currentTrack : null}
+        options={trackOptions}
+        onClose={() => setOptionsOpen(false)}
+      />
     </View>
   );
 };
@@ -127,14 +226,31 @@ const styles = StyleSheet.create({
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyClose: { position: 'absolute', top: 52, left: 16 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
-  artWrap: { alignItems: 'center', marginTop: 24 },
+  artWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   art: { backgroundColor: '#222' },
-  body: { flex: 1, justifyContent: 'flex-end', paddingHorizontal: 24, paddingBottom: 36 },
+  body: { paddingHorizontal: 24, paddingBottom: 36 },
   titleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   titleText: { flex: 1, marginRight: 12 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
   playBtn: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
   footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 28 },
+  queueBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },
+  queueSheet: {
+    maxHeight: '70%',
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 24,
+  },
+  queueHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  queueList: { paddingBottom: 12 },
+  queueEmpty: { textAlign: 'center', paddingVertical: 24 },
 });
 
 export default MusicPlayerScreen;

@@ -9,10 +9,11 @@ interface RailProps {
   rail: ResolvedRail;
   onAlbumPress: (album: Album) => void;
   onArtistPress: (artist: Artist) => void;
+  onSeeAll?: (rail: ResolvedRail) => void;
 }
 
 /** A single horizontally-scrolling Home row of albums or artists. */
-export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress }) => {
+export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress, onSeeAll }) => {
   const theme = useTheme();
 
   if (rail.itemType === 'artist') {
@@ -34,7 +35,10 @@ export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress })
 
   return (
     <>
-      <SectionHeader title={rail.title} />
+      <SectionHeader
+        title={rail.title}
+        onSeeAll={rail.seeAllArtistId ? () => onSeeAll?.(rail) : undefined}
+      />
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}

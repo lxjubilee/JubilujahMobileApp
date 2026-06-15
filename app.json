@@ -5,11 +5,12 @@
     "scheme": "jubilujah",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/Jubilujah-app-logo.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0B0B0F",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
+      "image": "./assets/Jubilujah-app-logo.png",
       "backgroundColor": "#0B0B0F",
       "resizeMode": "contain"
     },
@@ -26,9 +27,7 @@
       "package": "com.jubileeverse.jubilujah",
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0F",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/Jubilujah-app-logo.png"
       },
       "permissions": [
         "android.permission.FOREGROUND_SERVICE",
@@ -44,12 +43,20 @@
       "expo-dev-client",
       "expo-localization",
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      "expo-secure-store"
     ],
     "extra": {
       "cdnBaseUrl": "https://cdn.jubileeverse.com",
       "apiBaseUrl": "https://api.jubileeverse.com/v1",
-      "useMock": true
-    }
+      "useMock": true,
+      "dataSource": "manifest",
+      "authBaseUrl": "https://uatapi.jubileeinspire.com",
+      "authMobileClientKey": "",
+      "eas": {
+        "projectId": "7354f6a2-75e4-4f29-9f07-7d5fda551d22"
+      }
+    },
+    "owner": "gabeungureanu"
   }
 }

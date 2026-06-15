@@ -33,7 +33,7 @@ export const darkColors: ColorPalette = {
   border: '#2A2A36',
   primary: '#7C4DFF', // Jubilujah purple accent
   primaryMuted: '#4A2FA0',
-  accent: '#1DB954', // streaming-green for play CTAs
+  accent: '#E50914', // Jubilujah red — play CTAs & now-playing highlight
   text: '#FFFFFF',
   textSecondary: '#C7C7D1',
   textMuted: '#8A8A99',

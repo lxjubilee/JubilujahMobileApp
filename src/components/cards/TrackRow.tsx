@@ -1,11 +1,12 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context';
+import { useTrackDuration } from '@/hooks';
 import { Track } from '@/types';
-import { cdnUrl, formatDuration } from '@/utils';
+import { formatDuration } from '@/utils';
 import { AppText } from '../common/AppText';
+import { Artwork } from '../common/Artwork';
 import { IconButton } from '../common/IconButton';
 
 interface TrackRowProps {
@@ -46,11 +47,11 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           )}
         </View>
       ) : (
-        <Image
-          source={{ uri: cdnUrl(track.artwork) }}
+        <Artwork
+          uri={track.artwork}
           style={[styles.art, { borderRadius: theme.radius.sm }]}
-          contentFit="cover"
           transition={150}
+          iconSize={20}
         />
       )}
 
@@ -76,9 +77,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           style={styles.action}
         />
       ) : (
-        <AppText variant="caption" color="textMuted" style={styles.action}>
-          {formatDuration(track.duration)}
-        </AppText>
+        <TrackDurationLabel track={track} />
       )}
 
       {onOptions ? (
@@ -93,10 +92,29 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   );
 };
 
+/**
+ * Trailing duration label. The catalog has no durations, so we resolve them
+ * lazily from the audio file; while that's in flight we show a subtle skeleton
+ * (not a broken-looking "--:--") so the list reads as "loading".
+ */
+const TrackDurationLabel: React.FC<{ track: Track }> = ({ track }) => {
+  const theme = useTheme();
+  const duration = useTrackDuration(track);
+  if (duration > 0) {
+    return (
+      <AppText variant="caption" color="textMuted" style={styles.action}>
+        {formatDuration(duration)}
+      </AppText>
+    );
+  }
+  return <View style={[styles.durationSkeleton, { backgroundColor: theme.colors.skeleton }]} />;
+};
+
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
   indexBox: { width: 36, alignItems: 'center', justifyContent: 'center' },
   art: { width: 48, height: 48, backgroundColor: '#222' },
   meta: { flex: 1, marginLeft: 12, marginRight: 8 },
   action: { marginHorizontal: 6 },
+  durationSkeleton: { width: 30, height: 10, borderRadius: 4, marginHorizontal: 6 },
 });

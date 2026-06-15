@@ -1,10 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { useTheme } from '@/context';
 import { usePlayer, useSafeProgress } from '@/hooks';
-import { cdnUrl } from '@/utils';
 import { AppText } from '../common/AppText';
+import { Artwork } from '../common/Artwork';
 import { IconButton } from '../common/IconButton';
 
 interface MiniPlayerProps {
@@ -34,10 +33,10 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onPress }) => {
       ]}
     >
       <View style={styles.content}>
-        <Image
-          source={{ uri: cdnUrl(currentTrack.artwork) }}
+        <Artwork
+          uri={currentTrack.artwork}
           style={[styles.art, { borderRadius: theme.radius.sm }]}
-          contentFit="cover"
+          iconSize={20}
         />
         <View style={styles.meta}>
           <AppText variant="h3" numberOfLines={1}>

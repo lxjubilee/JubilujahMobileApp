@@ -1,5 +1,6 @@
 export { HomeScreen } from './Home';
 export { BrowseScreen } from './Browse';
+export { AlbumListScreen } from './AlbumList';
 export { SearchScreen } from './Search';
 export { AlbumDetailsScreen } from './AlbumDetails';
 export { ArtistDetailsScreen } from './ArtistDetails';
@@ -7,4 +8,4 @@ export { MusicPlayerScreen } from './MusicPlayer';
 export { LibraryScreen } from './Library';
 export { DownloadsScreen } from './Downloads';
 export { ProfileScreen } from './Profile';
-export { AuthScreen } from './Auth';
+export { SignInScreen, TwoFactorScreen, SignUpScreen } from './Auth';

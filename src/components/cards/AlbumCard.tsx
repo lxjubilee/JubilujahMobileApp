@@ -1,10 +1,9 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { useTheme } from '@/context';
 import { Album } from '@/types';
-import { cdnUrl } from '@/utils';
 import { AppText } from '../common/AppText';
+import { Artwork } from '../common/Artwork';
 
 interface AlbumCardProps {
   album: Album;
@@ -21,11 +20,11 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onPress, width = 15
       onPress={() => onPress?.(album)}
       style={({ pressed }) => [{ width, opacity: pressed ? 0.8 : 1 }]}
     >
-      <Image
-        source={{ uri: cdnUrl(album.cover) }}
+      <Artwork
+        uri={album.cover}
+        accentColor={album.accentColor}
         style={[styles.cover, { width, height: width, borderRadius: theme.radius.md }]}
-        contentFit="cover"
-        transition={250}
+        iconSize={Math.round(width * 0.28)}
       />
       <View style={styles.meta}>
         <AppText variant="h3" numberOfLines={1}>

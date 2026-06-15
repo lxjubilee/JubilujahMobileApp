@@ -7,6 +7,8 @@ import { Album, Artist, HomeRail, SearchResults, Track } from '@/types';
  */
 export interface HomeConfig {
   heroAlbumId: string;
+  /** Ordered album ids for the rotating hero carousel; falls back to [heroAlbumId]. */
+  heroAlbumIds?: string[];
   rails: HomeRail[];
 }
 

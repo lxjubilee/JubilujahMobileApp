@@ -3,4 +3,9 @@ export const STORAGE_KEYS = {
   PERSIST_ROOT: 'jubilujah:root',
   RECENT_SEARCHES: 'jubilujah:recentSearches',
   AUTH_TOKEN: 'jubilujah:authToken',
+  /** Set once the user finishes the first-launch onboarding. */
+  ONBOARDING_DONE: 'jubilujah:onboardingDone',
+  /** Catalog manifest is cached chunked (it exceeds Android's ~2 MB row limit). */
+  CATALOG_MANIFEST_META: 'jubilujah:catalogManifest:meta',
+  CATALOG_MANIFEST_CHUNK: 'jubilujah:catalogManifest:chunk:',
 } as const;

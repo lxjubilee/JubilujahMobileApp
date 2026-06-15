@@ -1,7 +1,9 @@
 export { AppText } from './AppText';
+export { Artwork } from './Artwork';
 export { Screen } from './Screen';
 export { Button } from './Button';
 export { IconButton } from './IconButton';
+export { ProfileButton } from './ProfileButton';
 export { Loader } from './Loader';
 export { SectionHeader } from './SectionHeader';
 export { Placeholder } from './Placeholder';

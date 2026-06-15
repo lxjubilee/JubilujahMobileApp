@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Dimensions, FlatList, ScrollView, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Screen, Loader, AppText, Button, IconButton } from '@/components/common';
+import { Screen, Loader, AppText, Artwork, Button, IconButton } from '@/components/common';
 import { AlbumCard, TrackRow } from '@/components/cards';
+import { FloatingMiniPlayer } from '@/components/player';
 import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
 import { toggleFollowArtist } from '@/redux';
 import { ArtistRepository } from '@/repositories';
 import { Album, Artist, Track } from '@/types';
-import { cdnUrl, formatCount } from '@/utils';
+import { formatCount } from '@/utils';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -74,7 +74,7 @@ export const ArtistDetailsScreen: React.FC = () => {
     <Screen safeArea={false}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={[styles.hero, { height: HERO }]}>
-          <Image source={{ uri: cdnUrl(artist.image) }} style={StyleSheet.absoluteFill} contentFit="cover" />
+          <Artwork uri={artist.image} style={StyleSheet.absoluteFill} iconSize={72} />
           <LinearGradient colors={['transparent', 'transparent', '#0B0B0F']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
           <View style={styles.topBar}>
             <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
@@ -101,7 +101,7 @@ export const ArtistDetailsScreen: React.FC = () => {
           <IconButton
             name="play-circle"
             size={52}
-            color="#1DB954"
+            color="#E50914"
             onPress={() => topTracks.length && playTracks(topTracks, 0)}
           />
         </View>
@@ -141,12 +141,13 @@ export const ArtistDetailsScreen: React.FC = () => {
           )}
         />
       </ScrollView>
+      <FloatingMiniPlayer />
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 32 },
+  content: { paddingBottom: 96 },
   hero: { width: '100%', justifyContent: 'flex-end' },
   topBar: { position: 'absolute', top: 48, left: 12 },
   heroText: { paddingHorizontal: 16, paddingBottom: 12 },

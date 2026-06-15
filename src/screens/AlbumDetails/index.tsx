@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Screen, Loader, AppText, Button, IconButton } from '@/components/common';
+import { Screen, Loader, AppText, Artwork, Button, IconButton } from '@/components/common';
 import { TrackRow } from '@/components/cards';
+import { FloatingMiniPlayer } from '@/components/player';
 import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
 import { toggleSavedAlbum, toggleFavoriteTrack } from '@/redux';
 import { AlbumRepository } from '@/repositories';
 import { Album, Track } from '@/types';
-import { cdnUrl } from '@/utils';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -76,12 +75,23 @@ export const AlbumDetailsScreen: React.FC = () => {
     <Screen safeArea={false}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Image source={{ uri: cdnUrl(album.cover) }} style={styles.bgArt} contentFit="cover" blurRadius={40} />
+          <Artwork
+            uri={album.cover}
+            accentColor={album.accentColor}
+            style={styles.bgArt}
+            blurRadius={40}
+            iconSize={0}
+          />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
           <View style={styles.topBar}>
             <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
           </View>
-          <Image source={{ uri: cdnUrl(album.cover) }} style={[styles.art, { width: ART, height: ART }]} contentFit="cover" />
+          <Artwork
+            uri={album.cover}
+            accentColor={album.accentColor}
+            style={[styles.art, { width: ART, height: ART }]}
+            iconSize={Math.round(ART * 0.3)}
+          />
           <AppText variant="display" style={styles.title} numberOfLines={2}>
             {album.title}
           </AppText>
@@ -103,7 +113,6 @@ export const AlbumDetailsScreen: React.FC = () => {
               size={30}
               onPress={() => dispatch(toggleSavedAlbum(album))}
             />
-            <IconButton name="download-outline" size={26} style={styles.dl} />
           </View>
           <View style={styles.actionsRight}>
             <IconButton name="shuffle" size={26} onPress={onShuffle} style={styles.dl} />
@@ -125,12 +134,13 @@ export const AlbumDetailsScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
+      <FloatingMiniPlayer />
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 32 },
+  content: { paddingBottom: 96 },
   header: { alignItems: 'center', paddingBottom: 16, paddingTop: 0 },
   bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
   topBar: { width: '100%', paddingHorizontal: 12, paddingTop: 48, alignItems: 'flex-start' },

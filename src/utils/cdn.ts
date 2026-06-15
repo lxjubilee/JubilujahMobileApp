@@ -7,11 +7,18 @@ import { ENV } from '@/constants';
  *
  * Accepts already-absolute URLs and returns them unchanged, so mock data can
  * mix absolute and relative paths during development.
+ *
+ * Relative path segments are URL-encoded (catalog filenames contain spaces and
+ * other unsafe characters), so the resulting URL is always valid to fetch.
  */
 export function cdnUrl(path?: string | null): string {
   if (!path) return '';
   if (/^https?:\/\//i.test(path)) return path;
   const base = ENV.CDN_BASE_URL.replace(/\/+$/, '');
-  const rel = path.replace(/^\/+/, '');
+  const rel = path
+    .replace(/^\/+/, '')
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
   return `${base}/${rel}`;
 }

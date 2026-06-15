@@ -7,13 +7,15 @@ import { cdnUrl } from '@/utils';
  * expects, resolving all CDN-relative paths to absolute URLs in the process.
  */
 export function toTPTrack(track: Track): TPTrack {
+  const artwork = cdnUrl(track.artwork);
   return {
     id: track.id,
     url: cdnUrl(track.url),
     title: track.title,
     artist: track.artistName,
     album: track.albumName,
-    artwork: cdnUrl(track.artwork),
+    // Omit when unavailable so the lock screen doesn't try to load an empty URL.
+    artwork: artwork || undefined,
     duration: track.duration,
   };
 }

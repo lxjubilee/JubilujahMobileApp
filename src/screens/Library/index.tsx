@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
-import { Screen, AppText, Placeholder, IconButton } from '@/components/common';
+import { Screen, AppText, Placeholder, ProfileButton } from '@/components/common';
 import { AlbumCard } from '@/components/cards';
 import { useAppSelector } from '@/hooks';
 import type { LibraryStackParamList, RootStackParamList } from '@/navigation/types';
@@ -28,7 +28,7 @@ export const LibraryScreen: React.FC = () => {
     <Screen>
       <View style={styles.header}>
         <AppText variant="display">{t('library.title')}</AppText>
-        <IconButton name="person-circle-outline" size={28} onPress={() => navigation.navigate('Profile')} />
+        <ProfileButton size={32} onPress={() => navigation.navigate('Profile')} />
       </View>
 
       <View style={styles.shortcuts}>
@@ -37,11 +37,6 @@ export const LibraryScreen: React.FC = () => {
           label={t('library.favorites')}
           meta={`${likedCount}`}
           color={theme.colors.accent}
-        />
-        <Shortcut
-          icon="download"
-          label={t('library.downloads')}
-          onPress={() => navigation.navigate('Downloads')}
         />
         <Shortcut icon="people" label={t('library.artists')} meta={`${followCount}`} />
       </View>

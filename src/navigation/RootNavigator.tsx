@@ -5,8 +5,8 @@ import { useTheme } from '@/context';
 import {
   AlbumDetailsScreen,
   ArtistDetailsScreen,
+  AlbumListScreen,
   MusicPlayerScreen,
-  AuthScreen,
 } from '@/screens';
 import { MainTabNavigator } from './MainTabNavigator';
 import { linking } from './linking';
@@ -36,10 +36,10 @@ export const RootNavigator: React.FC = () => {
         {/* Detail screens push full-screen over the tabs, Netflix-style. */}
         <Stack.Screen name="AlbumDetails" component={AlbumDetailsScreen} />
         <Stack.Screen name="ArtistDetails" component={ArtistDetailsScreen} />
-        {/* Player + Auth slide up as modals. */}
+        <Stack.Screen name="AlbumList" component={AlbumListScreen} />
+        {/* Player slides up as a modal. */}
         <Stack.Group screenOptions={{ presentation: 'modal' }}>
           <Stack.Screen name="MusicPlayer" component={MusicPlayerScreen} />
-          <Stack.Screen name="Auth" component={AuthScreen} />
         </Stack.Group>
       </Stack.Navigator>
     </NavigationContainer>

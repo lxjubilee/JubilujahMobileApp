@@ -1,9 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
 import { Artist } from '@/types';
-import { cdnUrl } from '@/utils';
 import { AppText } from '../common/AppText';
+import { Artwork } from '../common/Artwork';
 
 interface ArtistCardProps {
   artist: Artist;
@@ -18,11 +17,10 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onPress, size = 
       onPress={() => onPress?.(artist)}
       style={({ pressed }) => [{ width: size, opacity: pressed ? 0.8 : 1 }]}
     >
-      <Image
-        source={{ uri: cdnUrl(artist.image) }}
+      <Artwork
+        uri={artist.image}
         style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}
-        contentFit="cover"
-        transition={250}
+        iconSize={Math.round(size * 0.3)}
       />
       <AppText variant="h3" numberOfLines={1} style={styles.name}>
         {artist.name}

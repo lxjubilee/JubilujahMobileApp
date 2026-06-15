@@ -17,7 +17,6 @@ export const linking: LinkingOptions<RootStackParamList> = {
       AlbumDetails: 'album/:albumId',
       ArtistDetails: 'artist/:artistId',
       MusicPlayer: 'player',
-      Auth: 'auth',
     },
   },
 };

@@ -25,6 +25,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ position, duration, on
         minimumValue={0}
         maximumValue={duration > 0 ? duration : 1}
         value={value}
+        // Let a single tap/click on the track jump to that position (not just drag).
+        tapToSeek
         minimumTrackTintColor={theme.colors.text}
         maximumTrackTintColor={theme.colors.border}
         thumbTintColor={theme.colors.text}
