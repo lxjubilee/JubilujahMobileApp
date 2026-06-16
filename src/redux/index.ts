@@ -18,8 +18,10 @@ export {
 } from './slices/downloadsSlice';
 export {
   setQueue,
+  setPlayOrder,
   setCurrentTrack,
   setIsPlaying,
+  setIsBuffering,
   setRepeatMode,
   cycleRepeatMode,
   toggleShuffle,

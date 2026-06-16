@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
-import { Dimensions, FlatList, Modal, Pressable, Share, StyleSheet, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Dimensions,
+  FlatList,
+  Modal,
+  Pressable,
+  Share,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/context';
@@ -24,6 +34,7 @@ export const MusicPlayerScreen: React.FC = () => {
     currentTrack,
     queue,
     isPlaying,
+    isBuffering,
     repeatMode,
     shuffle,
     toggle,
@@ -34,7 +45,7 @@ export const MusicPlayerScreen: React.FC = () => {
     toggleShuffle,
     playFrom,
   } = usePlayer();
-  const { position, duration } = useSafeProgress(500);
+  const { position, duration } = useSafeProgress(250);
   const isFavorite = useAppSelector((s) =>
     currentTrack ? s.library.favoriteTrackIds.includes(currentTrack.id) : false,
   );
@@ -145,20 +156,20 @@ export const MusicPlayerScreen: React.FC = () => {
             onPress={toggle}
             style={[styles.playBtn, { backgroundColor: theme.colors.text }]}
           >
-            <IconButton
-              name={isPlaying ? 'pause' : 'play'}
-              size={34}
-              color="#000"
-              onPress={toggle}
-            />
+            {isBuffering ? (
+              <ActivityIndicator size="small" color="#000" />
+            ) : (
+              <IconButton name={isPlaying ? 'pause' : 'play'} size={34} color="#000" onPress={toggle} />
+            )}
           </Pressable>
           <IconButton name="play-skip-forward" size={34} onPress={next} />
-          <IconButton
-            name="repeat"
-            size={24}
-            color={repeatActive ? theme.colors.accent : theme.colors.iconMuted}
-            onPress={cycleRepeat}
-          />
+          <Pressable onPress={cycleRepeat} hitSlop={10} style={styles.repeatBtn}>
+            <MaterialCommunityIcons
+              name={repeatMode === 'track' ? 'repeat-once' : 'repeat'}
+              size={24}
+              color={repeatActive ? theme.colors.accent : theme.colors.iconMuted}
+            />
+          </Pressable>
         </View>
 
         <View style={styles.footer}>
@@ -233,6 +244,7 @@ const styles = StyleSheet.create({
   titleText: { flex: 1, marginRight: 12 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
   playBtn: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
+  repeatBtn: { alignItems: 'center', justifyContent: 'center' },
   footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 28 },
   queueBackdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.6)' },
   queueSheet: {

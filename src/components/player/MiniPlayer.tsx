@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/context';
 import { usePlayer, useSafeProgress } from '@/hooks';
 import { AppText } from '../common/AppText';
@@ -17,7 +17,7 @@ interface MiniPlayerProps {
  */
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onPress }) => {
   const theme = useTheme();
-  const { currentTrack, isPlaying, toggle, next } = usePlayer();
+  const { currentTrack, isPlaying, isBuffering, toggle, next } = usePlayer();
   const { position, duration } = useSafeProgress(500);
 
   if (!currentTrack) return null;
@@ -46,12 +46,18 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onPress }) => {
             {currentTrack.artistName}
           </AppText>
         </View>
-        <IconButton
-          name={isPlaying ? 'pause' : 'play'}
-          size={26}
-          onPress={toggle}
-          style={styles.control}
-        />
+        {isBuffering ? (
+          <View style={[styles.control, styles.spinner]}>
+            <ActivityIndicator size="small" color={theme.colors.text} />
+          </View>
+        ) : (
+          <IconButton
+            name={isPlaying ? 'pause' : 'play'}
+            size={26}
+            onPress={toggle}
+            style={styles.control}
+          />
+        )}
         <IconButton name="play-skip-forward" size={22} onPress={next} style={styles.control} />
       </View>
       <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}>
@@ -72,6 +78,7 @@ const styles = StyleSheet.create({
   art: { width: 44, height: 44, backgroundColor: '#222' },
   meta: { flex: 1, marginLeft: 10 },
   control: { paddingHorizontal: 8 },
+  spinner: { width: 26, alignItems: 'center', justifyContent: 'center' },
   progressTrack: { height: 2, width: '100%' },
   progressFill: { height: 2 },
 });

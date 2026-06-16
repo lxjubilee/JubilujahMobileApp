@@ -3,8 +3,10 @@ import {
   useAppDispatch,
   useAppSelector,
   setQueue,
+  setPlayOrder,
   setCurrentTrack,
   setIsPlaying,
+  setIsBuffering,
   cycleRepeatMode,
   toggleShuffle,
 } from '@/redux';
@@ -16,6 +18,7 @@ import {
   RepeatMode as TPRepeatMode,
 } from '@/services/music';
 import { Track } from '@/types';
+import { shuffle as shuffleArray } from '@/utils';
 
 const toTPRepeat = (mode: RepeatMode) =>
   mode === 'track'
@@ -33,17 +36,36 @@ export function usePlayer() {
   const dispatch = useAppDispatch();
   const currentTrack = useAppSelector((s) => s.player.currentTrack);
   const isPlaying = useAppSelector((s) => s.player.isPlaying);
+  const isBuffering = useAppSelector((s) => s.player.isBuffering);
   const repeatMode = useAppSelector((s) => s.player.repeatMode);
   const shuffle = useAppSelector((s) => s.player.shuffle);
   const queue = useAppSelector((s) => s.player.queue);
+  const originalQueue = useAppSelector((s) => s.player.originalQueue);
 
   const playTracks = useCallback(
     async (tracks: Track[], startIndex = 0) => {
+      const active = tracks[startIndex] ?? null;
+      // setQueue records the original (unshuffled) order; build the actual play
+      // order when shuffle is on — the chosen track first, the rest randomized.
       dispatch(setQueue(tracks));
-      dispatch(setCurrentTrack(tracks[startIndex] ?? null));
-      await playbackQueue.playTracks(tracks, startIndex);
+      let order = tracks;
+      let startIdx = startIndex;
+      if (shuffle && tracks.length > 1 && active) {
+        const before = tracks.slice(0, startIndex);
+        const tail = shuffleArray(tracks.slice(startIndex + 1));
+        order = [...before, active, ...tail];
+        startIdx = before.length;
+        dispatch(setPlayOrder(order));
+      }
+      dispatch(setCurrentTrack(active));
+      // Optimistic: show the playing state immediately, before the engine buffers.
+      dispatch(setIsPlaying(true));
+      await playbackQueue.playTracks(order, startIdx);
+      // reset() inside playTracks clears the engine repeat mode — re-apply it so
+      // repeat keeps working across track/album changes.
+      if (!isExpoGo) await TrackPlayer.setRepeatMode(toTPRepeat(repeatMode)).catch(() => undefined);
     },
-    [dispatch],
+    [dispatch, shuffle, repeatMode],
   );
 
   const playFrom = useCallback(
@@ -57,10 +79,14 @@ export function usePlayer() {
     [playTracks],
   );
 
-  // Optimistic: flip the icon immediately, then let the engine confirm via events.
+  // Optimistic: flip the icon immediately and command the engine directly from
+  // that intent — no getPlaybackState round-trip, so play/pause feels instant.
   const toggle = useCallback(() => {
-    dispatch(setIsPlaying(!isPlaying));
-    return playbackQueue.toggle();
+    const willPlay = !isPlaying;
+    dispatch(setIsPlaying(willPlay));
+    if (!willPlay) dispatch(setIsBuffering(false)); // pausing → no spinner
+    if (isExpoGo) return undefined;
+    return (willPlay ? TrackPlayer.play() : TrackPlayer.pause()).catch(() => undefined);
   }, [dispatch, isPlaying]);
 
   // Optimistic: move to the neighbouring track in the queue right away.
@@ -96,11 +122,27 @@ export function usePlayer() {
     if (!isExpoGo) await TrackPlayer.setRepeatMode(toTPRepeat(nextMode)).catch(() => undefined);
   }, [dispatch, repeatMode]);
 
-  const onToggleShuffle = useCallback(() => dispatch(toggleShuffle()), [dispatch]);
+  const onToggleShuffle = useCallback(() => {
+    const enabled = !shuffle;
+    dispatch(toggleShuffle());
+    if (!currentTrack || originalQueue.length <= 1) return;
+    // Reorder only the UPCOMING tracks (after the current one) so playback isn't
+    // interrupted: shuffle randomizes them, un-shuffle restores original order.
+    const curIdx = Math.max(
+      0,
+      originalQueue.findIndex((t) => t.id === currentTrack.id),
+    );
+    const played = originalQueue.slice(0, curIdx + 1);
+    const tail = originalQueue.slice(curIdx + 1);
+    const upcoming = enabled ? shuffleArray(tail) : tail;
+    dispatch(setPlayOrder([...played, ...upcoming]));
+    void playbackQueue.replaceUpcoming(upcoming);
+  }, [dispatch, shuffle, currentTrack, originalQueue]);
 
   return {
     currentTrack,
     isPlaying,
+    isBuffering,
     repeatMode,
     shuffle,
     queue,

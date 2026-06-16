@@ -11,8 +11,13 @@ export type RepeatMode = 'off' | 'track' | 'queue';
  */
 interface PlayerState {
   currentTrack: Track | null;
+  /** Live play/display order (may be shuffled). */
   queue: Track[];
+  /** Unshuffled order, kept so shuffle can be turned back off. */
+  originalQueue: Track[];
   isPlaying: boolean;
+  /** True while the engine is buffering/loading the current track. */
+  isBuffering: boolean;
   /** Persisted user preferences. */
   repeatMode: RepeatMode;
   shuffle: boolean;
@@ -21,7 +26,9 @@ interface PlayerState {
 const initialState: PlayerState = {
   currentTrack: null,
   queue: [],
+  originalQueue: [],
   isPlaying: false,
+  isBuffering: false,
   repeatMode: 'off',
   shuffle: false,
 };
@@ -32,12 +39,20 @@ const playerSlice = createSlice({
   reducers: {
     setQueue(state, action: PayloadAction<Track[]>) {
       state.queue = action.payload;
+      state.originalQueue = action.payload;
+    },
+    /** Update the live play/display order only (keeps originalQueue intact). */
+    setPlayOrder(state, action: PayloadAction<Track[]>) {
+      state.queue = action.payload;
     },
     setCurrentTrack(state, action: PayloadAction<Track | null>) {
       state.currentTrack = action.payload;
     },
     setIsPlaying(state, action: PayloadAction<boolean>) {
       state.isPlaying = action.payload;
+    },
+    setIsBuffering(state, action: PayloadAction<boolean>) {
+      state.isBuffering = action.payload;
     },
     setRepeatMode(state, action: PayloadAction<RepeatMode>) {
       state.repeatMode = action.payload;
@@ -55,8 +70,10 @@ const playerSlice = createSlice({
 
 export const {
   setQueue,
+  setPlayOrder,
   setCurrentTrack,
   setIsPlaying,
+  setIsBuffering,
   setRepeatMode,
   cycleRepeatMode,
   toggleShuffle,

@@ -18,6 +18,10 @@ export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
+  const initial = (user?.firstName || user?.displayName || user?.email || '')
+    .trim()
+    .charAt(0)
+    .toUpperCase();
 
   return (
     <Screen>
@@ -29,8 +33,19 @@ export const ProfileScreen: React.FC = () => {
       </View>
 
       <View style={styles.body}>
-        <View style={[styles.avatar, { backgroundColor: theme.colors.surface }]}>
-          <Ionicons name="person" size={48} color={theme.colors.iconMuted} />
+        <View
+          style={[
+            styles.avatar,
+            { backgroundColor: initial ? theme.colors.primary : theme.colors.surface },
+          ]}
+        >
+          {initial ? (
+            <AppText style={styles.avatarInitial} allowFontScaling={false}>
+              {initial}
+            </AppText>
+          ) : (
+            <Ionicons name="person" size={48} color={theme.colors.iconMuted} />
+          )}
         </View>
         <AppText variant="h2" style={styles.name}>
           {user?.displayName ?? 'Guest'}
@@ -89,6 +104,14 @@ const styles = StyleSheet.create({
   title: { marginLeft: 8 },
   body: { alignItems: 'center', marginTop: 40 },
   avatar: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
+  avatarInitial: {
+    color: '#fff',
+    fontSize: 46,
+    lineHeight: 54,
+    fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
+  },
   name: { marginTop: 16 },
   menu: { marginTop: 36, paddingHorizontal: 16, gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 14 },

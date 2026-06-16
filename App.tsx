@@ -10,12 +10,10 @@ import {
   fetchHomeFeed,
   restoreSession,
   clearSession,
-  markProfileSelected,
 } from '@/redux';
 import { ThemeProvider } from '@/context';
 import { RootNavigator, AuthNavigator } from '@/navigation';
-import { ChooseProfileScreen } from '@/screens/Auth';
-import { usePlayerSync, useAppSelector, useAppDispatch } from '@/hooks';
+import { usePlayerSync, useAppSelector } from '@/hooks';
 import { setupPlayer } from '@/services/music';
 import { initAuthClient } from '@/services/auth';
 import { getManifest, onCatalogUpdated, invalidateCatalogIndex } from '@/services/catalog';
@@ -36,11 +34,8 @@ const PlayerSyncGate: React.FC = () => {
  * either is still resolving (the splash overlay covers that window).
  */
 const RootGate: React.FC = () => {
-  const dispatch = useAppDispatch();
   const status = useAppSelector((s) => s.auth.status);
   const isAuthenticated = useAppSelector((s) => s.auth.user != null);
-  // Set only when a session is restored on launch; cleared on fresh sign-in.
-  const profileGatePending = useAppSelector((s) => s.auth.profileGatePending);
   const [hasOnboarded, setHasOnboarded] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -51,12 +46,9 @@ const RootGate: React.FC = () => {
 
   if (status === 'restoring' || hasOnboarded === null) return null;
 
+  // The "Choose your profile" gate is disabled for now (functionality pending);
+  // ChooseProfileScreen is kept but unused. Authenticated users go to Home.
   if (isAuthenticated) {
-    // Only a restored (cold-start) session shows the profile gate; a fresh
-    // sign-in goes straight to Home.
-    if (profileGatePending) {
-      return <ChooseProfileScreen onSelect={() => dispatch(markProfileSelected())} />;
-    }
     return <RootNavigator />;
   }
 

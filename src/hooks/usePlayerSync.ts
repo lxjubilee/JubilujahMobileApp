@@ -1,5 +1,11 @@
 import { useEffect } from 'react';
-import { useAppDispatch, useAppSelector, setCurrentTrack, setIsPlaying } from '@/redux';
+import {
+  useAppDispatch,
+  useAppSelector,
+  setCurrentTrack,
+  setIsPlaying,
+  setIsBuffering,
+} from '@/redux';
 import {
   isExpoGo,
   TrackPlayer,
@@ -10,6 +16,20 @@ import {
 
 // Built lazily so `Event` (undefined in Expo Go) is never dereferenced there.
 const SYNC_EVENTS = isExpoGo ? [] : [Event.PlaybackState, Event.PlaybackActiveTrackChanged];
+
+// States that mean "playing or about to play". Treating Buffering/Loading as
+// playing keeps the pause icon steady while a track buffers, instead of flicking
+// back to the play icon between the tap and the first audio frame.
+const PLAYING_STATES = isExpoGo ? [] : [State.Playing, State.Buffering, State.Loading];
+
+// States that mean genuinely not playing. None/Ready are deliberately excluded:
+// they fire transiently during reset()/load and must NOT flip the icon to "play"
+// (which made the control flicker the instant the mini player appeared).
+const PAUSED_STATES = isExpoGo ? [] : [State.Paused, State.Stopped, State.Ended, State.Error];
+
+// States where the engine is fetching/decoding before audio plays — drives a
+// small spinner on the play button so the wait reads as loading, not frozen.
+const BUFFERING_STATES = isExpoGo ? [] : [State.Buffering, State.Loading];
 
 /**
  * Bridges the track-player engine (source of truth) into Redux so the UI can
@@ -27,7 +47,11 @@ export function usePlayerSync(): void {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useTrackPlayerEvents(SYNC_EVENTS, async (event) => {
       if (event.type === Event.PlaybackState) {
-        dispatch(setIsPlaying(event.state === State.Playing));
+        // Only commit a definite play/pause; ignore transient None/Ready so the
+        // optimistic state set on tap isn't undone mid-load.
+        if (PLAYING_STATES.includes(event.state)) dispatch(setIsPlaying(true));
+        else if (PAUSED_STATES.includes(event.state)) dispatch(setIsPlaying(false));
+        dispatch(setIsBuffering(BUFFERING_STATES.includes(event.state)));
       }
       if (event.type === Event.PlaybackActiveTrackChanged) {
         const activeId = event.track?.id;
@@ -44,7 +68,7 @@ export function usePlayerSync(): void {
     let cancelled = false;
     TrackPlayer.getPlaybackState()
       .then((s) => {
-        if (!cancelled) dispatch(setIsPlaying(s.state === State.Playing));
+        if (!cancelled) dispatch(setIsPlaying(PLAYING_STATES.includes(s.state)));
       })
       .catch(() => undefined);
     return () => {
