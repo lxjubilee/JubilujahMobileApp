@@ -1,16 +1,16 @@
-import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useState } from 'react';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
-import { Screen, AppText, Button, IconButton } from '@/components/common';
+import { Screen, AppText, Button, IconButton, ConfirmDialog, PasswordInput } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/hooks';
-import { signOut } from '@/redux';
-import type { RootStackParamList } from '@/navigation/types';
+import { signOut, deleteAccount, clearSession } from '@/redux';
+import type { LibraryStackParamList } from '@/navigation/types';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = NativeStackNavigationProp<LibraryStackParamList>;
 
 export const ProfileScreen: React.FC = () => {
   const theme = useTheme();
@@ -22,6 +22,29 @@ export const ProfileScreen: React.FC = () => {
     .trim()
     .charAt(0)
     .toUpperCase();
+  const [mode, setMode] = useState<null | 'confirm' | 'success' | 'error'>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const openDeleteConfirm = () => {
+    setDeletePassword('');
+    setMode('confirm');
+  };
+
+  const confirmDelete = async () => {
+    if (!user?.email || !deletePassword) return;
+    setDeleting(true);
+    try {
+      await dispatch(deleteAccount({ email: user.email, password: deletePassword })).unwrap();
+      setDeleting(false);
+      setMode('success');
+    } catch (e) {
+      setDeleting(false);
+      setErrorMsg(typeof e === 'string' ? e : 'Something went wrong. Please try again.');
+      setMode('error');
+    }
+  };
 
   return (
     <Screen>
@@ -55,12 +78,24 @@ export const ProfileScreen: React.FC = () => {
         </AppText>
       </View>
 
-      {/* Account options. Handlers are placeholders — wire up the actual
-          navigation / actions later. */}
+      {/* Account options. */}
       <View style={styles.menu}>
-        <Row icon="shield-checkmark-outline" label="Privacy Policy" onPress={() => {}} />
-        <Row icon="document-text-outline" label="Terms of Use" onPress={() => {}} />
-        <Row icon="trash-outline" label="Delete Account" destructive onPress={() => {}} />
+        <Row
+          icon="lock-closed-outline"
+          label="Change Password"
+          onPress={() => navigation.navigate('ChangePassword')}
+        />
+        <Row
+          icon="shield-checkmark-outline"
+          label="Privacy Policy"
+          onPress={() => navigation.navigate('PrivacyPolicy')}
+        />
+        <Row
+          icon="document-text-outline"
+          label="Terms of Use"
+          onPress={() => navigation.navigate('TermsOfUse')}
+        />
+        <Row icon="trash-outline" label="Delete Account" destructive onPress={openDeleteConfirm} />
       </View>
 
       <Button
@@ -69,6 +104,39 @@ export const ProfileScreen: React.FC = () => {
         variant="ghost"
         onPress={() => dispatch(signOut())}
         style={styles.cta}
+      />
+
+      <ConfirmDialog
+        visible={mode === 'confirm'}
+        title="Delete account?"
+        message="This permanently deletes your account and all your data. This action cannot be undone. Enter your password to confirm."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        loading={deleting}
+        confirmDisabled={!deletePassword}
+        onConfirm={confirmDelete}
+        onCancel={() => setMode(null)}
+      >
+        <PasswordInput
+          value={deletePassword}
+          onChangeText={setDeletePassword}
+          placeholder="Password"
+        />
+      </ConfirmDialog>
+      <ConfirmDialog
+        visible={mode === 'success'}
+        title="Account deleted"
+        message="Your account has been permanently deleted."
+        confirmLabel="OK"
+        onConfirm={() => dispatch(clearSession())}
+      />
+      <ConfirmDialog
+        visible={mode === 'error'}
+        title="Couldn't delete account"
+        message={errorMsg}
+        confirmLabel="OK"
+        onConfirm={() => setMode(null)}
       />
     </Screen>
   );
@@ -79,12 +147,14 @@ const Row: React.FC<{
   label: string;
   onPress?: () => void;
   destructive?: boolean;
-}> = ({ icon, label, onPress, destructive }) => {
+  loading?: boolean;
+}> = ({ icon, label, onPress, destructive, loading }) => {
   const theme = useTheme();
   const tint = destructive ? theme.colors.danger : theme.colors.text;
   return (
     <Pressable
       onPress={onPress}
+      disabled={loading}
       style={({ pressed }) => [
         styles.row,
         { backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, opacity: pressed ? 0.7 : 1 },
@@ -94,7 +164,11 @@ const Row: React.FC<{
       <AppText variant="body" style={[styles.rowLabel, { color: tint }]}>
         {label}
       </AppText>
-      <Ionicons name="chevron-forward" size={18} color={theme.colors.iconMuted} />
+      {loading ? (
+        <ActivityIndicator size="small" color={theme.colors.iconMuted} />
+      ) : (
+        <Ionicons name="chevron-forward" size={18} color={theme.colors.iconMuted} />
+      )}
     </Pressable>
   );
 };

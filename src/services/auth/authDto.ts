@@ -41,6 +41,8 @@ export interface LoginRequest {
   password: string;
   rememberMe?: boolean;
   cfTurnstileToken?: string;
+  /** Platform whose user DB to authenticate against (e.g. "jubilujah"). */
+  source?: string;
   deviceInfo?: DeviceInfo;
 }
 

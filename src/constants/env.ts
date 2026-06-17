@@ -18,6 +18,14 @@ type AppExtra = {
   authBaseUrl: string;
   /** Prod-only: key for POST /api/auth/mobile/login to skip Turnstile CAPTCHA. */
   authMobileClientKey: string;
+  /** Platform `source` sent on POST /api/auth/login — picks the user DB to auth against. */
+  authSource: string;
+  /** Cloudflare Turnstile site key for the sign-in CAPTCHA (empty = CAPTCHA off). */
+  turnstileSiteKey: string;
+  /** Origin the Turnstile widget runs under (must be allow-listed for the site key). */
+  turnstileBaseUrl: string;
+  /** Jubilujah identity API host (cookie-session based: sign-up, forgot password). */
+  accountBaseUrl: string;
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Partial<AppExtra>;
@@ -33,4 +41,11 @@ export const ENV = {
   // Auth (SSO) — UAT by default; CAPTCHA is disabled there so /api/auth/login works directly.
   AUTH_BASE_URL: extra.authBaseUrl ?? 'https://uatapi.jubileeinspire.com',
   AUTH_MOBILE_CLIENT_KEY: extra.authMobileClientKey ?? '',
+  // Which platform's user DB /api/auth/login should authenticate against.
+  AUTH_SOURCE: extra.authSource ?? 'jubilujah',
+  // Cloudflare Turnstile (sign-in CAPTCHA). Empty disables the widget.
+  TURNSTILE_SITE_KEY: extra.turnstileSiteKey ?? '',
+  TURNSTILE_BASE_URL: extra.turnstileBaseUrl ?? 'https://jubilujah.com',
+  // Jubilujah identity API (cookie-session) — sign-up + forgot-password flows.
+  ACCOUNT_BASE_URL: extra.accountBaseUrl ?? 'https://api.jubilujah.com',
 } as const;

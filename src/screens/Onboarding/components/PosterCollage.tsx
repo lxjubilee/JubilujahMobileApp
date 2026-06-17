@@ -1,14 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, Easing, StyleSheet, View } from 'react-native';
 import { Image } from 'expo-image';
+import { MUSIC_COLLAGE_POSTERS } from '../musicImages';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-// Decorative poster set (independent of the catalog so it always renders fast).
-const POSTERS = Array.from(
-  { length: 24 },
-  (_, i) => `https://picsum.photos/seed/jbl_onb_${i + 1}/300/450`,
-);
+// Decorative, music-themed poster set (independent of the catalog so it always
+// renders fast). See musicImages.ts for the curated source list.
+const POSTERS = MUSIC_COLLAGE_POSTERS;
 
 const COLUMNS = 3;
 const GAP = 10;

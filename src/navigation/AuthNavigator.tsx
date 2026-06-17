@@ -6,7 +6,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/context';
 import { storage, STORAGE_KEYS } from '@/services/storage';
 import { Welcome } from '@/screens/Onboarding/Welcome';
-import { SignInScreen, TwoFactorScreen, SignUpScreen } from '@/screens/Auth';
+import {
+  SignInScreen,
+  TwoFactorScreen,
+  SignUpScreen,
+  VerifySignupScreen,
+  ForgotPasswordScreen,
+} from '@/screens/Auth';
+import { PrivacyPolicyScreen, TermsOfUseScreen } from '@/screens/Legal';
 import type { AuthStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -56,6 +63,10 @@ export const AuthNavigator: React.FC<AuthNavigatorProps> = ({ initialRoute }) =>
         <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="TwoFactor" component={TwoFactorScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />
+        <Stack.Screen name="VerifySignup" component={VerifySignupScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+        <Stack.Screen name="TermsOfUse" component={TermsOfUseScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

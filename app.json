@@ -16,7 +16,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jubileeverse.jubilujah",
+      "bundleIdentifier": "com.jubilujah.app",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "package": "com.jubileeverse.jubilujah",
+      "package": "com.jubilujah.app",
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0F",
         "foregroundImage": "./assets/Jubilujah-app-logo.png"
@@ -51,8 +51,12 @@
       "apiBaseUrl": "https://api.jubileeverse.com/v1",
       "useMock": true,
       "dataSource": "manifest",
-      "authBaseUrl": "https://uatapi.jubileeinspire.com",
+      "authBaseUrl": "https://api.jubileeinspire.com",
       "authMobileClientKey": "",
+      "authSource": "jubilujah",
+      "turnstileSiteKey": "0x4AAAAAADJah9FpwSaEzlLP",
+      "turnstileBaseUrl": "https://jubileeinspire.com",
+      "accountBaseUrl": "https://api.jubilujah.com",
       "eas": {
         "projectId": "7354f6a2-75e4-4f29-9f07-7d5fda551d22"
       }

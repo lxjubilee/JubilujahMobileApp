@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,11 +12,13 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AppText, IconButton } from '@/components/common';
+import { AppText, IconButton, PasswordInput } from '@/components/common';
+import { TurnstileWidget } from '@/components/auth/TurnstileWidget';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { signIn, clearAuthError } from '@/redux';
+import { CONFIG } from '@/constants';
 import type { AuthStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
@@ -37,15 +39,41 @@ export const SignInScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [focused, setFocused] = useState<'email' | 'password' | null>(null);
 
+  // Drop any error left over from another auth screen (e.g. a failed signup)
+  // so it doesn't surface here when this screen gains focus.
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(clearAuthError());
+    }, [dispatch]),
+  );
+
+  // Cloudflare Turnstile: gate sign-in on a CAPTCHA token when a site key is set.
+  const captchaRequired = !!CONFIG.TURNSTILE_SITE_KEY;
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaKey, setCaptchaKey] = useState(0); // bump to remount the widget for a fresh token
+  const refreshCaptcha = () => {
+    setCaptchaToken(null);
+    setCaptchaKey((k) => k + 1);
+  };
+
   const loading = status === 'loading';
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !loading;
+  const canSubmit =
+    email.trim().length > 0 &&
+    password.length > 0 &&
+    !loading &&
+    (!captchaRequired || !!captchaToken);
 
   const onSubmit = async () => {
     if (!canSubmit) return;
-    const result = await dispatch(signIn({ email, password, rememberMe: true }));
-    // If the backend asked for 2FA, the slice populated pending2FA → go verify.
-    if (signIn.fulfilled.match(result) && result.payload.kind === '2fa') {
-      navigation.navigate('TwoFactor');
+    const result = await dispatch(
+      signIn({ email, password, rememberMe: true, cfTurnstileToken: captchaToken ?? undefined }),
+    );
+    if (signIn.fulfilled.match(result)) {
+      // If the backend asked for 2FA, the slice populated pending2FA → go verify.
+      if (result.payload.kind === '2fa') navigation.navigate('TwoFactor');
+    } else if (captchaRequired) {
+      // The token is single-use; get a fresh one for the next attempt.
+      refreshCaptcha();
     }
   };
 
@@ -96,7 +124,7 @@ export const SignInScreen: React.FC = () => {
               style={[styles.input, { borderColor: borderFor('email') }]}
             />
 
-            <TextInput
+            <PasswordInput
               value={password}
               onChangeText={(t) => {
                 setPassword(t);
@@ -105,19 +133,23 @@ export const SignInScreen: React.FC = () => {
               onFocus={() => setFocused('password')}
               onBlur={() => setFocused(null)}
               placeholder="Password"
-              placeholderTextColor="#8A8A99"
-              secureTextEntry
-              autoCapitalize="none"
-              autoCorrect={false}
               onSubmitEditing={onSubmit}
               returnKeyType="go"
-              style={[styles.input, styles.inputSpaced, { borderColor: borderFor('password') }]}
+              containerStyle={[styles.inputSpaced, { borderColor: borderFor('password') }]}
             />
 
             {error ? (
               <AppText variant="bodySm" color="danger" style={styles.error}>
                 {error}
               </AppText>
+            ) : null}
+
+            {captchaRequired ? (
+              <TurnstileWidget
+                key={captchaKey}
+                onToken={setCaptchaToken}
+                onError={() => setCaptchaToken(null)}
+              />
             ) : null}
 
             <Pressable
@@ -137,11 +169,15 @@ export const SignInScreen: React.FC = () => {
               )}
             </Pressable>
 
-            <Pressable style={styles.help} hitSlop={6}>
+            <Pressable
+              style={styles.help}
+              hitSlop={6}
+              onPress={() => navigation.navigate('ForgotPassword')}
+            >
               <AppText variant="h3" style={styles.helpText}>
-                Get Help
+                Forgot password?
               </AppText>
-              <Ionicons name="chevron-down" size={16} color="#FFFFFF" />
+              <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
             </Pressable>
 
             <View style={styles.signupRow}>

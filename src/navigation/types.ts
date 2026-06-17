@@ -29,6 +29,10 @@ export type AuthStackParamList = {
   SignIn: undefined;
   TwoFactor: undefined;
   SignUp: undefined;
+  VerifySignup: { verificationGuid: string; email: string };
+  ForgotPassword: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfUse: undefined;
 };
 
 /** Per-tab inner stacks (Library nests Downloads + Profile). */
@@ -36,6 +40,9 @@ export type LibraryStackParamList = {
   Library: undefined;
   Downloads: undefined;
   Profile: undefined;
+  ChangePassword: undefined;
+  PrivacyPolicy: undefined;
+  TermsOfUse: undefined;
 };
 
 export type AuthStackScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<

@@ -13,6 +13,8 @@ interface AuthState {
   error: string | null;
   /** Set when login returned a 2FA challenge; drives the TwoFactor screen. */
   pending2FA: { verificationGuid: string } | null;
+  /** Set after sign-up phase 1; drives the VerifySignup screen. */
+  pendingSignup: { verificationGuid: string; email: string } | null;
   /**
    * True only when a session was *restored* on app launch (cold start) — the
    * "Choose your profile" gate then shows once. A fresh in-session sign-in skips
@@ -26,6 +28,7 @@ const initialState: AuthState = {
   status: 'restoring', // App dispatches restoreSession() on launch.
   error: null,
   pending2FA: null,
+  pendingSignup: null,
   profileGatePending: false,
 };
 
@@ -40,9 +43,12 @@ export const restoreSession = createAsyncThunk('auth/restore', () =>
 /** Email + password sign-in. May resolve to a 2FA challenge instead of a user. */
 export const signIn = createAsyncThunk(
   'auth/signIn',
-  (args: { email: string; password: string; rememberMe?: boolean }, { rejectWithValue }) =>
+  (
+    args: { email: string; password: string; rememberMe?: boolean; cfTurnstileToken?: string },
+    { rejectWithValue },
+  ) =>
     authService
-      .signIn(args.email.trim(), args.password, args.rememberMe ?? true)
+      .signIn(args.email.trim(), args.password, args.rememberMe ?? true, args.cfTurnstileToken)
       .catch((e) => rejectWithValue(errMessage(e))),
 );
 
@@ -57,6 +63,59 @@ export const verify2FA = createAsyncThunk(
 
 export const signOut = createAsyncThunk('auth/signOut', () => authService.signOut());
 
+/** Sign-up phase 1: request the emailed verification code. */
+export const requestSignup = createAsyncThunk(
+  'auth/requestSignup',
+  (args: { name: string; email: string; password: string }, { rejectWithValue }) =>
+    authService
+      .requestSignup(args.name, args.email, args.password)
+      .catch((e) => rejectWithValue(errMessage(e))),
+);
+
+/** Sign-up phase 2: confirm the code → account created + logged in (cookie). */
+export const verifySignup = createAsyncThunk(
+  'auth/verifySignup',
+  (args: { verificationGuid: string; verificationCode: string }, { rejectWithValue }) =>
+    authService
+      .verifySignup(args.verificationGuid, args.verificationCode)
+      .catch((e) => rejectWithValue(errMessage(e))),
+);
+
+/** Resend the sign-up verification code. Returns resend metadata. */
+export const resendSignup = createAsyncThunk(
+  'auth/resendSignup',
+  (verificationGuid: string, { rejectWithValue }) =>
+    authService.resendSignup(verificationGuid).catch((e) => rejectWithValue(errMessage(e))),
+);
+
+/** Request a password-reset email (redeemed on the website). Returns its message. */
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  (email: string, { rejectWithValue }) =>
+    authService.forgotPassword(email).catch((e) => rejectWithValue(errMessage(e))),
+);
+
+/** Change the signed-in user's password (authenticated cookie session). */
+export const changePassword = createAsyncThunk(
+  'auth/changePassword',
+  (
+    args: { email: string; currentPassword: string; newPassword: string },
+    { rejectWithValue },
+  ) =>
+    authService
+      .changePassword(args.email, args.currentPassword, args.newPassword)
+      .catch((e) => rejectWithValue(errMessage(e))),
+);
+
+/** Permanently delete the signed-in user's account (re-auth required), then sign out. */
+export const deleteAccount = createAsyncThunk(
+  'auth/deleteAccount',
+  (args: { email: string; password: string }, { rejectWithValue }) =>
+    authService
+      .deleteAccount(args.email, args.password)
+      .catch((e) => rejectWithValue(errMessage(e))),
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -67,6 +126,7 @@ const authSlice = createSlice({
       state.status = 'idle';
       state.error = null;
       state.pending2FA = null;
+      state.pendingSignup = null;
       state.profileGatePending = false;
     },
     clearAuthError(state) {
@@ -134,7 +194,39 @@ const authSlice = createSlice({
         state.status = 'idle';
         state.error = null;
         state.pending2FA = null;
+        state.pendingSignup = null;
+      })
+      // requestSignup (phase 1)
+      .addCase(requestSignup.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(requestSignup.fulfilled, (state, action) => {
+        state.status = 'idle';
+        state.pendingSignup = action.payload;
+      })
+      .addCase(requestSignup.rejected, (state, action) => {
+        state.status = 'error';
+        state.error = (action.payload as string) ?? 'Sign up failed';
+      })
+      // verifySignup (phase 2) → logged in
+      .addCase(verifySignup.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(verifySignup.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.status = 'authenticated';
+        state.pending2FA = null;
+        state.pendingSignup = null;
+        state.profileGatePending = false;
+      })
+      .addCase(verifySignup.rejected, (state, action) => {
+        state.status = 'error';
+        state.error = (action.payload as string) ?? 'Verification failed';
       });
+    // deleteAccount: the screen shows a themed success dialog, then dispatches
+    // clearSession() on acknowledge to reset auth + redirect to Sign In.
   },
 });
 

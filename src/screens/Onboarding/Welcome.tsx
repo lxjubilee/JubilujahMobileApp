@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AppText } from '@/components/common';
 import { PosterCollage } from './components/PosterCollage';
+import { MUSIC_HERO } from './musicImages';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -40,21 +41,21 @@ const SLIDES: Slide[] = [
   },
   {
     key: 'new',
-    visual: { type: 'poster', image: 'https://picsum.photos/seed/jbl_hero_new/700/1000' },
+    visual: { type: 'poster', image: MUSIC_HERO.new },
     headline: 'New arrivals weekly',
     subtitle: 'Fresh albums, singles and playlists added every week.',
   },
   {
     key: 'watchlist',
-    visual: { type: 'poster', image: 'https://picsum.photos/seed/jbl_hero_lib/700/1000' },
+    visual: { type: 'poster', image: MUSIC_HERO.library },
     headline: 'A library you’ll actually love',
     subtitle: 'Smart recommendations tuned to your taste.',
   },
   {
-    key: 'offline',
-    visual: { type: 'poster', image: 'https://picsum.photos/seed/jbl_hero_offline/700/1000' },
-    headline: 'Download and listen offline',
-    subtitle: 'Take your music anywhere — no internet needed.',
+    key: 'playback',
+    visual: { type: 'poster', image: MUSIC_HERO.playback },
+    headline: 'Play it your way',
+    subtitle: 'Shuffle, repeat and seamless playback — full control of every track.',
   },
 ];
 
@@ -80,7 +81,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
           <View style={styles.navLinks}>
             <Pressable
               hitSlop={8}
-              onPress={() => Linking.openURL('https://jubileeverse.com/privacy').catch(() => undefined)}
+              onPress={() => Linking.openURL('https://jubilujah.com/privacy').catch(() => undefined)}
             >
               <AppText variant="label" color="textSecondary" style={styles.navLink}>
                 PRIVACY
@@ -118,7 +119,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
                   <Image
                     source={{ uri: slide.visual.image }}
                     style={StyleSheet.absoluteFill}
-                    contentFit="contain"
+                    contentFit="cover"
                     transition={300}
                   />
                 )}

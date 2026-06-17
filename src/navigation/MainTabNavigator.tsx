@@ -5,6 +5,7 @@ import {
   createBottomTabNavigator,
   BottomTabBarProps,
 } from '@react-navigation/bottom-tabs';
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
@@ -22,13 +23,24 @@ const ICONS: Record<keyof MainTabParamList, React.ComponentProps<typeof Ionicons
   LibraryTab: 'library',
 };
 
+/** Routes (nested in a tab's stack) where the MiniPlayer should be hidden. */
+const HIDE_MINI_PLAYER_ON = ['Profile'];
+
 /** Custom tab bar that stacks the persistent MiniPlayer above the real tab bar. */
-const TabBarWithMiniPlayer: React.FC<BottomTabBarProps> = (props) => (
-  <View>
-    <MiniPlayer onPress={() => props.navigation.getParent()?.navigate('MusicPlayer')} />
-    <BottomTabBar {...props} />
-  </View>
-);
+const TabBarWithMiniPlayer: React.FC<BottomTabBarProps> = (props) => {
+  const activeRoute = props.state.routes[props.state.index];
+  const focusedNested = getFocusedRouteNameFromRoute(activeRoute);
+  const hideMiniPlayer = focusedNested != null && HIDE_MINI_PLAYER_ON.includes(focusedNested);
+
+  return (
+    <View>
+      {hideMiniPlayer ? null : (
+        <MiniPlayer onPress={() => props.navigation.getParent()?.navigate('MusicPlayer')} />
+      )}
+      <BottomTabBar {...props} />
+    </View>
+  );
+};
 
 export const MainTabNavigator: React.FC = () => {
   const theme = useTheme();
