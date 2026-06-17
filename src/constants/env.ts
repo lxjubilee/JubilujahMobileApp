@@ -20,6 +20,9 @@ type AppExtra = {
   authMobileClientKey: string;
   /** Platform `source` sent on POST /api/auth/login — picks the user DB to auth against. */
   authSource: string;
+  /** Service client credentials to mint a JI admin token (password sync). */
+  jiServiceClientId: string;
+  jiServiceClientSecret: string;
   /** Cloudflare Turnstile site key for the sign-in CAPTCHA (empty = CAPTCHA off). */
   turnstileSiteKey: string;
   /** Origin the Turnstile widget runs under (must be allow-listed for the site key). */
@@ -43,6 +46,9 @@ export const ENV = {
   AUTH_MOBILE_CLIENT_KEY: extra.authMobileClientKey ?? '',
   // Which platform's user DB /api/auth/login should authenticate against.
   AUTH_SOURCE: extra.authSource ?? 'jubilujah',
+  // Service-to-service client creds for the JI admin password-sync (uses AUTH_BASE_URL host).
+  JI_SERVICE_CLIENT_ID: extra.jiServiceClientId ?? 'jubilujah',
+  JI_SERVICE_CLIENT_SECRET: extra.jiServiceClientSecret ?? '',
   // Cloudflare Turnstile (sign-in CAPTCHA). Empty disables the widget.
   TURNSTILE_SITE_KEY: extra.turnstileSiteKey ?? '',
   TURNSTILE_BASE_URL: extra.turnstileBaseUrl ?? 'https://jubilujah.com',

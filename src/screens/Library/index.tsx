@@ -10,7 +10,7 @@ import { AlbumCard } from '@/components/cards';
 import { useAppSelector } from '@/hooks';
 import type { LibraryStackParamList, RootStackParamList } from '@/navigation/types';
 
-// Library can push within its own stack (Downloads/Profile) and to root details.
+// Library can push within its own stack (Profile) and to root details.
 type Nav = NativeStackNavigationProp<LibraryStackParamList & RootStackParamList>;
 const { width } = Dimensions.get('window');
 const CARD_W = (width - 48) / 2;

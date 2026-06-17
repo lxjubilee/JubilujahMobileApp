@@ -15,6 +15,9 @@ export const CONFIG = {
   AUTH_MOBILE_CLIENT_KEY: ENV.AUTH_MOBILE_CLIENT_KEY,
   /** Platform `source` sent on /api/auth/login (which user DB to authenticate against). */
   AUTH_SOURCE: ENV.AUTH_SOURCE,
+  /** Service client creds to mint a JI admin token for password sync (host = AUTH_BASE_URL). */
+  JI_SERVICE_CLIENT_ID: ENV.JI_SERVICE_CLIENT_ID,
+  JI_SERVICE_CLIENT_SECRET: ENV.JI_SERVICE_CLIENT_SECRET,
   /** Cloudflare Turnstile site key for the sign-in CAPTCHA (empty = disabled). */
   TURNSTILE_SITE_KEY: ENV.TURNSTILE_SITE_KEY,
   /** Origin the Turnstile widget runs under (allow-listed for the site key). */

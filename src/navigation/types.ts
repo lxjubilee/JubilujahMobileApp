@@ -35,10 +35,9 @@ export type AuthStackParamList = {
   TermsOfUse: undefined;
 };
 
-/** Per-tab inner stacks (Library nests Downloads + Profile). */
+/** Per-tab inner stacks (Library nests Profile). Downloads is hidden for v1. */
 export type LibraryStackParamList = {
   Library: undefined;
-  Downloads: undefined;
   Profile: undefined;
   ChangePassword: undefined;
   PrivacyPolicy: undefined;

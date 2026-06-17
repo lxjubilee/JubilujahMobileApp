@@ -1,4 +1,5 @@
 import { CONFIG } from '@/constants';
+// import { logger } from '@/utils'; // TEMP: re-enable with JI password sync
 import type { ApiError } from '@/services/api';
 import { configureAuthClient } from './authClient';
 import { authEndpoints } from './authEndpoints';
@@ -7,6 +8,8 @@ import { AuthUser, mapUser } from './authMappers';
 import { tokenStore } from './tokenStore';
 import { buildDeviceInfo } from './deviceInfo';
 import { accountApi, mapAccountUser } from './accountApi';
+import { accountSession } from './accountSession';
+// import { syncJiPassword } from './jiPasswordSync'; // TEMP: re-enable for JI password sync
 
 export type SignInResult =
   | { kind: 'authenticated'; user: AuthUser }
@@ -131,6 +134,14 @@ export const authService = {
       current_password: currentPassword,
       new_password: newPassword,
     });
+
+    // TEMP (disabled while verifying the 403 CSRF issue): mirror the new password
+    // to the JubileeInspire DB. Re-enable with the imports below.
+    // try {
+    //   await syncJiPassword(email, newPassword);
+    // } catch (e) {
+    //   logger.warn('JI password sync failed', e);
+    // }
   },
 
   /**
@@ -144,6 +155,7 @@ export const authService = {
       throw new Error('This account needs verification before it can be deleted. Please sign in on Jubilujah first.');
     }
     await accountApi.deleteAccount();
+    await accountSession.clear(); // session is revoked server-side
     await tokenStore.clear(); // server clears the cookie session; drop local tokens too
   },
 
@@ -158,12 +170,16 @@ export const authService = {
         await tokenStore.clear();
       }
     }
-    // Fall back to the cookie session created by sign-up on this API.
-    try {
-      const me = await accountApi.me();
-      if (me.authenticated && me.user) return mapAccountUser(me.user);
-    } catch {
-      // no cookie session either
+    // Fall back to the Jubilujah session (Bearer carrier) created by sign-up.
+    const session = await accountSession.load();
+    if (session) {
+      try {
+        const me = await accountApi.me();
+        if (me.authenticated && me.user) return mapAccountUser(me.user);
+      } catch {
+        // fall through
+      }
+      await accountSession.clear();
     }
     return null;
   },
@@ -175,10 +191,11 @@ export const authService = {
       // best-effort; clear locally regardless
     }
     try {
-      await accountApi.logout(); // clear the cookie session too
+      await accountApi.logout(); // revoke the Jubilujah session (Bearer) too
     } catch {
       // best-effort
     }
+    await accountSession.clear();
     await tokenStore.clear();
   },
 };
