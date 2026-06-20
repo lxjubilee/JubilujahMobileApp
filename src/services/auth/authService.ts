@@ -1,15 +1,10 @@
-import { CONFIG } from '@/constants';
-// import { logger } from '@/utils'; // TEMP: re-enable with JI password sync
-import type { ApiError } from '@/services/api';
-import { configureAuthClient } from './authClient';
 import { authEndpoints } from './authEndpoints';
 import { isTwoFactor } from './authDto';
 import { AuthUser, mapUser } from './authMappers';
 import { tokenStore } from './tokenStore';
 import { buildDeviceInfo } from './deviceInfo';
-import { accountApi, mapAccountUser } from './accountApi';
-import { accountSession } from './accountSession';
-// import { syncJiPassword } from './jiPasswordSync'; // TEMP: re-enable for JI password sync
+import { configureAuthClient } from './authClient';
+import { clearSessionCookies } from './cookieJar';
 
 export type SignInResult =
   | { kind: 'authenticated'; user: AuthUser }
@@ -28,14 +23,18 @@ export interface SignupChallenge {
 export function initAuthClient(onAuthFailure: () => void): void {
   configureAuthClient({
     getRefreshToken: () => tokenStore.getRefreshToken(),
-    persistAccessToken: (token, expiresAt) => {
-      void tokenStore.updateAccessToken(token, expiresAt);
+    persistTokens: ({ accessToken, refreshToken, expiresAt }) => {
+      void tokenStore.updateTokens(accessToken, refreshToken, expiresAt);
     },
     onAuthFailure,
   });
+  // Flush any jv_session cookie persisted from a previous run so mutations
+  // (logout/change-password/delete) aren't treated as cookie requests → CSRF 403.
+  void clearSessionCookies();
 }
 
 export const authService = {
+  /** Email + password sign-in. Resolves to tokens, or a 2FA challenge. */
   async signIn(
     email: string,
     password: string,
@@ -43,159 +42,113 @@ export const authService = {
     cfTurnstileToken?: string,
   ): Promise<SignInResult> {
     const deviceInfo = await buildDeviceInfo();
-    const res = await authEndpoints.login({
+    const res = await authEndpoints.signin({
       email,
       password,
       rememberMe,
-      source: CONFIG.AUTH_SOURCE,
       cfTurnstileToken,
       deviceInfo,
     });
     if (isTwoFactor(res)) {
       return { kind: '2fa', verificationGuid: res.verificationGuid };
     }
-    await tokenStore.save({
-      accessToken: res.tokens.accessToken,
-      refreshToken: res.tokens.refreshToken,
-      expiresAt: res.tokens.expiresAt,
-    });
+    await tokenStore.save(res.tokens);
     return { kind: 'authenticated', user: mapUser(res.user) };
   },
 
+  /** Complete a 2FA challenge with the emailed OTP code. */
   async verify2FA(
+    email: string,
     code: string,
     verificationGuid: string,
-    trustDevice: boolean,
+    rememberMe: boolean,
   ): Promise<AuthUser> {
-    const res = await authEndpoints.verifyLogin({ code, verificationGuid, trustDevice });
-    await tokenStore.save({
-      accessToken: res.accessToken,
-      refreshToken: res.refreshToken,
-      expiresAt: res.expiresAt,
+    const res = await authEndpoints.verifyLogin({
+      email,
+      verificationGuid,
+      verificationCode: code,
+      rememberMe,
     });
-    if (res.user) return mapUser(res.user);
-    const me = await authEndpoints.me();
-    return mapUser(me.user);
+    await tokenStore.save(res.tokens);
+    return mapUser(res.user);
   },
 
-  // --- Jubilujah identity API (cookie-session): sign-up + forgot password ---
+  // --- Sign up ---
 
   /** Phase 1: request a 6-digit email verification code. No account yet. */
   async requestSignup(name: string, email: string, password: string): Promise<SignupChallenge> {
-    const res = await accountApi.signup({ name: name.trim(), email: email.trim(), password });
+    const res = await authEndpoints.signup({ name: name.trim(), email: email.trim(), password });
     return { verificationGuid: res.verificationGuid, email: res.email };
   },
 
-  /** Phase 2: confirm the code → account created + session cookie set (logged in). */
+  /** Phase 2: confirm the code → account created + tokens issued (logged in). */
   async verifySignup(verificationGuid: string, verificationCode: string): Promise<AuthUser> {
-    const res = await accountApi.verifySignup({
+    const res = await authEndpoints.verifySignup({
       verificationGuid,
       verificationCode: verificationCode.trim(),
       rememberMe: true,
     });
-    return mapAccountUser(res.user);
+    await tokenStore.save(res.tokens);
+    return mapUser(res.user);
   },
 
   /** Resend the sign-up code for an in-progress sign-up. */
   resendSignup(verificationGuid: string) {
-    return accountApi.resendSignup(verificationGuid);
+    return authEndpoints.sendSignupVerification(verificationGuid);
   },
+
+  // --- Password / account ---
 
   /** Request a password-reset email (redeemed on the website). Always succeeds. */
   async forgotPassword(email: string): Promise<string> {
-    const res = await accountApi.forgotPassword(email.trim());
+    const res = await authEndpoints.forgotPassword(email.trim());
     return res.message;
   },
 
   /**
-   * Change the signed-in user's password. Re-authenticates against the Jubilujah
-   * API first (using the current password) to obtain a `jv_session` — the app's
-   * sign-in uses the SSO (bearer), which doesn't set that cookie.
-   *
-   * Cross-platform note: syncing the new password to the JubileeInspire DB is a
-   * SERVER-SIDE concern — the Jubilujah backend does it inside its change-password
-   * handler (mint a JI service token → POST /admin/set-password). The mobile app
-   * must NEVER hold the `client_secret` or call JI's admin endpoints (the secret
-   * would be extractable from the binary → account-takeover). See
-   * `API docs/PASSWORD_SYNC.md`.
+   * Change the signed-in user's password (Bearer-authed). The server revokes the
+   * user's other sessions; we pass the current refresh token so this session
+   * stays alive. Cross-platform password sync to JubileeInspire is handled
+   * server-side by the change-password handler — the mobile client never touches
+   * JI's admin endpoints. See `API docs/API.md`.
    */
-  async changePassword(email: string, currentPassword: string, newPassword: string): Promise<void> {
-    let res;
-    try {
-      res = await accountApi.signin({ email, password: currentPassword });
-    } catch (e) {
-      if ((e as ApiError)?.status === 401) throw new Error('Current password is incorrect.');
-      throw e;
-    }
-    if (res.requires2FA) {
-      throw new Error('Please sign in on Jubilujah first to change your password.');
-    }
-    await accountApi.changePassword({
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await authEndpoints.changePassword({
       current_password: currentPassword,
       new_password: newPassword,
+      refreshToken: tokenStore.getRefreshToken() ?? undefined,
     });
-
-    // TEMP (disabled while verifying the 403 CSRF issue): mirror the new password
-    // to the JubileeInspire DB. Re-enable with the imports below.
-    // try {
-    //   await syncJiPassword(email, newPassword);
-    // } catch (e) {
-    //   logger.warn('JI password sync failed', e);
-    // }
   },
 
-  /**
-   * Permanently delete the user's account (irreversible). Re-authenticates against
-   * the Jubilujah API first to obtain a `jv_session` — required because the app's
-   * sign-in uses the SSO (bearer), which doesn't set that cookie.
-   */
-  async deleteAccount(email: string, password: string): Promise<void> {
-    const res = await accountApi.signin({ email, password });
-    if (res.requires2FA) {
-      throw new Error('This account needs verification before it can be deleted. Please sign in on Jubilujah first.');
-    }
-    await accountApi.deleteAccount();
-    await accountSession.clear(); // session is revoked server-side
-    await tokenStore.clear(); // server clears the cookie session; drop local tokens too
+  /** Permanently delete the signed-in user's account (Bearer-authed, irreversible). */
+  async deleteAccount(): Promise<void> {
+    await authEndpoints.deleteAccount();
+    await tokenStore.clear(); // session is revoked server-side; drop local tokens
   },
 
   /** Restore a persisted session on cold start; null if none/invalid. */
   async restoreSession(): Promise<AuthUser | null> {
     const tokens = await tokenStore.load();
-    if (tokens) {
-      try {
-        const me = await authEndpoints.me(); // 401 → interceptor refreshes transparently
-        return mapUser(me.user);
-      } catch {
-        await tokenStore.clear();
-      }
+    if (!tokens) return null;
+    try {
+      const me = await authEndpoints.me(); // 401 → interceptor refreshes transparently
+      if (me.authenticated && me.user) return mapUser(me.user);
+    } catch {
+      // fall through to clear
     }
-    // Fall back to the Jubilujah session (Bearer carrier) created by sign-up.
-    const session = await accountSession.load();
-    if (session) {
-      try {
-        const me = await accountApi.me();
-        if (me.authenticated && me.user) return mapAccountUser(me.user);
-      } catch {
-        // fall through
-      }
-      await accountSession.clear();
-    }
+    await tokenStore.clear();
     return null;
   },
 
   async signOut(): Promise<void> {
+    // Drop the session cookie first so the logout POST isn't seen as a cookie
+    // request (which would demand CSRF and 403). We authenticate via Bearer.
+    await clearSessionCookies();
     try {
-      await authEndpoints.logout();
+      await authEndpoints.logout(tokenStore.getRefreshToken() ?? undefined);
     } catch {
       // best-effort; clear locally regardless
     }
-    try {
-      await accountApi.logout(); // revoke the Jubilujah session (Bearer) too
-    } catch {
-      // best-effort
-    }
-    await accountSession.clear();
     await tokenStore.clear();
   },
 };

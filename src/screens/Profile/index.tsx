@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
-import { Screen, AppText, Button, IconButton, ConfirmDialog, PasswordInput } from '@/components/common';
+import { Screen, AppText, Button, IconButton, ConfirmDialog } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { signOut, deleteAccount, clearSession } from '@/redux';
 import type { LibraryStackParamList } from '@/navigation/types';
@@ -24,19 +24,14 @@ export const ProfileScreen: React.FC = () => {
     .toUpperCase();
   const [mode, setMode] = useState<null | 'confirm' | 'success' | 'error'>(null);
   const [deleting, setDeleting] = useState(false);
-  const [deletePassword, setDeletePassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const openDeleteConfirm = () => {
-    setDeletePassword('');
-    setMode('confirm');
-  };
+  const openDeleteConfirm = () => setMode('confirm');
 
   const confirmDelete = async () => {
-    if (!user?.email || !deletePassword) return;
     setDeleting(true);
     try {
-      await dispatch(deleteAccount({ email: user.email, password: deletePassword })).unwrap();
+      await dispatch(deleteAccount()).unwrap();
       setDeleting(false);
       setMode('success');
     } catch (e) {
@@ -109,21 +104,14 @@ export const ProfileScreen: React.FC = () => {
       <ConfirmDialog
         visible={mode === 'confirm'}
         title="Delete account?"
-        message="This permanently deletes your account and all your data. This action cannot be undone. Enter your password to confirm."
+        message="This permanently deletes your account and all your data. This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         destructive
         loading={deleting}
-        confirmDisabled={!deletePassword}
         onConfirm={confirmDelete}
         onCancel={() => setMode(null)}
-      >
-        <PasswordInput
-          value={deletePassword}
-          onChangeText={setDeletePassword}
-          placeholder="Password"
-        />
-      </ConfirmDialog>
+      />
       <ConfirmDialog
         visible={mode === 'success'}
         title="Account deleted"

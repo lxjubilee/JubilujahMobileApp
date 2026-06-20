@@ -14,21 +14,16 @@ type AppExtra = {
   useMock: boolean;
   /** Explicit source selector; takes precedence over `useMock` when set. */
   dataSource: DataSourceKind;
-  /** SSO auth API host (different service than the catalog API). */
+  /**
+   * Unified jubilujah-api host (Bearer-token auth). Owns ALL auth/account flows
+   * under `/api/auth/*`; in prod it delegates credential checks to JubileeInspire
+   * server-side, so the client never talks to JI directly. See `API docs/API.md`.
+   */
   authBaseUrl: string;
-  /** Prod-only: key for POST /api/auth/mobile/login to skip Turnstile CAPTCHA. */
-  authMobileClientKey: string;
-  /** Platform `source` sent on POST /api/auth/login — picks the user DB to auth against. */
-  authSource: string;
-  /** Service client credentials to mint a JI admin token (password sync). */
-  jiServiceClientId: string;
-  jiServiceClientSecret: string;
   /** Cloudflare Turnstile site key for the sign-in CAPTCHA (empty = CAPTCHA off). */
   turnstileSiteKey: string;
   /** Origin the Turnstile widget runs under (must be allow-listed for the site key). */
   turnstileBaseUrl: string;
-  /** Jubilujah identity API host (cookie-session based: sign-up, forgot password). */
-  accountBaseUrl: string;
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Partial<AppExtra>;
@@ -41,17 +36,9 @@ export const ENV = {
   USE_MOCK: useMock,
   // Backward-compatible: fall back to the old boolean when `dataSource` is unset.
   DATA_SOURCE: (extra.dataSource ?? (useMock ? 'mock' : 'api')) as DataSourceKind,
-  // Auth (SSO) — UAT by default; CAPTCHA is disabled there so /api/auth/login works directly.
-  AUTH_BASE_URL: extra.authBaseUrl ?? 'https://uatapi.jubileeinspire.com',
-  AUTH_MOBILE_CLIENT_KEY: extra.authMobileClientKey ?? '',
-  // Which platform's user DB /api/auth/login should authenticate against.
-  AUTH_SOURCE: extra.authSource ?? 'jubilujah',
-  // Service-to-service client creds for the JI admin password-sync (uses AUTH_BASE_URL host).
-  JI_SERVICE_CLIENT_ID: extra.jiServiceClientId ?? 'jubilujah',
-  JI_SERVICE_CLIENT_SECRET: extra.jiServiceClientSecret ?? '',
+  // Unified jubilujah-api — single host for every /api/auth/* call (Bearer).
+  API_AUTH_BASE: extra.authBaseUrl ?? 'https://api.jubilujah.com',
   // Cloudflare Turnstile (sign-in CAPTCHA). Empty disables the widget.
   TURNSTILE_SITE_KEY: extra.turnstileSiteKey ?? '',
   TURNSTILE_BASE_URL: extra.turnstileBaseUrl ?? 'https://jubilujah.com',
-  // Jubilujah identity API (cookie-session) — sign-up + forgot-password flows.
-  ACCOUNT_BASE_URL: extra.accountBaseUrl ?? 'https://api.jubilujah.com',
 } as const;

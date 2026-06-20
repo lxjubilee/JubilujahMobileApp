@@ -51,14 +51,9 @@
       "apiBaseUrl": "https://api.jubileeverse.com/v1",
       "useMock": false,
       "dataSource": "manifest",
-      "authBaseUrl": "https://api.jubileeinspire.com",
-      "authMobileClientKey": "",
-      "authSource": "jubilujah",
-      "jiServiceClientId": "jubilujah",
-      "jiServiceClientSecret": "",
+      "authBaseUrl": "https://api.jubilujah.com",
       "turnstileSiteKey": "0x4AAAAAADJah9FpwSaEzlLP",
       "turnstileBaseUrl": "https://jubileeinspire.com",
-      "accountBaseUrl": "https://api.jubilujah.com",
       "eas": {
         "projectId": "7354f6a2-75e4-4f29-9f07-7d5fda551d22"
       }

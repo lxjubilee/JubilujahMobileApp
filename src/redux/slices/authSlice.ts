@@ -11,8 +11,8 @@ interface AuthState {
   user: AuthUser | null;
   status: AuthStatus;
   error: string | null;
-  /** Set when login returned a 2FA challenge; drives the TwoFactor screen. */
-  pending2FA: { verificationGuid: string } | null;
+  /** Set when sign-in returned a 2FA challenge; drives the TwoFactor screen. */
+  pending2FA: { verificationGuid: string; email: string } | null;
   /** Set after sign-up phase 1; drives the VerifySignup screen. */
   pendingSignup: { verificationGuid: string; email: string } | null;
   /**
@@ -52,13 +52,16 @@ export const signIn = createAsyncThunk(
       .catch((e) => rejectWithValue(errMessage(e))),
 );
 
-/** Complete a 2FA challenge with the emailed/issued OTP code. */
+/** Complete a 2FA challenge with the emailed OTP code. Email + guid come from `pending2FA`. */
 export const verify2FA = createAsyncThunk(
   'auth/verify2FA',
-  (args: { code: string; verificationGuid: string; trustDevice?: boolean }, { rejectWithValue }) =>
-    authService
-      .verify2FA(args.code.trim(), args.verificationGuid, args.trustDevice ?? true)
-      .catch((e) => rejectWithValue(errMessage(e))),
+  (args: { code: string; trustDevice?: boolean }, { getState, rejectWithValue }) => {
+    const { pending2FA } = (getState() as { auth: AuthState }).auth;
+    if (!pending2FA) return rejectWithValue('Your verification session expired. Please sign in again.');
+    return authService
+      .verify2FA(pending2FA.email, args.code.trim(), pending2FA.verificationGuid, args.trustDevice ?? true)
+      .catch((e) => rejectWithValue(errMessage(e)));
+  },
 );
 
 export const signOut = createAsyncThunk('auth/signOut', () => authService.signOut());
@@ -72,7 +75,7 @@ export const requestSignup = createAsyncThunk(
       .catch((e) => rejectWithValue(errMessage(e))),
 );
 
-/** Sign-up phase 2: confirm the code → account created + logged in (cookie). */
+/** Sign-up phase 2: confirm the code → account created + tokens issued (logged in). */
 export const verifySignup = createAsyncThunk(
   'auth/verifySignup',
   (args: { verificationGuid: string; verificationCode: string }, { rejectWithValue }) =>
@@ -95,25 +98,20 @@ export const forgotPassword = createAsyncThunk(
     authService.forgotPassword(email).catch((e) => rejectWithValue(errMessage(e))),
 );
 
-/** Change the signed-in user's password (authenticated cookie session). */
+/** Change the signed-in user's password (Bearer-authed; keeps this session, revokes others). */
 export const changePassword = createAsyncThunk(
   'auth/changePassword',
-  (
-    args: { email: string; currentPassword: string; newPassword: string },
-    { rejectWithValue },
-  ) =>
+  (args: { currentPassword: string; newPassword: string }, { rejectWithValue }) =>
     authService
-      .changePassword(args.email, args.currentPassword, args.newPassword)
+      .changePassword(args.currentPassword, args.newPassword)
       .catch((e) => rejectWithValue(errMessage(e))),
 );
 
-/** Permanently delete the signed-in user's account (re-auth required), then sign out. */
+/** Permanently delete the signed-in user's account (Bearer-authed), then sign out. */
 export const deleteAccount = createAsyncThunk(
   'auth/deleteAccount',
-  (args: { email: string; password: string }, { rejectWithValue }) =>
-    authService
-      .deleteAccount(args.email, args.password)
-      .catch((e) => rejectWithValue(errMessage(e))),
+  (_: void, { rejectWithValue }) =>
+    authService.deleteAccount().catch((e) => rejectWithValue(errMessage(e))),
 );
 
 const authSlice = createSlice({
@@ -161,7 +159,11 @@ const authSlice = createSlice({
       .addCase(signIn.fulfilled, (state, action) => {
         if (action.payload.kind === '2fa') {
           state.status = 'idle';
-          state.pending2FA = { verificationGuid: action.payload.verificationGuid };
+          // verify-login needs the email; carry it from the sign-in args.
+          state.pending2FA = {
+            verificationGuid: action.payload.verificationGuid,
+            email: action.meta.arg.email.trim(),
+          };
         } else {
           state.user = action.payload.user;
           state.status = 'authenticated';

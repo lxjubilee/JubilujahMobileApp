@@ -59,15 +59,24 @@ export const tokenStore = {
     }
   },
 
-  /** Update just the access token (after a refresh). */
-  async updateAccessToken(accessToken: string, expiresAt?: string): Promise<void> {
-    if (memo) memo = { ...memo, accessToken, expiresAt: expiresAt ?? memo.expiresAt };
+  /**
+   * Persist a rotated token set after a refresh. The unified API rotates the
+   * refresh token on every refresh, so we must store the new one too — keeping
+   * the old refresh token would break the next refresh.
+   */
+  async updateTokens(accessToken: string, refreshToken: string, expiresAt?: string): Promise<void> {
+    memo = { accessToken, refreshToken, expiresAt: expiresAt ?? memo?.expiresAt };
     setAccessToken(accessToken);
     try {
-      await SecureStore.setItemAsync(KEY_ACCESS, accessToken);
-      if (expiresAt) await SecureStore.setItemAsync(KEY_EXPIRES, expiresAt);
+      await Promise.all([
+        SecureStore.setItemAsync(KEY_ACCESS, accessToken),
+        SecureStore.setItemAsync(KEY_REFRESH, refreshToken),
+        expiresAt
+          ? SecureStore.setItemAsync(KEY_EXPIRES, expiresAt)
+          : Promise.resolve(),
+      ]);
     } catch (e) {
-      logger.warn('tokenStore.updateAccessToken failed', e);
+      logger.warn('tokenStore.updateTokens failed', e);
     }
   },
 

@@ -38,9 +38,8 @@ export const TwoFactorScreen: React.FC = () => {
 
   const onVerify = () => {
     if (!canSubmit || !pending2FA) return;
-    void dispatch(
-      verify2FA({ code, verificationGuid: pending2FA.verificationGuid, trustDevice }),
-    );
+    // email + verificationGuid come from the slice's pending2FA (set at sign-in).
+    void dispatch(verify2FA({ code, trustDevice }));
   };
 
   return (

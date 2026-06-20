@@ -11,14 +11,12 @@ type Nav = NativeStackNavigationProp<LibraryStackParamList>;
 const RED = '#E50914';
 
 /**
- * Change the signed-in user's password. Requires the cookie session created by
- * the Jubilujah account API (sign-up); the call keeps the current session and
- * logs out other devices.
+ * Change the signed-in user's password. Authenticated by the current Bearer
+ * session; the server keeps this session alive and signs out other devices.
  */
 export const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
-  const email = useAppSelector((s) => s.auth.user?.email ?? '');
 
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -36,7 +34,7 @@ export const ChangePasswordScreen: React.FC = () => {
     setError(null);
     try {
       await dispatch(
-        changePassword({ email, currentPassword: current, newPassword: next }),
+        changePassword({ currentPassword: current, newPassword: next }),
       ).unwrap();
       setDone(true);
     } catch (e) {

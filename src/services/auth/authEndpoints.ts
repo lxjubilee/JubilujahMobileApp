@@ -1,38 +1,71 @@
 import { authClient } from './authClient';
 import {
-  LoginRequest,
-  LoginResponseDTO,
-  MeDTO,
-  RefreshDTO,
+  ChangePasswordRequest,
+  ChangePasswordResponseDTO,
+  ForgotPasswordResponseDTO,
+  MeResponseDTO,
+  RefreshResponseDTO,
+  ResendResponseDTO,
+  SigninRequest,
+  SigninResponseDTO,
+  SignupRequest,
+  SignupResponseDTO,
+  AuthSuccessDTO,
   VerifyLoginRequest,
-  VerifyLoginDTO,
+  VerifySignupRequest,
 } from './authDto';
 
 /**
- * Typed SSO endpoint functions — the only place auth URLs are declared.
- * Sign-up endpoints are declared but intentionally not implemented yet (the
- * backend contract is still pending); calling them throws a clear error so the
- * UI can wire to a stable surface now.
+ * Typed endpoint functions for the unified jubilujah-api (`API docs/API.md`).
+ * The only place auth URLs are declared. Every call goes through `authClient`
+ * (Bearer auth + transparent 401 refresh).
  */
 export const authEndpoints = {
-  login: (body: LoginRequest) =>
-    authClient.post<LoginResponseDTO>('/api/auth/login', body).then((r) => r.data),
+  // --- Sign in / 2FA ---
+  signin: (body: SigninRequest) =>
+    authClient.post<SigninResponseDTO>('/api/auth/signin', body).then((r) => r.data),
 
   verifyLogin: (body: VerifyLoginRequest) =>
-    authClient.post<VerifyLoginDTO>('/api/auth/verify-login', body).then((r) => r.data),
+    authClient.post<AuthSuccessDTO>('/api/auth/verify-login', body).then((r) => r.data),
 
-  me: () => authClient.get<MeDTO>('/api/auth/me').then((r) => r.data),
+  sendLoginVerification: (email: string, verificationGuid: string) =>
+    authClient
+      .post<ResendResponseDTO>('/api/auth/send-login-verification', { email, verificationGuid })
+      .then((r) => r.data),
 
+  // --- Sign up ---
+  signup: (body: SignupRequest) =>
+    authClient.post<SignupResponseDTO>('/api/auth/signup', body).then((r) => r.data),
+
+  verifySignup: (body: VerifySignupRequest) =>
+    authClient.post<AuthSuccessDTO>('/api/auth/verify-signup', body).then((r) => r.data),
+
+  sendSignupVerification: (verificationGuid: string) =>
+    authClient
+      .post<ResendResponseDTO>('/api/auth/send-signup-verification', { verificationGuid })
+      .then((r) => r.data),
+
+  // --- Session / tokens ---
   refresh: (refreshToken: string) =>
-    authClient.post<RefreshDTO>('/api/auth/refresh', { refreshToken }).then((r) => r.data),
+    authClient.post<RefreshResponseDTO>('/api/auth/refresh', { refreshToken }).then((r) => r.data),
 
-  logout: () => authClient.post('/api/auth/logout').then((r) => r.data),
+  me: () => authClient.get<MeResponseDTO>('/api/auth/me').then((r) => r.data),
 
-  // --- Sign Up (UI built, API deferred until the backend contract is known) ---
-  signup: (_body: { email: string; password: string; displayName?: string }): Promise<never> => {
-    throw new Error('Sign up is coming soon.');
-  },
-  verifySignup: (_body: { email: string; code: string }): Promise<never> => {
-    throw new Error('Sign up is coming soon.');
-  },
+  logout: (refreshToken?: string) =>
+    authClient.post('/api/auth/logout', { refreshToken }).then((r) => r.data),
+
+  logoutAll: () => authClient.post('/api/auth/logout-all').then((r) => r.data),
+
+  // --- Password / account ---
+  forgotPassword: (email: string) =>
+    authClient
+      .post<ForgotPasswordResponseDTO>('/api/auth/forgot-password', { email })
+      .then((r) => r.data),
+
+  changePassword: (body: ChangePasswordRequest) =>
+    authClient
+      .post<ChangePasswordResponseDTO>('/api/auth/change-password', body)
+      .then((r) => r.data),
+
+  deleteAccount: () => authClient.delete('/api/auth/account').then((r) => r.data),
 };
