@@ -16,6 +16,7 @@ export {
   completeDownload,
   removeDownload,
 } from './slices/downloadsSlice';
+export { markArtworkMissing } from './slices/artworkSlice';
 export {
   setQueue,
   setPlayOrder,

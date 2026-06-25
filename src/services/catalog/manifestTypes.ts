@@ -42,6 +42,12 @@ export interface ManifestAlbum {
   /** 1 when the album has playable audio, 0 otherwise. */
   playable: number;
   trackCount: number;
+  /**
+   * True when the album's cover PNG (`<path>/artwork/<code>.png`) is published
+   * to the CDN. Absent ⇒ assume present (legacy manifests stay fully visible);
+   * only an explicit `false` hides the album. See manifestMappers.hasArtwork().
+   */
+  hasArtwork?: boolean;
   tracks: ManifestTrack[];
 }
 

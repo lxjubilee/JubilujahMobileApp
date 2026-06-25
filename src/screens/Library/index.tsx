@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { Screen, AppText, Placeholder, ProfileButton } from '@/components/common';
 import { AlbumCard } from '@/components/cards';
-import { useAppSelector } from '@/hooks';
+import { useAppSelector, useVisibleAlbums } from '@/hooks';
 import type { LibraryStackParamList, RootStackParamList } from '@/navigation/types';
 
 // Library can push within its own stack (Profile) and to root details.
@@ -20,7 +20,8 @@ export const LibraryScreen: React.FC = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
 
-  const savedAlbums = useAppSelector((s) => s.library.savedAlbums);
+  const saved = useAppSelector((s) => s.library.savedAlbums);
+  const savedAlbums = useVisibleAlbums(saved);
   const likedCount = useAppSelector((s) => s.library.favoriteTrackIds.length);
   const followCount = useAppSelector((s) => s.library.followedArtistIds.length);
 

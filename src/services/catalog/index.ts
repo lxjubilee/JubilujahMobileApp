@@ -1,5 +1,5 @@
 export { getManifest, resetManifestCache, onCatalogUpdated } from './manifestClient';
-export { getCatalogIndex, invalidateCatalogIndex } from './catalogIndex';
+export { getCatalogIndex, peekCatalogIndex, invalidateCatalogIndex } from './catalogIndex';
 export { buildCatalogIndex } from './manifestMappers';
 export type { CatalogIndex } from './manifestMappers';
 export type {

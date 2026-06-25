@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen, AppText, Loader, IconButton } from '@/components/common';
 import { AlbumCard } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
+import { useVisibleAlbums } from '@/hooks';
 import { ArtistRepository } from '@/repositories';
 import { Album } from '@/types';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
@@ -20,6 +21,7 @@ export const AlbumListScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
+  const visibleAlbums = useVisibleAlbums(albums);
 
   useEffect(() => {
     let active = true;
@@ -47,7 +49,7 @@ export const AlbumListScreen: React.FC = () => {
   return (
     <Screen>
       <FlatList
-        data={albums}
+        data={visibleAlbums}
         keyExtractor={(a) => a.id}
         numColumns={2}
         columnWrapperStyle={styles.column}

@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Screen, AppText, Loader } from '@/components/common';
 import { AlbumCard } from '@/components/cards';
+import { useVisibleAlbums } from '@/hooks';
 import { AlbumRepository } from '@/repositories';
 import { Album } from '@/types';
 import type { RootStackParamList } from '@/navigation/types';
@@ -19,6 +20,7 @@ export const BrowseScreen: React.FC = () => {
   const { t } = useTranslation();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
+  const visibleAlbums = useVisibleAlbums(albums);
 
   useEffect(() => {
     let active = true;
@@ -47,7 +49,7 @@ export const BrowseScreen: React.FC = () => {
   return (
     <Screen>
       <FlatList
-        data={albums}
+        data={visibleAlbums}
         keyExtractor={(a) => a.id}
         numColumns={2}
         columnWrapperStyle={styles.column}

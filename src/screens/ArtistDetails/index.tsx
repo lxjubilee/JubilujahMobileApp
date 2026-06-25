@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Screen, Loader, AppText, Artwork, Button, IconButton } from '@/components/common';
 import { AlbumCard, TrackRow } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
-import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
+import { useAppDispatch, useAppSelector, usePlayer, useVisibleAlbums } from '@/hooks';
 import { toggleFollowArtist } from '@/redux';
 import { ArtistRepository } from '@/repositories';
 import { Album, Artist, Track } from '@/types';
@@ -29,6 +29,7 @@ export const ArtistDetailsScreen: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [topTracks, setTopTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
+  const visibleAlbums = useVisibleAlbums(albums);
 
   const following = useAppSelector((s) => s.library.followedArtistIds.includes(params.artistId));
 
@@ -132,7 +133,7 @@ export const ArtistDetailsScreen: React.FC = () => {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={albums}
+          data={visibleAlbums}
           keyExtractor={(a) => a.id}
           contentContainerStyle={styles.albumRow}
           ItemSeparatorComponent={() => <View style={styles.sep} />}

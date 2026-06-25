@@ -14,7 +14,9 @@ import {
  * Conventions (all relative paths are resolved + URL-encoded by cdnUrl()):
  *  - audio:  `music/<track.url>`
  *  - cover:  `music/<album.path>/artwork/<album.code>.png`
- *            (not yet published to the CDN — renders a placeholder until it is)
+ *
+ * Albums whose cover isn't published (`hasArtwork === false`) are dropped here,
+ * so the lookup structures only ever contain items with real artwork.
  */
 
 const MAX_RAIL_ITEMS = 20;
@@ -34,6 +36,14 @@ const coverPath = (album: ManifestAlbum): string =>
 
 const isPlayable = (album: ManifestAlbum): boolean =>
   album.playable === 1 || album.tracks.some((t) => t.audio);
+
+/**
+ * Whether the album's cover is published to the CDN. Albums without artwork are
+ * filtered out of the catalog index entirely (see buildCatalogIndex), so they
+ * never reach the UI. Default is visible: only an explicit `hasArtwork === false`
+ * hides an album, so legacy manifests (no flag) keep showing everything.
+ */
+const hasArtwork = (album: ManifestAlbum): boolean => album.hasArtwork !== false;
 
 function buildTrack(
   t: ManifestAlbum['tracks'][number],
@@ -82,13 +92,17 @@ function buildAlbum(
   };
 }
 
-function buildArtist(artist: ManifestArtist, category: ManifestCategory): Artist {
-  const firstAlbum = artist.albums[0];
+function buildArtist(
+  artist: ManifestArtist,
+  category: ManifestCategory,
+  imageAlbum: ManifestAlbum | undefined,
+): Artist {
   return {
     id: artist.slug,
     name: artist.name,
-    // No artist image in the manifest; fall back to a cover (placeholder until published).
-    image: firstAlbum ? coverPath(firstAlbum) : '',
+    // No artist image in the manifest; fall back to a cover. `imageAlbum` is the
+    // artist's first *artworked* album, so this always resolves to a real cover.
+    image: imageAlbum ? coverPath(imageAlbum) : '',
     bio: artist.role,
     genres: [category.label],
   };
@@ -126,7 +140,12 @@ export function buildCatalogIndex(manifest: CatalogManifest): CatalogIndex {
 
   for (const category of manifest.categories) {
     for (const artist of category.artists) {
-      const domainArtist = buildArtist(artist, category);
+      // Only albums whose cover is published are surfaced. An artist with zero
+      // artworked albums is hidden entirely; its image comes from the first one.
+      const artworked = artist.albums.filter(hasArtwork);
+      if (artworked.length === 0) continue;
+
+      const domainArtist = buildArtist(artist, category, artworked[0]);
       artists.push(domainArtist);
       artistsById.set(domainArtist.id, domainArtist);
 
@@ -135,7 +154,7 @@ export function buildCatalogIndex(manifest: CatalogManifest): CatalogIndex {
       let artistHasPlayable = false;
       let firstPlayableCode: string | undefined;
 
-      for (const album of artist.albums) {
+      for (const album of artworked) {
         const light = buildAlbum(album, artist, category, false);
         const full = buildAlbum(album, artist, category, true);
         albums.push(light);
@@ -190,12 +209,15 @@ export function buildCatalogIndex(manifest: CatalogManifest): CatalogIndex {
   // featured artists' albums (in featured order). Capped at HERO_COUNT.
   const HERO_COUNT = 5;
   const HERO_PIN_SLUG = 'jubilee-inspire';
+  /** Artists deliberately kept out of the hero carousel. */
+  const HERO_EXCLUDE_SLUGS = ['gabriel-inspire'];
   const heroAlbumIds: string[] = [];
   const pinCode = heroByArtist.get(HERO_PIN_SLUG);
   if (pinCode) heroAlbumIds.push(pinCode);
   for (const slug of featuredArtistIds) {
     if (heroAlbumIds.length >= HERO_COUNT) break;
     if (slug === HERO_PIN_SLUG) continue;
+    if (HERO_EXCLUDE_SLUGS.includes(slug)) continue;
     const code = heroByArtist.get(slug);
     if (code && !heroAlbumIds.includes(code)) heroAlbumIds.push(code);
   }

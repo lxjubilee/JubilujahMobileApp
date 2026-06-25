@@ -7,7 +7,15 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { Screen, AppText, IconButton } from '@/components/common';
 import { AlbumCard, ArtistCard, TrackRow } from '@/components/cards';
-import { useAppDispatch, useAppSelector, useDebounce, usePlayer } from '@/hooks';
+import {
+  useAppDispatch,
+  useAppSelector,
+  useDebounce,
+  usePlayer,
+  useVisibleAlbums,
+  useVisibleArtists,
+  useVisibleTracks,
+} from '@/hooks';
 import { runSearch, setQuery, addRecentSearch, clearRecentSearches } from '@/redux';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -29,8 +37,13 @@ export const SearchScreen: React.FC = () => {
     if (debounced.trim()) dispatch(runSearch(debounced.trim()));
   }, [debounced, dispatch]);
 
+  // Hide results whose artwork is missing (same rule as everywhere else).
+  const albums = useVisibleAlbums(results.albums);
+  const artists = useVisibleArtists(results.artists);
+  const tracks = useVisibleTracks(results.tracks);
+
   const hasQuery = input.trim().length > 0;
-  const hasResults = results.albums.length || results.artists.length || results.tracks.length;
+  const hasResults = albums.length || artists.length || tracks.length;
 
   return (
     <Screen>
@@ -84,10 +97,10 @@ export const SearchScreen: React.FC = () => {
           </AppText>
         ) : (
           <>
-            {results.artists.length ? (
+            {artists.length ? (
               <Section title={t('search.sectionArtists')}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-                  {results.artists.map((a) => (
+                  {artists.map((a) => (
                     <View key={a.id} style={styles.hItem}>
                       <ArtistCard artist={a} onPress={(ar) => navigation.navigate('ArtistDetails', { artistId: ar.id })} />
                     </View>
@@ -96,10 +109,10 @@ export const SearchScreen: React.FC = () => {
               </Section>
             ) : null}
 
-            {results.albums.length ? (
+            {albums.length ? (
               <Section title={t('search.sectionAlbums')}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
-                  {results.albums.map((al) => (
+                  {albums.map((al) => (
                     <View key={al.id} style={styles.hItem}>
                       <AlbumCard album={al} onPress={(x) => navigation.navigate('AlbumDetails', { albumId: x.id })} />
                     </View>
@@ -108,10 +121,10 @@ export const SearchScreen: React.FC = () => {
               </Section>
             ) : null}
 
-            {results.tracks.length ? (
+            {tracks.length ? (
               <Section title={t('search.sectionTracks')}>
                 <View style={styles.tracks}>
-                  {results.tracks.map((track) => (
+                  {tracks.map((track) => (
                     <TrackRow key={track.id} track={track} onPress={() => playTracks([track], 0)} />
                   ))}
                 </View>

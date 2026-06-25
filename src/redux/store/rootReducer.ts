@@ -8,6 +8,7 @@ import libraryReducer from '../slices/librarySlice';
 import downloadsReducer from '../slices/downloadsSlice';
 import playerReducer from '../slices/playerSlice';
 import authReducer from '../slices/authSlice';
+import artworkReducer from '../slices/artworkSlice';
 
 /**
  * Per-slice persistence. We persist only durable data:
@@ -42,6 +43,13 @@ const persistedDownloads = persistReducer(
   downloadsReducer,
 );
 
+// Persisted so covers known-missing from a prior launch are filtered out
+// immediately, without flashing in and then disappearing.
+const persistedArtwork = persistReducer(
+  { key: 'artwork', storage: AsyncStorage },
+  artworkReducer,
+);
+
 export const rootReducer = combineReducers({
   home: persistedHome,
   search: persistedSearch,
@@ -49,6 +57,7 @@ export const rootReducer = combineReducers({
   downloads: persistedDownloads,
   player: persistedPlayer,
   auth: authReducer,
+  artwork: persistedArtwork,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Screen, Loader, AppText } from '@/components/common';
-import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
+import { useAppDispatch, useAppSelector, usePlayer, useVisibleAlbums, useVisibleRails } from '@/hooks';
 import { fetchHomeFeed } from '@/redux';
 import { AlbumRepository } from '@/repositories';
 import { Album, Artist, ResolvedRail } from '@/types';
@@ -31,17 +31,22 @@ export const HomeScreen: React.FC = () => {
   const { playTracks } = usePlayer();
   const { feed, status } = useAppSelector((s) => s.home);
   const [filter, setFilter] = useState<HomeFilter>(HOME_FILTER_ALL);
+  // Hero albums minus any whose cover is missing.
+  const heroes = useVisibleAlbums(feed?.heroes ?? []);
+  // Rails with artwork-less items removed and emptied rails dropped — so no
+  // blank gap is left where an all-missing rail used to be.
+  const railsWithArt = useVisibleRails(feed?.rails ?? []);
 
-  // Chips = "Home" + each distinct category present in the feed (in feed order).
+  // Chips = "Home" + each distinct category that still has content (in order).
   const filters = useMemo<HomeFilter[]>(() => {
     const labels: string[] = [];
-    for (const rail of feed?.rails ?? []) {
+    for (const rail of railsWithArt) {
       if (rail.categoryLabel && !labels.includes(rail.categoryLabel)) {
         labels.push(rail.categoryLabel);
       }
     }
     return [HOME_FILTER_ALL, ...labels];
-  }, [feed]);
+  }, [railsWithArt]);
 
   // Reset to "Home" if the selected category vanishes after a feed refresh.
   useEffect(() => {
@@ -51,10 +56,10 @@ export const HomeScreen: React.FC = () => {
   // "Home" shows every rail; any other chip shows only rails in that category.
   const visibleRails = useMemo(
     () =>
-      (feed?.rails ?? []).filter(
+      railsWithArt.filter(
         (rail) => filter === HOME_FILTER_ALL || rail.categoryLabel === filter,
       ),
-    [feed, filter],
+    [railsWithArt, filter],
   );
 
   // Animated state for the collapsing header (chips) and its solid background.
@@ -174,8 +179,8 @@ export const HomeScreen: React.FC = () => {
           />
         }
       >
-        {feed?.heroes?.length ? (
-          <HeroCarousel albums={feed.heroes} onPlay={playAlbum} onOpen={openAlbum} />
+        {heroes.length ? (
+          <HeroCarousel albums={heroes} onPlay={playAlbum} onOpen={openAlbum} />
         ) : null}
 
         {visibleRails.map((rail) => (
