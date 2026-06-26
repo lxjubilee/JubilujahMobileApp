@@ -15,8 +15,9 @@ import {
  *  - audio:  `music/<track.url>`
  *  - cover:  `music/<album.path>/artwork/<album.code>.png`
  *
- * Albums whose cover isn't published (`hasArtwork === false`) are dropped here,
- * so the lookup structures only ever contain items with real artwork.
+ * Albums whose cover isn't published (`hasArtwork === false`) or that have no
+ * playable track (`isPlayable === false`) are dropped here, so the lookup
+ * structures only ever contain items with real artwork and at least one track.
  */
 
 const MAX_RAIL_ITEMS = 20;
@@ -38,10 +39,11 @@ const isPlayable = (album: ManifestAlbum): boolean =>
   album.playable === 1 || album.tracks.some((t) => t.audio);
 
 /**
- * Whether the album's cover is published to the CDN. Albums without artwork are
- * filtered out of the catalog index entirely (see buildCatalogIndex), so they
- * never reach the UI. Default is visible: only an explicit `hasArtwork === false`
- * hides an album, so legacy manifests (no flag) keep showing everything.
+ * Whether the album's cover is published to the CDN. Albums without artwork (or
+ * without a playable track — see isPlayable) are filtered out of the catalog
+ * index entirely (see buildCatalogIndex), so they never reach the UI. Default is
+ * visible: only an explicit `hasArtwork === false` hides an album, so legacy
+ * manifests (no flag) keep showing everything that has tracks.
  */
 const hasArtwork = (album: ManifestAlbum): boolean => album.hasArtwork !== false;
 
@@ -140,12 +142,13 @@ export function buildCatalogIndex(manifest: CatalogManifest): CatalogIndex {
 
   for (const category of manifest.categories) {
     for (const artist of category.artists) {
-      // Only albums whose cover is published are surfaced. An artist with zero
-      // artworked albums is hidden entirely; its image comes from the first one.
-      const artworked = artist.albums.filter(hasArtwork);
-      if (artworked.length === 0) continue;
+      // Only albums with a published cover AND at least one playable track are
+      // surfaced. An artist left with zero such albums is hidden entirely; its
+      // image comes from the first one.
+      const visibleAlbums = artist.albums.filter((a) => hasArtwork(a) && isPlayable(a));
+      if (visibleAlbums.length === 0) continue;
 
-      const domainArtist = buildArtist(artist, category, artworked[0]);
+      const domainArtist = buildArtist(artist, category, visibleAlbums[0]);
       artists.push(domainArtist);
       artistsById.set(domainArtist.id, domainArtist);
 
@@ -154,7 +157,7 @@ export function buildCatalogIndex(manifest: CatalogManifest): CatalogIndex {
       let artistHasPlayable = false;
       let firstPlayableCode: string | undefined;
 
-      for (const album of artworked) {
+      for (const album of visibleAlbums) {
         const light = buildAlbum(album, artist, category, false);
         const full = buildAlbum(album, artist, category, true);
         albums.push(light);

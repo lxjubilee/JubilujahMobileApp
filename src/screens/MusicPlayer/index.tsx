@@ -159,7 +159,15 @@ export const MusicPlayerScreen: React.FC = () => {
             {isBuffering ? (
               <ActivityIndicator size="small" color="#000" />
             ) : (
-              <IconButton name={isPlaying ? 'pause' : 'play'} size={34} color="#000" onPress={toggle} />
+              <IconButton
+                name={isPlaying ? 'pause' : 'play'}
+                size={34}
+                color="#000"
+                onPress={toggle}
+                // Optically center the play triangle (its mass sits left of its
+                // bounding box); pause is symmetric and needs no nudge.
+                style={isPlaying ? undefined : { marginLeft: 5 }}
+              />
             )}
           </Pressable>
           <IconButton name="play-skip-forward" size={34} onPress={next} />
