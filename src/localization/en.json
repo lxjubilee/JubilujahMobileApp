@@ -176,6 +176,7 @@
     "create": "Create",
     "save": "Save",
     "rename": "Rename playlist",
+    "reorder": "Reorder",
     "delete": "Delete playlist",
     "deleteConfirm": "Delete \"{{title}}\"? This can't be undone.",
     "addSongs": "Add songs",

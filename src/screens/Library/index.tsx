@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Dimensions, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
@@ -9,8 +9,7 @@ import { Screen, AppText, Artwork, IconButton, Placeholder, ProfileButton } from
 import { AlbumCard } from '@/components/cards';
 import { PlaylistNameDialog } from '@/components/playlists';
 import { useAppDispatch, useAppSelector, useVisibleAlbums } from '@/hooks';
-import { createPlaylist } from '@/redux';
-import { newId } from '@/utils';
+import { createPlaylist, fetchPlaylists } from '@/redux';
 import type { LibraryStackParamList, RootStackParamList } from '@/navigation/types';
 
 // Library can push within its own stack (Profile) and to root details.
@@ -29,18 +28,30 @@ export const LibraryScreen: React.FC = () => {
   const savedAlbums = useVisibleAlbums(saved, { filterByLanguage: false });
   const likedCount = useAppSelector((s) => s.library.favoriteTrackIds.length);
   const followCount = useAppSelector((s) => s.library.followedArtistIds.length);
-  const playlists = useAppSelector((s) => s.library.playlists);
+  const summaries = useAppSelector((s) => s.playlists.summaries);
+  // Hide the default "My Favorites" playlist (matches web; mobile has Liked Songs).
+  const playlists = useMemo(() => summaries.filter((p) => !p.isDefault), [summaries]);
 
   const [creating, setCreating] = useState(false);
 
-  const onCreate = (title: string) => {
-    const id = newId('pl');
-    dispatch(createPlaylist({ id, title }));
+  // Refresh the server playlists each time the Library tab gains focus.
+  useFocusEffect(
+    useCallback(() => {
+      void dispatch(fetchPlaylists());
+    }, [dispatch]),
+  );
+
+  const onCreate = (name: string) => {
     setCreating(false);
-    // Wait for the dialog's modal to finish dismissing before navigating —
-    // otherwise its window lingers over the new screen and blocks all touches
-    // (the screen looks frozen). 350ms covers the fade-out animation.
-    setTimeout(() => navigation.navigate('PlaylistDetails', { playlistId: id }), 350);
+    void dispatch(createPlaylist({ name }))
+      .unwrap()
+      .then((summary) => {
+        // Wait for the dialog's modal to finish dismissing before navigating —
+        // otherwise its window lingers over the new screen and blocks all touches
+        // (the screen looks frozen). 350ms covers the fade-out animation.
+        setTimeout(() => navigation.navigate('PlaylistDetails', { playlistId: summary.id }), 350);
+      })
+      .catch(() => undefined);
   };
 
   const listHeader = (
@@ -73,13 +84,13 @@ export const LibraryScreen: React.FC = () => {
             style={({ pressed }) => [styles.plRow, { opacity: pressed ? 0.7 : 1 }]}
             onPress={() => navigation.navigate('PlaylistDetails', { playlistId: pl.id })}
           >
-            <Artwork uri={pl.cover} style={[styles.plArt, { borderRadius: theme.radius.sm }]} iconSize={20} />
+            <Artwork uri={pl.cover ?? ''} style={[styles.plArt, { borderRadius: theme.radius.sm }]} iconSize={20} />
             <View style={styles.plMeta}>
               <AppText variant="h3" numberOfLines={1}>
-                {pl.title}
+                {pl.name}
               </AppText>
               <AppText variant="bodySm" color="textMuted">
-                {t('playlist.songCount', { count: pl.trackIds.length })}
+                {t('playlist.songCount', { count: pl.itemCount })}
               </AppText>
             </View>
             <Ionicons name="chevron-forward" size={20} color={theme.colors.iconMuted} />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { Screen, AppText, Artwork, IconButton } from '@/components/common';
 import { useTheme } from '@/context';
 import { useAppDispatch, useAppSelector, useDebounce, useVisibleTracks } from '@/hooks';
-import { addTrackToPlaylist, removeTrackFromPlaylist } from '@/redux';
+import { addTrackToPlaylist, fetchPlaylistDetail, removeItemFromPlaylist } from '@/redux';
+import { trackSongUuid } from '@/services/playlists';
 import { SearchRepository } from '@/repositories';
 import { Track } from '@/types';
 import type { RootStackScreenProps } from '@/navigation/types';
@@ -24,14 +25,22 @@ export const PlaylistAddSongsScreen: React.FC = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
 
-  const playlist = useAppSelector((s) =>
-    s.library.playlists.find((p) => p.id === params.playlistId),
-  );
-  const trackIds = playlist?.trackIds ?? [];
+  const detail = useAppSelector((s) => s.playlists.byId[params.playlistId]);
+  // song uuid -> playlist item, so we can show membership and remove by item id.
+  const itemBySong = useMemo(() => {
+    const m = new Map<string, { id: string }>();
+    (detail?.items ?? []).forEach((it) => m.set(it.songId, { id: it.id }));
+    return m;
+  }, [detail]);
 
   const [input, setInput] = useState('');
   const debounced = useDebounce(input, 350);
   const [results, setResults] = useState<Track[]>([]);
+
+  // Ensure the playlist's items are loaded so the add/remove state is accurate.
+  useEffect(() => {
+    void dispatch(fetchPlaylistDetail(params.playlistId));
+  }, [dispatch, params.playlistId]);
 
   useEffect(() => {
     const q = debounced.trim();
@@ -51,12 +60,15 @@ export const PlaylistAddSongsScreen: React.FC = () => {
   const tracks = useVisibleTracks(results);
 
   const toggle = (track: Track) => {
-    if (trackIds.includes(track.id)) {
-      dispatch(removeTrackFromPlaylist({ playlistId: params.playlistId, trackId: track.id }));
-    } else {
-      dispatch(
-        addTrackToPlaylist({ playlistId: params.playlistId, trackId: track.id, artwork: track.artwork }),
+    const songId = trackSongUuid(track);
+    if (!songId) return;
+    const existing = itemBySong.get(songId);
+    if (existing) {
+      void dispatch(
+        removeItemFromPlaylist({ playlistId: params.playlistId, itemId: existing.id, songId }),
       );
+    } else {
+      void dispatch(addTrackToPlaylist({ playlistId: params.playlistId, track }));
     }
   };
 
@@ -94,7 +106,8 @@ export const PlaylistAddSongsScreen: React.FC = () => {
           </AppText>
         ) : (
           tracks.map((track) => {
-            const added = trackIds.includes(track.id);
+            const sid = trackSongUuid(track);
+            const added = sid != null && itemBySong.has(sid);
             return (
               <Pressable
                 key={track.id}

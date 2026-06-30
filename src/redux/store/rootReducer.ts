@@ -5,6 +5,7 @@ import { persistReducer } from 'redux-persist';
 import homeReducer from '../slices/homeSlice';
 import searchReducer from '../slices/searchSlice';
 import libraryReducer from '../slices/librarySlice';
+import playlistsReducer from '../slices/playlistsSlice';
 import downloadsReducer from '../slices/downloadsSlice';
 import playerReducer from '../slices/playerSlice';
 import authReducer from '../slices/authSlice';
@@ -62,6 +63,8 @@ export const rootReducer = combineReducers({
   home: persistedHome,
   search: persistedSearch,
   library: persistedLibrary,
+  // Playlists are server-backed (/api/me/playlists) — fetched on demand, not persisted.
+  playlists: playlistsReducer,
   downloads: persistedDownloads,
   player: persistedPlayer,
   auth: authReducer,

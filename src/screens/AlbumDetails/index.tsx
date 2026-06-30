@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,7 +26,7 @@ export const AlbumDetailsScreen: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
-  const { openTrackOptions } = usePlaylistMenu();
+  const { openTrackOptions, addAlbumToPlaylist } = usePlaylistMenu();
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
@@ -123,6 +124,16 @@ export const AlbumDetailsScreen: React.FC = () => {
               onPress={() => dispatch(toggleSavedAlbum(album))}
             />
             <IconButton name="share-outline" size={26} onPress={onShare} style={styles.share} />
+            <Pressable
+              onPress={() => addAlbumToPlaylist(tracks)}
+              hitSlop={10}
+              disabled={!tracks.length}
+              style={[styles.share, { opacity: tracks.length ? 1 : 0.4 }]}
+              accessibilityRole="button"
+              accessibilityLabel={t('playlist.addToPlaylist')}
+            >
+              <MaterialCommunityIcons name="playlist-plus" size={28} color="#FFFFFF" />
+            </Pressable>
           </View>
           <View style={styles.actionsRight}>
             <IconButton name="shuffle" size={26} onPress={onShuffle} style={styles.dl} />

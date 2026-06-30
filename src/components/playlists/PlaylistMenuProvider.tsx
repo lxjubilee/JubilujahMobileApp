@@ -1,9 +1,15 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Track } from '@/types';
 import { useAppDispatch, useAppSelector } from '@/hooks';
-import { addTrackToPlaylist, createPlaylist, toggleFavoriteTrack } from '@/redux';
-import { newId } from '@/utils';
+import {
+  addAlbumToPlaylist,
+  addTrackToPlaylist,
+  createPlaylist,
+  fetchMembership,
+  fetchPlaylists,
+  toggleFavoriteTrack,
+} from '@/redux';
 import { TrackOptionsModal, TrackOption } from '@/components/modals';
 import { PlaylistPickerSheet } from './PlaylistPickerSheet';
 import { PlaylistNameDialog } from './PlaylistNameDialog';
@@ -11,6 +17,8 @@ import { PlaylistNameDialog } from './PlaylistNameDialog';
 interface PlaylistMenu {
   /** Open the "add this track to a playlist" picker directly. */
   addToPlaylist: (track: Track) => void;
+  /** Open the picker to add a whole album (all its tracks) to a playlist. */
+  addAlbumToPlaylist: (tracks: Track[]) => void;
   /** Open the generic track "⋮" options sheet (Like / Add to playlist). */
   openTrackOptions: (track: Track) => void;
 }
@@ -31,19 +39,46 @@ export function usePlaylistMenu(): PlaylistMenu {
 export const PlaylistMenuProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const playlists = useAppSelector((s) => s.library.playlists);
+  const userId = useAppSelector((s) => s.auth.user?.id);
+  const playlists = useAppSelector((s) => s.playlists.summaries);
   const favoriteIds = useAppSelector((s) => s.library.favoriteTrackIds);
 
-  const [optionsTrack, setOptionsTrack] = useState<Track | null>(null);
-  const [pickerTrack, setPickerTrack] = useState<Track | null>(null);
-  const [namingTrack, setNamingTrack] = useState<Track | null>(null);
+  // Load the user's playlists (+ membership) once signed in, so the "add to
+  // playlist" picker is ready from any track list without visiting Library.
+  useEffect(() => {
+    if (userId) {
+      void dispatch(fetchPlaylists());
+      void dispatch(fetchMembership());
+    }
+  }, [userId, dispatch]);
 
-  const addToPlaylist = useCallback((track: Track) => setPickerTrack(track), []);
+  // The default "My Favorites" playlist is hidden from pickers (matches web).
+  const pickable = useMemo(() => playlists.filter((p) => !p.isDefault), [playlists]);
+
+  const [optionsTrack, setOptionsTrack] = useState<Track | null>(null);
+  // The pending add target: one or more tracks to add to the chosen playlist.
+  const [pickerTracks, setPickerTracks] = useState<Track[] | null>(null);
+  const [namingTracks, setNamingTracks] = useState<Track[] | null>(null);
+
+  const addToPlaylist = useCallback((track: Track) => setPickerTracks([track]), []);
+  const addAlbumToPlaylistMenu = useCallback(
+    (tracks: Track[]) => (tracks.length ? setPickerTracks(tracks) : undefined),
+    [],
+  );
   const openTrackOptions = useCallback((track: Track) => setOptionsTrack(track), []);
 
   const value = useMemo<PlaylistMenu>(
-    () => ({ addToPlaylist, openTrackOptions }),
-    [addToPlaylist, openTrackOptions],
+    () => ({ addToPlaylist, addAlbumToPlaylist: addAlbumToPlaylistMenu, openTrackOptions }),
+    [addToPlaylist, addAlbumToPlaylistMenu, openTrackOptions],
+  );
+
+  /** Add the pending tracks to a playlist (single -> addTrack, many -> bulk). */
+  const addTracksTo = useCallback(
+    (playlistId: string, tracks: Track[]) => {
+      if (tracks.length === 1) void dispatch(addTrackToPlaylist({ playlistId, track: tracks[0] }));
+      else void dispatch(addAlbumToPlaylist({ playlistId, tracks }));
+    },
+    [dispatch],
   );
 
   // Defer opening the next modal until the current one has finished dismissing —
@@ -64,26 +99,24 @@ export const PlaylistMenuProvider: React.FC<{ children: React.ReactNode }> = ({ 
       key: 'addToPlaylist',
       label: t('playlist.addToPlaylist'),
       icon: 'add-circle-outline',
-      onPress: (track) => handoff(() => setPickerTrack(track)),
+      onPress: (track) => handoff(() => setPickerTracks([track])),
     },
   ];
 
   const onPick = (playlistId: string) => {
-    if (pickerTrack) {
-      dispatch(
-        addTrackToPlaylist({ playlistId, trackId: pickerTrack.id, artwork: pickerTrack.artwork }),
-      );
-    }
-    setPickerTrack(null);
+    if (pickerTracks) addTracksTo(playlistId, pickerTracks);
+    setPickerTracks(null);
   };
 
-  const onConfirmCreate = (title: string) => {
-    const id = newId('pl');
-    dispatch(createPlaylist({ id, title }));
-    if (namingTrack) {
-      dispatch(addTrackToPlaylist({ playlistId: id, trackId: namingTrack.id, artwork: namingTrack.artwork }));
-    }
-    setNamingTrack(null);
+  const onConfirmCreate = (name: string) => {
+    const tracks = namingTracks;
+    setNamingTracks(null);
+    void dispatch(createPlaylist({ name }))
+      .unwrap()
+      .then((summary) => {
+        if (tracks) addTracksTo(summary.id, tracks);
+      })
+      .catch(() => undefined);
   };
 
   return (
@@ -97,23 +130,23 @@ export const PlaylistMenuProvider: React.FC<{ children: React.ReactNode }> = ({ 
       />
 
       <PlaylistPickerSheet
-        visible={pickerTrack != null}
-        playlists={playlists}
+        visible={pickerTracks != null}
+        playlists={pickable}
         onPick={onPick}
         onCreateNew={() => {
-          const track = pickerTrack;
-          setPickerTrack(null);
-          handoff(() => setNamingTrack(track));
+          const tracks = pickerTracks;
+          setPickerTracks(null);
+          handoff(() => setNamingTracks(tracks));
         }}
-        onClose={() => setPickerTrack(null)}
+        onClose={() => setPickerTracks(null)}
       />
 
       <PlaylistNameDialog
-        visible={namingTrack != null}
+        visible={namingTracks != null}
         title={t('playlist.namePrompt')}
         confirmLabel={t('playlist.create')}
         onConfirm={onConfirmCreate}
-        onCancel={() => setNamingTrack(null)}
+        onCancel={() => setNamingTracks(null)}
       />
     </Ctx.Provider>
   );

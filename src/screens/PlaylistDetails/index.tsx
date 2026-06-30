@@ -1,8 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import {
@@ -19,21 +19,17 @@ import { TrackOptionsModal, TrackOption } from '@/components/modals';
 import { PlaylistNameDialog } from '@/components/playlists';
 import { FloatingMiniPlayer } from '@/components/player';
 import { useTheme } from '@/context';
-import {
-  useAppDispatch,
-  useAppSelector,
-  usePlayer,
-  useTracksByIds,
-  useVisibleTracks,
-} from '@/hooks';
+import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
 import {
   deletePlaylist,
-  removeTrackFromPlaylist,
+  fetchPlaylistDetail,
+  removeItemFromPlaylist,
   renamePlaylist,
+  reorderPlaylistItems,
   toggleFavoriteTrack,
 } from '@/redux';
 import { shuffle as shuffleArray } from '@/utils';
-import { Track } from '@/types';
+import type { PlaylistItem } from '@/services/playlists';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -42,37 +38,57 @@ const ART = width * 0.62;
 
 export const PlaylistDetailsScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'PlaylistDetails'>['route']>();
+  const id = params.playlistId;
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
 
-  const playlist = useAppSelector((s) =>
-    s.library.playlists.find((p) => p.id === params.playlistId),
-  );
+  const detail = useAppSelector((s) => s.playlists.byId[id]);
+  const summary = useAppSelector((s) => s.playlists.summaries.find((p) => p.id === id));
   const favoriteIds = useAppSelector((s) => s.library.favoriteTrackIds);
 
-  const { tracks: resolved, loading } = useTracksByIds(playlist?.trackIds ?? []);
-  // Personal collection — never hidden by the active catalog language.
-  const tracks = useVisibleTracks(resolved, { filterByLanguage: false });
-
+  const [failed, setFailed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [optionsTrack, setOptionsTrack] = useState<Track | null>(null);
+  const [optionsItem, setOptionsItem] = useState<PlaylistItem | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [order, setOrder] = useState<PlaylistItem[]>([]);
+
+  // Refresh detail whenever the screen gains focus (e.g. returning from Add Songs).
+  useFocusEffect(
+    useCallback(() => {
+      setFailed(false);
+      void dispatch(fetchPlaylistDetail(id))
+        .unwrap()
+        .catch(() => setFailed(true));
+    }, [dispatch, id]),
+  );
+
+  const items = useMemo(() => detail?.items ?? [], [detail]);
+  const tracks = useMemo(() => items.map((i) => i.track), [items]);
+  const name = detail?.name ?? summary?.name ?? '';
+  const cover = tracks[0]?.artwork ?? '';
 
   const trackOptions = useMemo<TrackOption[]>(() => {
-    if (!optionsTrack || !playlist) return [];
-    const isFav = favoriteIds.includes(optionsTrack.id);
+    if (!optionsItem) return [];
+    const isFav = favoriteIds.includes(optionsItem.track.id);
     return [
       {
         key: 'remove',
         label: t('playlist.removeFromPlaylist'),
         icon: 'remove-circle-outline',
         destructive: true,
-        onPress: (track) =>
-          dispatch(removeTrackFromPlaylist({ playlistId: playlist.id, trackId: track.id })),
+        onPress: () =>
+          dispatch(
+            removeItemFromPlaylist({
+              playlistId: id,
+              itemId: optionsItem.id,
+              songId: optionsItem.songId,
+            }),
+          ),
       },
       {
         key: 'like',
@@ -81,9 +97,33 @@ export const PlaylistDetailsScreen: React.FC = () => {
         onPress: (track) => dispatch(toggleFavoriteTrack(track)),
       },
     ];
-  }, [optionsTrack, playlist, favoriteIds, dispatch, t]);
+  }, [optionsItem, favoriteIds, dispatch, t, id]);
 
-  if (!playlist) {
+  const onPlay = () => {
+    if (tracks.length) void playTracks(tracks, 0);
+  };
+  const onShuffle = () => {
+    if (tracks.length) void playTracks(shuffleArray(tracks), 0);
+  };
+
+  const startEdit = () => {
+    setOrder(items);
+    setEditing(true);
+  };
+  const move = (from: number, to: number) =>
+    setOrder((prev) => {
+      if (to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      return next;
+    });
+  const saveOrder = () => {
+    void dispatch(reorderPlaylistItems({ playlistId: id, orderedSongIds: order.map((i) => i.songId) }));
+    setEditing(false);
+  };
+
+  if (failed && !detail) {
     return (
       <Screen>
         <View style={styles.topBarFixed}>
@@ -94,74 +134,94 @@ export const PlaylistDetailsScreen: React.FC = () => {
     );
   }
 
-  const onPlay = () => {
-    if (tracks.length) void playTracks(tracks, 0);
-  };
-  const onShuffle = () => {
-    if (tracks.length) void playTracks(shuffleArray(tracks), 0);
-  };
-
   return (
     <Screen safeArea={false}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={styles.header}>
-          <Artwork uri={playlist.cover} style={styles.bgArt} blurRadius={40} iconSize={0} />
+          <Artwork uri={cover} style={styles.bgArt} blurRadius={40} iconSize={0} />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
           <View style={styles.topBar}>
             <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
-            <IconButton name="ellipsis-horizontal" onPress={() => setMenuOpen(true)} />
+            {!editing ? (
+              <IconButton name="ellipsis-horizontal" onPress={() => setMenuOpen(true)} />
+            ) : null}
           </View>
-          <Artwork
-            uri={playlist.cover}
-            style={[styles.art, { width: ART, height: ART }]}
-            iconSize={Math.round(ART * 0.3)}
-          />
+          <Artwork uri={cover} style={[styles.art, { width: ART, height: ART }]} iconSize={Math.round(ART * 0.3)} />
           <AppText variant="display" style={styles.title} numberOfLines={2}>
-            {playlist.title}
+            {name}
           </AppText>
           <AppText variant="bodySm" color="textMuted" style={styles.sub}>
             {t('playlist.songCount', { count: tracks.length })}
           </AppText>
         </View>
 
-        <View style={styles.actions}>
-          <Button
-            label={t('playlist.addSongs')}
-            icon="add"
-            variant="secondary"
-            onPress={() => navigation.navigate('PlaylistAddSongs', { playlistId: playlist.id })}
-          />
-          <View style={styles.actionsRight}>
-            <IconButton
-              name="shuffle"
-              size={26}
-              onPress={onShuffle}
-              style={styles.shuffle}
-              disabled={!tracks.length}
-            />
-            <Button label={t('common.play')} icon="play" onPress={onPlay} />
+        {editing ? (
+          <View style={styles.actions}>
+            <Button label={t('common.cancel')} variant="ghost" onPress={() => setEditing(false)} />
+            <Button label={t('common.done')} icon="checkmark" onPress={saveOrder} />
           </View>
-        </View>
+        ) : (
+          <View style={styles.actions}>
+            <Button
+              label={t('playlist.addSongs')}
+              icon="add"
+              variant="secondary"
+              onPress={() => navigation.navigate('PlaylistAddSongs', { playlistId: id })}
+            />
+            <View style={styles.actionsRight}>
+              <IconButton
+                name="shuffle"
+                size={26}
+                onPress={onShuffle}
+                style={styles.shuffle}
+                disabled={!tracks.length}
+              />
+              <Button label={t('common.play')} icon="play" onPress={onPlay} />
+            </View>
+          </View>
+        )}
 
-        {loading ? (
+        {!detail ? (
           <View style={styles.stateBox}>
             <ActivityIndicator color={theme.colors.primary} size="large" />
           </View>
+        ) : editing ? (
+          <View style={styles.list}>
+            {order.map((item, i) => (
+              <View key={item.id} style={styles.editRow}>
+                <AppText variant="body" numberOfLines={1} style={styles.editTitle}>
+                  {item.track.title}
+                </AppText>
+                <IconButton
+                  name="chevron-up"
+                  size={22}
+                  disabled={i === 0}
+                  onPress={() => move(i, i - 1)}
+                />
+                <IconButton
+                  name="chevron-down"
+                  size={22}
+                  disabled={i === order.length - 1}
+                  onPress={() => move(i, i + 1)}
+                  style={styles.downArrow}
+                />
+              </View>
+            ))}
+          </View>
         ) : tracks.length ? (
           <View style={styles.list}>
-            {tracks.map((track, i) => (
+            {items.map((item, i) => (
               <TrackRow
-                key={track.id}
-                track={track}
+                key={item.id}
+                track={item.track}
                 index={i + 1}
-                isActive={currentTrack?.id === track.id}
-                onPress={() => playFrom(tracks, track.id)}
-                onOptions={setOptionsTrack}
+                isActive={currentTrack?.id === item.track.id}
+                onPress={() => playFrom(tracks, item.track.id)}
+                onOptions={() => setOptionsItem(item)}
               />
             ))}
           </View>
         ) : (
-          // Natural-height (no flex:1) so it renders safely inside the ScrollView.
           <View style={styles.stateBox}>
             <Ionicons name="musical-notes-outline" size={56} color={theme.colors.iconMuted} />
             <AppText variant="h2" style={styles.emptyTitle}>
@@ -176,62 +236,73 @@ export const PlaylistDetailsScreen: React.FC = () => {
 
       <FloatingMiniPlayer />
 
-      {/* Modals are mounted only while open — never permanently with visible=false.
-          A stack of always-mounted RN <Modal>s inside a native-stack screen wedges
-          the UI thread on Android (Old Arch), which froze this screen on open. */}
-
-      {/* Per-track options (remove / like). */}
-      {optionsTrack ? (
+      {/* Modals mounted only while open (a stack of always-mounted RN <Modal>s wedges
+          the Android UI thread on Old Arch). */}
+      {optionsItem ? (
         <TrackOptionsModal
-          track={optionsTrack}
+          track={optionsItem.track}
           options={trackOptions}
-          onClose={() => setOptionsTrack(null)}
+          onClose={() => setOptionsItem(null)}
         />
       ) : null}
 
-      {/* Playlist-level menu: rename / delete. */}
       {menuOpen ? (
-      <Modal visible transparent animationType="slide" onRequestClose={() => setMenuOpen(false)}>
-        <Pressable style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]} onPress={() => setMenuOpen(false)}>
+        <Modal visible transparent animationType="slide" onRequestClose={() => setMenuOpen(false)}>
           <Pressable
-            style={[
-              styles.sheet,
-              {
-                backgroundColor: theme.colors.backgroundElevated,
-                borderTopLeftRadius: theme.radius.xl,
-                borderTopRightRadius: theme.radius.xl,
-              },
-            ]}
+            style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]}
+            onPress={() => setMenuOpen(false)}
           >
             <Pressable
-              style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
-              onPress={() => {
-                setMenuOpen(false);
-                // Let the menu sheet close before opening the next modal so they
-                // don't overlap (the second can fail to appear / freeze on Android).
-                setTimeout(() => setRenaming(true), 260);
-              }}
+              style={[
+                styles.sheet,
+                {
+                  backgroundColor: theme.colors.backgroundElevated,
+                  borderTopLeftRadius: theme.radius.xl,
+                  borderTopRightRadius: theme.radius.xl,
+                },
+              ]}
             >
-              <Ionicons name="create-outline" size={22} color={theme.colors.icon} />
-              <AppText variant="body" style={styles.menuLabel}>
-                {t('playlist.rename')}
-              </AppText>
-            </Pressable>
-            <Pressable
-              style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
-              onPress={() => {
-                setMenuOpen(false);
-                setTimeout(() => setConfirmDelete(true), 260);
-              }}
-            >
-              <Ionicons name="trash-outline" size={22} color={theme.colors.danger} />
-              <AppText variant="body" color="danger" style={styles.menuLabel}>
-                {t('playlist.delete')}
-              </AppText>
+              <Pressable
+                style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
+                onPress={() => {
+                  setMenuOpen(false);
+                  setTimeout(() => setRenaming(true), 260);
+                }}
+              >
+                <Ionicons name="create-outline" size={22} color={theme.colors.icon} />
+                <AppText variant="body" style={styles.menuLabel}>
+                  {t('playlist.rename')}
+                </AppText>
+              </Pressable>
+              {items.length > 1 ? (
+                <Pressable
+                  style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
+                  onPress={() => {
+                    setMenuOpen(false);
+                    setTimeout(startEdit, 260);
+                  }}
+                >
+                  <Ionicons name="swap-vertical-outline" size={22} color={theme.colors.icon} />
+                  <AppText variant="body" style={styles.menuLabel}>
+                    {t('playlist.reorder')}
+                  </AppText>
+                </Pressable>
+              ) : null}
+              <Pressable
+                style={({ pressed }) => [styles.menuRow, { opacity: pressed ? 0.6 : 1 }]}
+                onPress={() => {
+                  setMenuOpen(false);
+                  setTimeout(() => setConfirmDelete(true), 260);
+                }}
+              >
+                <Ionicons name="trash-outline" size={22} color={theme.colors.danger} />
+                <AppText variant="body" color="danger" style={styles.menuLabel}>
+                  {t('playlist.delete')}
+                </AppText>
+              </Pressable>
             </Pressable>
           </Pressable>
-        </Pressable>
-      </Modal>
+        </Modal>
       ) : null}
 
       {renaming ? (
@@ -239,9 +310,9 @@ export const PlaylistDetailsScreen: React.FC = () => {
           visible
           title={t('playlist.rename')}
           confirmLabel={t('playlist.save')}
-          initialName={playlist.title}
-          onConfirm={(name) => {
-            dispatch(renamePlaylist({ id: playlist.id, title: name }));
+          initialName={name}
+          onConfirm={(newName) => {
+            void dispatch(renamePlaylist({ id, name: newName }));
             setRenaming(false);
           }}
           onCancel={() => setRenaming(false)}
@@ -252,18 +323,15 @@ export const PlaylistDetailsScreen: React.FC = () => {
         <ConfirmDialog
           visible
           title={t('playlist.delete')}
-          message={t('playlist.deleteConfirm', { title: playlist.title })}
+          message={t('playlist.deleteConfirm', { title: name })}
           confirmLabel={t('playlist.delete')}
           cancelLabel={t('common.cancel')}
           destructive
           onConfirm={() => {
             setConfirmDelete(false);
-            // Defer until the confirm dialog dismisses; go back first (unmounting
-            // this screen), then delete — avoids a frozen overlay and a "not found"
-            // flash from the removed playlist.
             setTimeout(() => {
               navigation.goBack();
-              dispatch(deletePlaylist({ id: playlist.id }));
+              void dispatch(deletePlaylist(id));
             }, 350);
           }}
           onCancel={() => setConfirmDelete(false)}
@@ -293,7 +361,9 @@ const styles = StyleSheet.create({
   actionsRight: { flexDirection: 'row', alignItems: 'center' },
   shuffle: { marginHorizontal: 14 },
   list: { paddingHorizontal: 16 },
-  // Natural-height state area (loading / empty) — no flex:1, so it's safe inside the ScrollView.
+  editRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
+  editTitle: { flex: 1, marginRight: 12 },
+  downArrow: { marginLeft: 8 },
   stateBox: { alignItems: 'center', justifyContent: 'center', paddingVertical: 72, paddingHorizontal: 32 },
   emptyTitle: { marginTop: 16, textAlign: 'center' },
   emptyHint: { marginTop: 8, textAlign: 'center' },

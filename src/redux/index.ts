@@ -5,16 +5,19 @@ export { useAppDispatch, useAppSelector } from './store/hooks';
 // Slice actions/thunks
 export { fetchHomeFeed } from './slices/homeSlice';
 export { runSearch, setQuery, addRecentSearch, clearRecentSearches } from './slices/searchSlice';
+export { toggleFavoriteTrack, toggleSavedAlbum, toggleFollowArtist } from './slices/librarySlice';
 export {
-  toggleFavoriteTrack,
-  toggleSavedAlbum,
-  toggleFollowArtist,
+  fetchPlaylists,
+  fetchMembership,
+  fetchPlaylistDetail,
   createPlaylist,
   renamePlaylist,
   deletePlaylist,
   addTrackToPlaylist,
-  removeTrackFromPlaylist,
-} from './slices/librarySlice';
+  addAlbumToPlaylist,
+  removeItemFromPlaylist,
+  reorderPlaylistItems,
+} from './slices/playlistsSlice';
 export {
   enqueueDownload,
   updateDownloadProgress,

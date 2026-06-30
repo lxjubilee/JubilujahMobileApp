@@ -3,13 +3,13 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
-import { Playlist } from '@/types';
+import type { PlaylistSummary } from '@/services/playlists';
 import { AppText, Artwork } from '@/components/common';
 
 interface PlaylistPickerSheetProps {
   /** Non-null shows the sheet (the track being added). */
   visible: boolean;
-  playlists: Playlist[];
+  playlists: PlaylistSummary[];
   onPick: (playlistId: string) => void;
   onCreateNew: () => void;
   onClose: () => void;
@@ -75,10 +75,10 @@ export const PlaylistPickerSheet: React.FC<PlaylistPickerSheetProps> = ({
                   />
                   <View style={styles.rowMeta}>
                     <AppText variant="h3" numberOfLines={1}>
-                      {pl.title}
+                      {pl.name}
                     </AppText>
                     <AppText variant="bodySm" color="textMuted">
-                      {t('playlist.songCount', { count: pl.trackIds.length })}
+                      {t('playlist.songCount', { count: pl.itemCount })}
                     </AppText>
                   </View>
                 </Pressable>
