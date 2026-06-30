@@ -2,6 +2,8 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   LibraryScreen,
+  LikedSongsScreen,
+  FollowedArtistsScreen,
   ProfileScreen,
   ChangePasswordScreen,
   PrivacyPolicyScreen,
@@ -16,6 +18,8 @@ const Stack = createNativeStackNavigator<LibraryStackParamList>();
 export const LibraryStackNavigator: React.FC = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="Library" component={LibraryScreen} />
+    <Stack.Screen name="LikedSongs" component={LikedSongsScreen} />
+    <Stack.Screen name="FollowedArtists" component={FollowedArtistsScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

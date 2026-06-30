@@ -12,7 +12,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { AppText } from '@/components/common';
+import { AppText, BrandLogo } from '@/components/common';
 import { PosterCollage } from './components/PosterCollage';
 import { MUSIC_HERO } from './musicImages';
 
@@ -59,7 +59,7 @@ const SLIDES: Slide[] = [
   },
 ];
 
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
  * First-launch welcome: a horizontal pager of slides, each with its own visual
@@ -77,7 +77,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
 
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.topNav}>
-          <AppText style={styles.logo}>JUBILUJAH</AppText>
+          <BrandLogo textStyle={styles.logo} />
           <View style={styles.navLinks}>
             <Pressable
               hitSlop={8}
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
   },
-  logo: { color: RED, fontSize: 22, fontWeight: '900', letterSpacing: 1 },
+  logo: { color: ACCENT, fontSize: 22, fontWeight: '900', letterSpacing: 1 },
   navLinks: { flexDirection: 'row', alignItems: 'center', gap: 22 },
   navLink: { letterSpacing: 1 },
   pager: { flex: 1 },
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', alignSelf: 'center', gap: 7, marginTop: 14, marginBottom: 16 },
   dot: { height: 7, borderRadius: 4, backgroundColor: '#FFFFFF' },
   cta: {
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     marginHorizontal: 18,
     height: 50,
     borderRadius: 6,

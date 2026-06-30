@@ -11,9 +11,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Screen, Loader, AppText } from '@/components/common';
+import { Screen, Loader, AppText, LanguagePanel } from '@/components/common';
 import { useAppDispatch, useAppSelector, usePlayer, useVisibleAlbums, useVisibleRails } from '@/hooks';
 import { fetchHomeFeed } from '@/redux';
+import { DEFAULT_LANG, langName } from '@/localization';
 import { AlbumRepository } from '@/repositories';
 import { Album, Artist, ResolvedRail } from '@/types';
 import { logger } from '@/utils';
@@ -30,7 +31,9 @@ export const HomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const { playTracks } = usePlayer();
   const { feed, status } = useAppSelector((s) => s.home);
+  const language = useAppSelector((s) => s.settings.language);
   const [filter, setFilter] = useState<HomeFilter>(HOME_FILTER_ALL);
+  const [langPanelOpen, setLangPanelOpen] = useState(false);
   // Hero albums minus any whose cover is missing.
   const heroes = useVisibleAlbums(feed?.heroes ?? []);
   // Rails with artwork-less items removed and emptied rails dropped — so no
@@ -144,6 +147,14 @@ export const HomeScreen: React.FC = () => {
 
   const refreshing = status === 'loading' && feed != null;
 
+  // A non-English language with nothing in the catalog yet → "coming soon"
+  // (mirrors the web's per-language Home). English always has content.
+  const emptyForLanguage =
+    feed != null &&
+    language !== DEFAULT_LANG &&
+    heroes.length === 0 &&
+    visibleRails.length === 0;
+
   if (status === 'loading' && !feed) {
     return (
       <Screen safeArea={false}>
@@ -179,20 +190,30 @@ export const HomeScreen: React.FC = () => {
           />
         }
       >
-        {heroes.length ? (
-          <HeroCarousel albums={heroes} onPlay={playAlbum} onOpen={openAlbum} />
-        ) : null}
-
-        {visibleRails.map((rail) => (
-          <View key={rail.id} style={styles.railWrap}>
-            <Rail
-              rail={rail}
-              onAlbumPress={openAlbum}
-              onArtistPress={openArtist}
-              onSeeAll={openSeeAll}
-            />
+        {emptyForLanguage ? (
+          <View style={styles.comingSoon}>
+            <AppText variant="body" color="textMuted" style={styles.comingSoonText}>
+              {t('home.comingSoon', { language: langName(language) })}
+            </AppText>
           </View>
-        ))}
+        ) : (
+          <>
+            {heroes.length ? (
+              <HeroCarousel albums={heroes} onPlay={playAlbum} onOpen={openAlbum} />
+            ) : null}
+
+            {visibleRails.map((rail) => (
+              <View key={rail.id} style={styles.railWrap}>
+                <Rail
+                  rail={rail}
+                  onAlbumPress={openAlbum}
+                  onArtistPress={openArtist}
+                  onSeeAll={openSeeAll}
+                />
+              </View>
+            ))}
+          </>
+        )}
       </ScrollView>
 
       {/* Fixed Netflix-style header overlaying the hero. */}
@@ -203,7 +224,16 @@ export const HomeScreen: React.FC = () => {
         chipsAnim={chipsAnim}
         bgAnim={bgAnim}
         onPressProfile={openProfile}
+        language={language}
+        onPressLanguage={() => setLangPanelOpen(true)}
       />
+
+      {langPanelOpen ? (
+        <LanguagePanel
+          selected={language}
+          onClose={() => setLangPanelOpen(false)}
+        />
+      ) : null}
     </Screen>
   );
 };
@@ -211,6 +241,8 @@ export const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   scrollContent: { paddingBottom: 24 },
   railWrap: { marginBottom: 28 },
+  comingSoon: { paddingTop: 180, paddingHorizontal: 32, alignItems: 'center' },
+  comingSoonText: { textAlign: 'center', lineHeight: 22 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   errorText: { textAlign: 'center' },
 });

@@ -15,13 +15,14 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AppText, IconButton, PasswordInput } from '@/components/common';
+import { useTranslation } from 'react-i18next';
+import { AppText, BrandLogo, IconButton, PasswordInput } from '@/components/common';
 import { useAppDispatch } from '@/hooks';
 import { requestSignup } from '@/redux';
 import type { AuthStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 const MUTED = '#8A8A99';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -46,6 +47,7 @@ const ageFrom = (d: Date): number => {
 export const SignUpScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [dob, setDob] = useState<Date | null>(null);
@@ -81,7 +83,7 @@ export const SignUpScreen: React.FC = () => {
         email: res.email,
       });
     } catch (e) {
-      setNotice(typeof e === 'string' ? e : 'Could not start sign up. Please try again.');
+      setNotice(typeof e === 'string' ? e : t('auth.signup.error'));
     } finally {
       setSubmitting(false);
     }
@@ -95,8 +97,8 @@ export const SignUpScreen: React.FC = () => {
   ) => (
     <TextInput
       value={value}
-      onChangeText={(t) => {
-        set(t);
+      onChangeText={(v) => {
+        set(v);
         clearNotice();
       }}
       placeholder={placeholder}
@@ -115,7 +117,7 @@ export const SignUpScreen: React.FC = () => {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <IconButton name="arrow-back" size={26} onPress={() => navigation.goBack()} />
-          <AppText style={styles.logo}>JUBILUJAH</AppText>
+          <BrandLogo textStyle={styles.logo} />
         </View>
 
         <KeyboardAvoidingView
@@ -128,14 +130,14 @@ export const SignUpScreen: React.FC = () => {
             keyboardDismissMode="interactive"
             showsVerticalScrollIndicator
           >
-            <AppText style={styles.title}>Create your account</AppText>
+            <AppText style={styles.title}>{t('auth.signup.title')}</AppText>
             <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-              Join Jubilujah to save your music, build playlists, and listen anywhere.
+              {t('auth.signup.subtitle')}
             </AppText>
 
             <View style={styles.nameRow}>
-              {field('First name', firstName, setFirstName, { style: styles.nameField })}
-              {field('Last name', lastName, setLastName, { style: styles.nameField })}
+              {field(t('auth.signup.firstName'), firstName, setFirstName, { style: styles.nameField })}
+              {field(t('auth.signup.lastName'), lastName, setLastName, { style: styles.nameField })}
             </View>
 
             <DateField
@@ -148,33 +150,33 @@ export const SignUpScreen: React.FC = () => {
 
             {dob != null && !ageOk ? (
               <AppText variant="bodySm" style={styles.error}>
-                You must be at least {MIN_AGE} years old to create an account.
+                {t('auth.signup.ageError', { age: MIN_AGE })}
               </AppText>
             ) : null}
 
-            {field('Email', email, setEmail, { email: true })}
+            {field(t('auth.signup.email'), email, setEmail, { email: true })}
             <PasswordInput
               value={password}
-              onChangeText={(t) => {
-                setPassword(t);
+              onChangeText={(v) => {
+                setPassword(v);
                 clearNotice();
               }}
-              placeholder="Password (min 8 characters)"
+              placeholder={t('auth.signup.password')}
               containerStyle={styles.pwField}
             />
             <PasswordInput
               value={confirm}
-              onChangeText={(t) => {
-                setConfirm(t);
+              onChangeText={(v) => {
+                setConfirm(v);
                 clearNotice();
               }}
-              placeholder="Confirm password"
+              placeholder={t('auth.signup.confirm')}
               containerStyle={styles.pwField}
             />
 
             {confirm.length > 0 && password !== confirm ? (
               <AppText variant="bodySm" style={styles.error}>
-                Passwords don’t match.
+                {t('auth.signup.mismatch')}
               </AppText>
             ) : null}
 
@@ -182,24 +184,24 @@ export const SignUpScreen: React.FC = () => {
               <Ionicons
                 name={agreed ? 'checkbox' : 'square-outline'}
                 size={24}
-                color={agreed ? RED : MUTED}
+                color={agreed ? ACCENT : MUTED}
               />
               <AppText variant="bodySm" color="textSecondary" style={styles.agreeText}>
-                I agree to the{' '}
+                {t('auth.signup.agreePrefix')}
                 <AppText
                   variant="bodySm"
                   style={styles.link}
                   onPress={() => navigation.navigate('TermsOfUse')}
                 >
-                  Terms of Use
-                </AppText>{' '}
-                and{' '}
+                  {t('profile.termsOfUse')}
+                </AppText>
+                {t('auth.signup.and')}
                 <AppText
                   variant="bodySm"
                   style={styles.link}
                   onPress={() => navigation.navigate('PrivacyPolicy')}
                 >
-                  Privacy Policy
+                  {t('profile.privacyPolicy')}
                 </AppText>
               </AppText>
             </Pressable>
@@ -222,18 +224,18 @@ export const SignUpScreen: React.FC = () => {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <AppText variant="h3" style={styles.ctaLabel}>
-                  Create Account
+                  {t('auth.signup.submit')}
                 </AppText>
               )}
             </Pressable>
 
             <View style={styles.signinRow}>
               <AppText variant="body" color="textMuted">
-                Already have an account?{' '}
+                {t('auth.signup.havePrompt')}
               </AppText>
               <Pressable hitSlop={6} onPress={() => navigation.navigate('SignIn')}>
                 <AppText variant="body" style={styles.signinLink}>
-                  Sign in
+                  {t('auth.signup.signIn')}
                 </AppText>
               </Pressable>
             </View>
@@ -249,6 +251,7 @@ const DateField: React.FC<{ value: Date | null; onChange: (d: Date) => void }> =
   value,
   onChange,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const thisYear = new Date().getFullYear();
   // Reasonable date-of-birth range: 13–100 years old.
@@ -276,7 +279,7 @@ const DateField: React.FC<{ value: Date | null; onChange: (d: Date) => void }> =
     <>
       <Pressable style={styles.input} onPress={() => setOpen(true)}>
         <AppText style={[styles.dateText, !value && styles.datePlaceholder]}>
-          {value ? formatDob(value) : 'Date of birth'}
+          {value ? formatDob(value) : t('auth.signup.dateOfBirth')}
         </AppText>
         <Ionicons name="calendar-outline" size={20} color={MUTED} />
       </Pressable>
@@ -285,7 +288,7 @@ const DateField: React.FC<{ value: Date | null; onChange: (d: Date) => void }> =
         <Pressable style={styles.modalBackdrop} onPress={() => setOpen(false)}>
           <Pressable style={styles.modalSheet}>
             <AppText variant="h2" style={styles.modalTitle}>
-              Date of birth
+              {t('auth.signup.dateOfBirth')}
             </AppText>
             <View style={styles.wheels}>
               <Column
@@ -305,7 +308,7 @@ const DateField: React.FC<{ value: Date | null; onChange: (d: Date) => void }> =
             </View>
             <Pressable style={styles.doneBtn} onPress={confirm}>
               <AppText variant="h3" style={styles.ctaLabel}>
-                Done
+                {t('common.done')}
               </AppText>
             </Pressable>
           </Pressable>
@@ -374,7 +377,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 6,
   },
-  logo: { color: RED, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
+  logo: { color: ACCENT, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
   content: { paddingHorizontal: 22, paddingTop: 18, paddingBottom: 60 },
   title: { color: '#FFFFFF', fontSize: 28, lineHeight: 36, fontWeight: '800' },
   subtitle: { marginTop: 12, fontSize: 16, lineHeight: 22 },
@@ -404,7 +407,7 @@ const styles = StyleSheet.create({
   notice: { marginTop: 16, color: '#F5C518' },
   cta: {
     marginTop: 22,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 52,
     borderRadius: 6,
     alignItems: 'center',
@@ -433,7 +436,7 @@ const styles = StyleSheet.create({
   columnTextDisabled: { color: 'rgba(255,255,255,0.18)' },
   doneBtn: {
     marginTop: 14,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 50,
     borderRadius: 8,
     alignItems: 'center',

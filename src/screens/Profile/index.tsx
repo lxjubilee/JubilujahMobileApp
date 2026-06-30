@@ -36,7 +36,7 @@ export const ProfileScreen: React.FC = () => {
       setMode('success');
     } catch (e) {
       setDeleting(false);
-      setErrorMsg(typeof e === 'string' ? e : 'Something went wrong. Please try again.');
+      setErrorMsg(typeof e === 'string' ? e : t('errors.generic'));
       setMode('error');
     }
   };
@@ -66,10 +66,10 @@ export const ProfileScreen: React.FC = () => {
           )}
         </View>
         <AppText variant="h2" style={styles.name}>
-          {user?.displayName ?? 'Guest'}
+          {user?.displayName ?? t('profile.guest')}
         </AppText>
         <AppText variant="bodySm" color="textMuted">
-          {user?.email ?? 'Not signed in'}
+          {user?.email ?? t('profile.notSignedIn')}
         </AppText>
       </View>
 
@@ -77,24 +77,24 @@ export const ProfileScreen: React.FC = () => {
       <View style={styles.menu}>
         <Row
           icon="lock-closed-outline"
-          label="Change Password"
+          label={t('profile.changePassword')}
           onPress={() => navigation.navigate('ChangePassword')}
         />
         <Row
           icon="shield-checkmark-outline"
-          label="Privacy Policy"
+          label={t('profile.privacyPolicy')}
           onPress={() => navigation.navigate('PrivacyPolicy')}
         />
         <Row
           icon="document-text-outline"
-          label="Terms of Use"
+          label={t('profile.termsOfUse')}
           onPress={() => navigation.navigate('TermsOfUse')}
         />
-        <Row icon="trash-outline" label="Delete Account" destructive onPress={openDeleteConfirm} />
+        <Row icon="trash-outline" label={t('profile.deleteAccount')} destructive onPress={openDeleteConfirm} />
       </View>
 
       <Button
-        label="Sign Out"
+        label={t('profile.signOut')}
         icon="log-out-outline"
         variant="ghost"
         onPress={() => dispatch(signOut())}
@@ -103,10 +103,10 @@ export const ProfileScreen: React.FC = () => {
 
       <ConfirmDialog
         visible={mode === 'confirm'}
-        title="Delete account?"
-        message="This permanently deletes your account and all your data. This action cannot be undone."
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={t('profile.deleteTitle')}
+        message={t('profile.deleteMessage')}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
         destructive
         loading={deleting}
         onConfirm={confirmDelete}
@@ -114,16 +114,16 @@ export const ProfileScreen: React.FC = () => {
       />
       <ConfirmDialog
         visible={mode === 'success'}
-        title="Account deleted"
-        message="Your account has been permanently deleted."
-        confirmLabel="OK"
+        title={t('profile.deletedTitle')}
+        message={t('profile.deletedMessage')}
+        confirmLabel={t('common.ok')}
         onConfirm={() => dispatch(clearSession())}
       />
       <ConfirmDialog
         visible={mode === 'error'}
-        title="Couldn't delete account"
+        title={t('profile.deleteFailedTitle')}
         message={errorMsg}
-        confirmLabel="OK"
+        confirmLabel={t('common.ok')}
         onConfirm={() => setMode(null)}
       />
     </Screen>

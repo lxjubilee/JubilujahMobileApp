@@ -9,6 +9,7 @@ import downloadsReducer from '../slices/downloadsSlice';
 import playerReducer from '../slices/playerSlice';
 import authReducer from '../slices/authSlice';
 import artworkReducer from '../slices/artworkSlice';
+import settingsReducer from '../slices/settingsSlice';
 
 /**
  * Per-slice persistence. We persist only durable data:
@@ -50,6 +51,13 @@ const persistedArtwork = persistReducer(
   artworkReducer,
 );
 
+// Persist the selected language so the chosen UI locale + catalog filter
+// survive restarts.
+const persistedSettings = persistReducer(
+  { key: 'settings', storage: AsyncStorage, whitelist: ['language'] },
+  settingsReducer,
+);
+
 export const rootReducer = combineReducers({
   home: persistedHome,
   search: persistedSearch,
@@ -58,6 +66,7 @@ export const rootReducer = combineReducers({
   player: persistedPlayer,
   auth: authReducer,
   artwork: persistedArtwork,
+  settings: persistedSettings,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

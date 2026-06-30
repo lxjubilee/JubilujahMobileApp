@@ -13,7 +13,7 @@ const HERO_H = Math.round(SCREEN_H * 0.58);
 const TILE = Math.min((SCREEN_W - 48 - 20) / 2, 88);
 const GRID_GAP = 18;
 const GRID_W = TILE * 2 + GRID_GAP; // exactly two columns → 2×2
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 interface Profile {
   key: string;
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#0B0B0F' },
   hero: { width: '100%' },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', marginBottom: 16 },
-  topBox: { backgroundColor: RED, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
+  topBox: { backgroundColor: ACCENT, borderRadius: 3, paddingHorizontal: 4, paddingVertical: 1 },
   topBoxText: { color: '#fff', fontSize: 9, fontWeight: '800', letterSpacing: 0.5 },
   badgeText: { color: '#fff' },
   body: { flex: 1 },

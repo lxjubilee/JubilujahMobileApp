@@ -1,4 +1,6 @@
 export { AppText } from './AppText';
+export { BrandLogo } from './BrandLogo';
+export { LanguagePanel } from './LanguagePanel';
 export { Artwork } from './Artwork';
 export { Screen } from './Screen';
 export { Button } from './Button';

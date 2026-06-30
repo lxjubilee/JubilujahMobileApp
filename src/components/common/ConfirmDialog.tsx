@@ -45,10 +45,15 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   const confirmBg = destructive ? theme.colors.danger : theme.colors.primary;
   const dismiss = loading ? undefined : onCancel;
   const primaryDisabled = loading || confirmDisabled;
+  // Dialogs with an input (children) get a keyboard. Anchor them near the top so
+  // the buttons stay above it. We deliberately DON'T use KeyboardAvoidingView —
+  // it's unreliable inside an Android Modal (and stacking it under a native-stack
+  // screen can wedge the UI thread); top-anchoring keeps the buttons reachable.
+  const hasInput = children != null;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={dismiss ?? onConfirm}>
-      <Pressable style={styles.backdrop} onPress={dismiss}>
+      <Pressable style={[styles.backdrop, hasInput && styles.backdropTop]} onPress={dismiss}>
         {/* Inner press swallows taps so they don't close the dialog. */}
         <Pressable
           style={[
@@ -114,6 +119,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 28,
   },
+  // Top-anchored variant for input dialogs so the keyboard can't cover the buttons.
+  backdropTop: { justifyContent: 'flex-start', paddingTop: 96 },
   card: { width: '100%', maxWidth: 360, padding: 22 },
   title: { marginBottom: 8 },
   message: { lineHeight: 22 },

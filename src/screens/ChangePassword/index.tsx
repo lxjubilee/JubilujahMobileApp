@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Screen, AppText, IconButton, PasswordInput } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { changePassword } from '@/redux';
 import type { LibraryStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<LibraryStackParamList>;
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
  * Change the signed-in user's password. Authenticated by the current Bearer
@@ -17,6 +18,7 @@ const RED = '#E50914';
 export const ChangePasswordScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
@@ -38,7 +40,7 @@ export const ChangePasswordScreen: React.FC = () => {
       ).unwrap();
       setDone(true);
     } catch (e) {
-      setError(typeof e === 'string' ? e : 'Could not change your password. Please try again.');
+      setError(typeof e === 'string' ? e : t('changePassword.error'));
     } finally {
       setSubmitting(false);
     }
@@ -51,7 +53,7 @@ export const ChangePasswordScreen: React.FC = () => {
       <View style={styles.header}>
         <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
         <AppText variant="h1" style={styles.title}>
-          Change Password
+          {t('changePassword.title')}
         </AppText>
       </View>
 
@@ -60,55 +62,54 @@ export const ChangePasswordScreen: React.FC = () => {
           {done ? (
             <>
               <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-                Your password has been changed. You&apos;ll stay signed in here; other devices have
-                been signed out.
+                {t('changePassword.success')}
               </AppText>
               <Pressable
                 onPress={() => navigation.goBack()}
                 style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
               >
                 <AppText variant="h3" style={styles.ctaLabel}>
-                  Done
+                  {t('changePassword.done')}
                 </AppText>
               </Pressable>
             </>
           ) : (
             <>
               <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-                Enter your current password and choose a new one (at least 8 characters).
+                {t('changePassword.instruction')}
               </AppText>
 
               <PasswordInput
                 value={current}
-                onChangeText={(t) => {
-                  setCurrent(t);
+                onChangeText={(v) => {
+                  setCurrent(v);
                   clearError();
                 }}
-                placeholder="Current password"
+                placeholder={t('changePassword.currentPlaceholder')}
                 containerStyle={styles.field}
               />
               <PasswordInput
                 value={next}
-                onChangeText={(t) => {
-                  setNext(t);
+                onChangeText={(v) => {
+                  setNext(v);
                   clearError();
                 }}
-                placeholder="New password (min 8 characters)"
+                placeholder={t('changePassword.newPlaceholder')}
                 containerStyle={styles.field}
               />
               <PasswordInput
                 value={confirm}
-                onChangeText={(t) => {
-                  setConfirm(t);
+                onChangeText={(v) => {
+                  setConfirm(v);
                   clearError();
                 }}
-                placeholder="Confirm new password"
+                placeholder={t('changePassword.confirmPlaceholder')}
                 containerStyle={styles.field}
               />
 
               {confirm.length > 0 && next !== confirm ? (
                 <AppText variant="bodySm" style={styles.error}>
-                  Passwords don’t match.
+                  {t('changePassword.mismatch')}
                 </AppText>
               ) : null}
               {error ? (
@@ -129,7 +130,7 @@ export const ChangePasswordScreen: React.FC = () => {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <AppText variant="h3" style={styles.ctaLabel}>
-                    Update Password
+                    {t('changePassword.submit')}
                   </AppText>
                 )}
               </Pressable>
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
   error: { marginTop: 12, color: '#FF4D5E' },
   cta: {
     marginTop: 24,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 52,
     borderRadius: 6,
     alignItems: 'center',

@@ -8,6 +8,7 @@ import { Screen, Loader, AppText, Artwork, Button, IconButton } from '@/componen
 import { TrackRow } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
 import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
+import { usePlaylistMenu } from '@/components/playlists';
 import { toggleSavedAlbum, toggleFavoriteTrack } from '@/redux';
 import { AlbumRepository } from '@/repositories';
 import { Album, Track } from '@/types';
@@ -23,6 +24,7 @@ export const AlbumDetailsScreen: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
+  const { openTrackOptions } = usePlaylistMenu();
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +67,7 @@ export const AlbumDetailsScreen: React.FC = () => {
     return (
       <Screen>
         <View style={styles.center}>
-          <AppText color="textMuted">Album not found.</AppText>
+          <AppText color="textMuted">{t('errors.albumNotFound')}</AppText>
         </View>
       </Screen>
     );
@@ -130,6 +132,7 @@ export const AlbumDetailsScreen: React.FC = () => {
               isFavorite={favoriteIds.includes(track.id)}
               onPress={() => playFrom(tracks, track.id)}
               onToggleFavorite={(tr) => dispatch(toggleFavoriteTrack(tr))}
+              onOptions={openTrackOptions}
             />
           ))}
         </View>

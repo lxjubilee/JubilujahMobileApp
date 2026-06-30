@@ -69,6 +69,16 @@ export const MainTabNavigator: React.FC = () => {
         name="LibraryTab"
         component={LibraryStackNavigator}
         options={{ title: t('tabs.library') }}
+        listeners={({ navigation }) => ({
+          // Tapping the Library tab always returns to the Library root. Without
+          // this, a sub-screen left over from a previous visit (e.g. Profile,
+          // reached here or deep-linked from Home) would re-appear instead of
+          // the library — wrong, since the user tapped "Library".
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('LibraryTab', { screen: 'Library' });
+          },
+        })}
       />
     </Tab.Navigator>
   );

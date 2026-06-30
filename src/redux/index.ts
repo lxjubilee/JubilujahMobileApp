@@ -9,6 +9,11 @@ export {
   toggleFavoriteTrack,
   toggleSavedAlbum,
   toggleFollowArtist,
+  createPlaylist,
+  renamePlaylist,
+  deletePlaylist,
+  addTrackToPlaylist,
+  removeTrackFromPlaylist,
 } from './slices/librarySlice';
 export {
   enqueueDownload,
@@ -17,6 +22,7 @@ export {
   removeDownload,
 } from './slices/downloadsSlice';
 export { markArtworkMissing } from './slices/artworkSlice';
+export { setLanguage, setAppLanguage } from './slices/settingsSlice';
 export {
   setQueue,
   setPlayOrder,

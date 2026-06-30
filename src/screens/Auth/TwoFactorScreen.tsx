@@ -12,11 +12,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { AppText, IconButton } from '@/components/common';
+import { useTranslation } from 'react-i18next';
+import { AppText, BrandLogo, IconButton } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { verify2FA, clearAuthError } from '@/redux';
 
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
  * 2FA challenge: enter the OTP code issued by the backend. `verificationGuid`
@@ -26,6 +27,7 @@ const RED = '#E50914';
 export const TwoFactorScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const status = useAppSelector((s) => s.auth.status);
   const error = useAppSelector((s) => s.auth.error);
   const pending2FA = useAppSelector((s) => s.auth.pending2FA);
@@ -48,7 +50,7 @@ export const TwoFactorScreen: React.FC = () => {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <IconButton name="arrow-back" size={26} onPress={() => navigation.goBack()} />
-          <AppText style={styles.logo}>JUBILUJAH</AppText>
+          <BrandLogo textStyle={styles.logo} />
         </View>
 
         <KeyboardAvoidingView
@@ -56,18 +58,18 @@ export const TwoFactorScreen: React.FC = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={styles.content}>
-            <AppText style={styles.title}>Verify it&apos;s you</AppText>
+            <AppText style={styles.title}>{t('auth.twoFactor.title')}</AppText>
             <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-              Enter the verification code we sent to keep your account secure.
+              {t('auth.twoFactor.subtitle')}
             </AppText>
 
             <TextInput
               value={code}
-              onChangeText={(t) => {
-                setCode(t.replace(/[^0-9]/g, ''));
+              onChangeText={(v) => {
+                setCode(v.replace(/[^0-9]/g, ''));
                 if (error) dispatch(clearAuthError());
               }}
-              placeholder="6-digit code"
+              placeholder={t('auth.twoFactor.codePlaceholder')}
               placeholderTextColor="#8A8A99"
               keyboardType="number-pad"
               maxLength={6}
@@ -79,10 +81,10 @@ export const TwoFactorScreen: React.FC = () => {
               <Ionicons
                 name={trustDevice ? 'checkbox' : 'square-outline'}
                 size={22}
-                color={trustDevice ? RED : '#8A8A99'}
+                color={trustDevice ? ACCENT : '#8A8A99'}
               />
               <AppText variant="body" style={styles.trustLabel}>
-                Trust this device
+                {t('auth.twoFactor.trustDevice')}
               </AppText>
             </Pressable>
 
@@ -104,7 +106,7 @@ export const TwoFactorScreen: React.FC = () => {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <AppText variant="h3" style={styles.ctaLabel}>
-                  Verify
+                  {t('auth.twoFactor.submit')}
                 </AppText>
               )}
             </Pressable>
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 6,
   },
-  logo: { color: RED, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
+  logo: { color: ACCENT, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
   content: { paddingHorizontal: 22, paddingTop: 18 },
   title: { color: '#FFFFFF', fontSize: 28, lineHeight: 36, fontWeight: '800' },
   subtitle: { marginTop: 12, fontSize: 16, lineHeight: 22 },
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
   error: { marginTop: 14 },
   cta: {
     marginTop: 20,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 52,
     borderRadius: 6,
     alignItems: 'center',

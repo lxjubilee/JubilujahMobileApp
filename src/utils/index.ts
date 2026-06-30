@@ -12,6 +12,10 @@ export function pickByIds<T extends { id: string }>(items: T[], ids: string[]): 
 export const delay = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Generate a locally-unique id with a short prefix (e.g. `pl_lq3f8k2a`). */
+export const newId = (prefix: string): string =>
+  `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+
 /** Fisher–Yates shuffle — returns a new array, leaving the input untouched. */
 export function shuffle<T>(items: T[]): T[] {
   const a = [...items];

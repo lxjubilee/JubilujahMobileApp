@@ -1,49 +1,37 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, StyleSheet } from 'react-native';
-import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Easing, Image, StyleSheet, Text } from 'react-native';
 
 interface SplashScreenProps {
   /** Called once the intro animation completes and the app should be revealed. */
   onFinish: () => void;
 }
 
+/** Wordmark span colors — "Jubi" + ".com" white, "Lujah" gold (matches header). */
+const WHITE = '#FFFFFF';
+const GOLD = '#ffbd59';
+
 /**
- * Netflix-style intro splash: the "JUBILUJAH" wordmark (Bebas Neue — the tall,
- * condensed, all-caps face used to mimic the Netflix logo) settles in (scale +
- * fade), holds, then zooms toward the viewer while the black overlay fades out,
- * revealing the app. Uses RN Animated (native driver) so it runs in Expo Go.
+ * Netflix-style intro splash: the Jubilujah logo and "JubiLujah.com" wordmark
+ * (Orbitron brand font) settle in (scale + fade), hold, then zoom toward the
+ * viewer while the black overlay fades out, revealing the app. Uses RN Animated
+ * (native driver) so it runs in Expo Go.
  */
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
-  const [fontsLoaded] = useFonts({ BebasNeue_400Regular });
-  // Don't block forever if the font can't load (e.g. offline) — fall back to system.
-  const [ready, setReady] = useState(false);
-
-  const textScale = useRef(new Animated.Value(1.25)).current;
-  const textOpacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(1.25)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    const timeout = setTimeout(() => setReady(true), 2000);
-    if (fontsLoaded) {
-      setReady(true);
-      clearTimeout(timeout);
-    }
-    return () => clearTimeout(timeout);
-  }, [fontsLoaded]);
-
-  useEffect(() => {
-    if (!ready) return undefined;
-
     const animation = Animated.sequence([
-      // 1. Wordmark settles in.
+      // 1. Logo + wordmark settle in.
       Animated.parallel([
-        Animated.timing(textOpacity, {
+        Animated.timing(opacity, {
           toValue: 1,
           duration: 700,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-        Animated.spring(textScale, {
+        Animated.spring(scale, {
           toValue: 1,
           friction: 7,
           tension: 45,
@@ -54,7 +42,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
       Animated.delay(550),
       // 3. Zoom into the wordmark while the overlay fades to reveal the app.
       Animated.parallel([
-        Animated.timing(textScale, {
+        Animated.timing(scale, {
           toValue: 14,
           duration: 650,
           easing: Easing.in(Easing.cubic),
@@ -74,20 +62,22 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     });
 
     return () => animation.stop();
-  }, [ready, textScale, textOpacity, overlayOpacity, onFinish]);
+  }, [scale, opacity, overlayOpacity, onFinish]);
 
   return (
     <Animated.View style={[styles.container, { opacity: overlayOpacity }]} pointerEvents="none">
-      <Animated.Text
-        style={[
-          styles.wordmark,
-          fontsLoaded ? styles.bebas : styles.systemFallback,
-          { opacity: textOpacity, transform: [{ scale: textScale }] },
-        ]}
-        allowFontScaling={false}
-      >
-        JUBILUJAH
-      </Animated.Text>
+      <Animated.View style={[styles.group, { opacity, transform: [{ scale }] }]}>
+        <Image
+          source={require('../../assets/Jubilujah-app-logo.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+        <Text style={styles.wordmark} allowFontScaling={false}>
+          <Text style={styles.white}>Jubi</Text>
+          <Text style={styles.gold}>Lujah</Text>
+          <Text style={styles.white}>.com</Text>
+        </Text>
+      </Animated.View>
     </Animated.View>
   );
 };
@@ -100,21 +90,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 100,
   },
+  group: { alignItems: 'center' },
+  logo: { width: 132, height: 132, marginBottom: 18 },
+  // Orbitron_600SemiBold already encodes weight 600 — no fontWeight (it makes
+  // Android drop the custom font and fall back to the system sans-serif).
   wordmark: {
-    color: '#E50914',
-    textShadowColor: 'rgba(229,9,20,0.35)',
+    fontFamily: 'Orbitron_600SemiBold',
+    fontSize: 30,
+    letterSpacing: 1,
+    textShadowColor: 'rgba(255,189,89,0.35)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 18,
   },
-  // Bebas Neue is tall/condensed, so it reads best larger with tight tracking.
-  bebas: {
-    fontFamily: 'BebasNeue_400Regular',
-    fontSize: 72,
-    letterSpacing: 3,
-  },
-  systemFallback: {
-    fontSize: 46,
-    fontWeight: '900',
-    letterSpacing: 4,
-  },
+  white: { color: WHITE },
+  gold: { color: GOLD },
 });

@@ -7,7 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { Screen, Loader, AppText, Artwork, Button, IconButton } from '@/components/common';
 import { AlbumCard, TrackRow } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
-import { useAppDispatch, useAppSelector, usePlayer, useVisibleAlbums } from '@/hooks';
+import { useAppDispatch, useAppSelector, usePlayer, useVisibleAlbums, useVisibleTracks } from '@/hooks';
+import { usePlaylistMenu } from '@/components/playlists';
 import { toggleFollowArtist } from '@/redux';
 import { ArtistRepository } from '@/repositories';
 import { Album, Artist, Track } from '@/types';
@@ -24,12 +25,14 @@ export const ArtistDetailsScreen: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
+  const { openTrackOptions } = usePlaylistMenu();
 
   const [artist, setArtist] = useState<Artist | null>(null);
   const [albums, setAlbums] = useState<Album[]>([]);
   const [topTracks, setTopTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const visibleAlbums = useVisibleAlbums(albums);
+  const visibleTopTracks = useVisibleTracks(topTracks);
 
   const following = useAppSelector((s) => s.library.followedArtistIds.includes(params.artistId));
 
@@ -65,7 +68,7 @@ export const ArtistDetailsScreen: React.FC = () => {
     return (
       <Screen>
         <View style={styles.center}>
-          <AppText color="textMuted">Artist not found.</AppText>
+          <AppText color="textMuted">{t('errors.artistNotFound')}</AppText>
         </View>
       </Screen>
     );
@@ -102,8 +105,8 @@ export const ArtistDetailsScreen: React.FC = () => {
           <IconButton
             name="play-circle"
             size={52}
-            color="#E50914"
-            onPress={() => topTracks.length && playTracks(topTracks, 0)}
+            color="#007FFF"
+            onPress={() => visibleTopTracks.length && playTracks(visibleTopTracks, 0)}
           />
         </View>
 
@@ -117,12 +120,13 @@ export const ArtistDetailsScreen: React.FC = () => {
           {t('artist.popular')}
         </AppText>
         <View style={styles.list}>
-          {topTracks.map((track) => (
+          {visibleTopTracks.map((track) => (
             <TrackRow
               key={track.id}
               track={track}
               isActive={currentTrack?.id === track.id}
-              onPress={() => playFrom(topTracks, track.id)}
+              onPress={() => playFrom(visibleTopTracks, track.id)}
+              onOptions={openTrackOptions}
             />
           ))}
         </View>

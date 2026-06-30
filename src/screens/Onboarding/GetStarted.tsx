@@ -11,7 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { AppText, IconButton } from '@/components/common';
+import { AppText, BrandLogo, IconButton } from '@/components/common';
 
 interface GetStartedProps {
   onBack: () => void;
@@ -19,7 +19,7 @@ interface GetStartedProps {
   onContinue: () => void;
 }
 
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
  * "Ready to listen?" sign-in / get-started screen (Netflix style): back arrow +
@@ -37,7 +37,7 @@ export const GetStarted: React.FC<GetStartedProps> = ({ onBack, onContinue }) =>
         {/* Header: back + wordmark. */}
         <View style={styles.header}>
           <IconButton name="arrow-back" size={26} onPress={onBack} />
-          <AppText style={styles.logo}>JUBILUJAH</AppText>
+          <BrandLogo textStyle={styles.logo} />
         </View>
 
         <KeyboardAvoidingView
@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 6,
   },
-  logo: { color: RED, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
+  logo: { color: ACCENT, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
   content: { paddingHorizontal: 22, paddingTop: 18 },
   title: { color: '#FFFFFF', fontSize: 28, lineHeight: 36, fontWeight: '800' },
   subtitle: { marginTop: 12, fontSize: 16, lineHeight: 22 },
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
   },
   cta: {
     marginTop: 16,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 52,
     borderRadius: 6,
     alignItems: 'center',

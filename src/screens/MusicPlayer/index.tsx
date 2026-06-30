@@ -13,11 +13,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AppText, Artwork, IconButton } from '@/components/common';
 import { ProgressBar } from '@/components/player';
 import { TrackRow } from '@/components/cards';
 import { TrackOptionsModal, TrackOption } from '@/components/modals';
+import { usePlaylistMenu } from '@/components/playlists';
 import { useAppDispatch, useAppSelector, usePlayer, useSafeProgress } from '@/hooks';
 import { toggleFavoriteTrack } from '@/redux';
 import type { RootStackParamList } from '@/navigation/types';
@@ -28,6 +30,7 @@ const ART = width - 48;
 
 export const MusicPlayerScreen: React.FC = () => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
   const {
@@ -45,6 +48,7 @@ export const MusicPlayerScreen: React.FC = () => {
     toggleShuffle,
     playFrom,
   } = usePlayer();
+  const { addToPlaylist } = usePlaylistMenu();
   const { position, duration } = useSafeProgress(250);
   const isFavorite = useAppSelector((s) =>
     currentTrack ? s.library.favoriteTrackIds.includes(currentTrack.id) : false,
@@ -55,7 +59,7 @@ export const MusicPlayerScreen: React.FC = () => {
   if (!currentTrack) {
     return (
       <View style={[styles.empty, { backgroundColor: theme.colors.background }]}>
-        <AppText color="textMuted">Nothing playing.</AppText>
+        <AppText color="textMuted">{t('player.nothingPlaying')}</AppText>
         <IconButton name="chevron-down" size={28} onPress={() => navigation.goBack()} style={styles.emptyClose} />
       </View>
     );
@@ -73,25 +77,25 @@ export const MusicPlayerScreen: React.FC = () => {
   const trackOptions: TrackOption[] = [
     {
       key: 'like',
-      label: isFavorite ? 'Remove from Liked Songs' : 'Like',
+      label: isFavorite ? t('player.removeFromLiked') : t('player.like'),
       icon: isFavorite ? 'heart' : 'heart-outline',
-      onPress: (t) => dispatch(toggleFavoriteTrack(t)),
+      onPress: (track) => dispatch(toggleFavoriteTrack(track)),
     },
     {
       key: 'album',
-      label: 'Go to album',
+      label: t('player.goToAlbum'),
       icon: 'albums-outline',
-      onPress: (t) => navigation.navigate('AlbumDetails', { albumId: t.albumId }),
+      onPress: (track) => navigation.navigate('AlbumDetails', { albumId: track.albumId }),
     },
     {
       key: 'artist',
-      label: 'Go to artist',
+      label: t('player.goToArtist'),
       icon: 'person-outline',
-      onPress: (t) => navigation.navigate('ArtistDetails', { artistId: t.artistId }),
+      onPress: (track) => navigation.navigate('ArtistDetails', { artistId: track.artistId }),
     },
     {
       key: 'share',
-      label: 'Share',
+      label: t('player.share'),
       icon: 'share-outline',
       onPress: () => onShare(),
     },
@@ -134,12 +138,17 @@ export const MusicPlayerScreen: React.FC = () => {
               </AppText>
             </Pressable>
           </View>
-          <IconButton
-            name={isFavorite ? 'heart' : 'heart-outline'}
-            size={28}
-            color={isFavorite ? theme.colors.accent : theme.colors.icon}
-            onPress={() => dispatch(toggleFavoriteTrack(currentTrack))}
-          />
+          <View style={styles.titleActions}>
+            <Pressable onPress={() => addToPlaylist(currentTrack)} hitSlop={10} style={styles.titleAction}>
+              <MaterialCommunityIcons name="playlist-plus" size={30} color={theme.colors.icon} />
+            </Pressable>
+            <IconButton
+              name={isFavorite ? 'heart' : 'heart-outline'}
+              size={28}
+              color={isFavorite ? theme.colors.accent : theme.colors.icon}
+              onPress={() => dispatch(toggleFavoriteTrack(currentTrack))}
+            />
+          </View>
         </View>
 
         <ProgressBar position={position} duration={duration} onSeek={seekTo} />
@@ -203,7 +212,7 @@ export const MusicPlayerScreen: React.FC = () => {
             style={[styles.queueSheet, { backgroundColor: theme.colors.backgroundElevated }]}
           >
             <View style={styles.queueHeader}>
-              <AppText variant="h2">Up next</AppText>
+              <AppText variant="h2">{t('player.upNext')}</AppText>
               <IconButton name="close" size={24} onPress={() => setQueueOpen(false)} />
             </View>
             <FlatList
@@ -222,7 +231,7 @@ export const MusicPlayerScreen: React.FC = () => {
               )}
               ListEmptyComponent={
                 <AppText color="textMuted" style={styles.queueEmpty}>
-                  The queue is empty.
+                  {t('player.queueEmpty')}
                 </AppText>
               }
             />
@@ -250,6 +259,8 @@ const styles = StyleSheet.create({
   body: { paddingHorizontal: 24, paddingBottom: 36 },
   titleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   titleText: { flex: 1, marginRight: 12 },
+  titleActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  titleAction: { alignItems: 'center', justifyContent: 'center' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16 },
   playBtn: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center' },
   repeatBtn: { alignItems: 'center', justifyContent: 'center' },

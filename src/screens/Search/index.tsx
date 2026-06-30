@@ -17,6 +17,7 @@ import {
   useVisibleTracks,
 } from '@/hooks';
 import { runSearch, setQuery, addRecentSearch, clearRecentSearches } from '@/redux';
+import { usePlaylistMenu } from '@/components/playlists';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -27,6 +28,7 @@ export const SearchScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
   const { playTracks } = usePlayer();
+  const { openTrackOptions } = usePlaylistMenu();
 
   const { query, results, recent, status } = useAppSelector((s) => s.search);
   const [input, setInput] = useState(query);
@@ -125,7 +127,12 @@ export const SearchScreen: React.FC = () => {
               <Section title={t('search.sectionTracks')}>
                 <View style={styles.tracks}>
                   {tracks.map((track) => (
-                    <TrackRow key={track.id} track={track} onPress={() => playTracks([track], 0)} />
+                    <TrackRow
+                      key={track.id}
+                      track={track}
+                      onPress={() => playTracks([track], 0)}
+                      onOptions={openTrackOptions}
+                    />
                   ))}
                 </View>
               </Section>

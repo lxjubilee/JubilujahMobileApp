@@ -14,7 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AppText, IconButton, PasswordInput } from '@/components/common';
+import { useTranslation } from 'react-i18next';
+import { AppText, BrandLogo, IconButton, PasswordInput } from '@/components/common';
 import { TurnstileWidget } from '@/components/auth/TurnstileWidget';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { signIn, clearAuthError } from '@/redux';
@@ -22,7 +23,7 @@ import { CONFIG } from '@/constants';
 import type { AuthStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'SignIn'>;
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
  * "Ready to listen?" — real email + password sign-in against the SSO backend.
@@ -32,6 +33,7 @@ const RED = '#E50914';
 export const SignInScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const status = useAppSelector((s) => s.auth.status);
   const error = useAppSelector((s) => s.auth.error);
 
@@ -91,7 +93,7 @@ export const SignInScreen: React.FC = () => {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <IconButton name="arrow-back" size={26} onPress={onBack} />
-          <AppText style={styles.logo}>JUBILUJAH</AppText>
+          <BrandLogo textStyle={styles.logo} />
         </View>
 
         <KeyboardAvoidingView
@@ -103,20 +105,20 @@ export const SignInScreen: React.FC = () => {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <AppText style={styles.title}>Ready to listen?</AppText>
+            <AppText style={styles.title}>{t('auth.signin.title')}</AppText>
             <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-              Enter your email and password to sign in.
+              {t('auth.signin.subtitle')}
             </AppText>
 
             <TextInput
               value={email}
-              onChangeText={(t) => {
-                setEmail(t);
+              onChangeText={(v) => {
+                setEmail(v);
                 if (error) dispatch(clearAuthError());
               }}
               onFocus={() => setFocused('email')}
               onBlur={() => setFocused(null)}
-              placeholder="Email"
+              placeholder={t('auth.signin.email')}
               placeholderTextColor="#8A8A99"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -126,13 +128,13 @@ export const SignInScreen: React.FC = () => {
 
             <PasswordInput
               value={password}
-              onChangeText={(t) => {
-                setPassword(t);
+              onChangeText={(v) => {
+                setPassword(v);
                 if (error) dispatch(clearAuthError());
               }}
               onFocus={() => setFocused('password')}
               onBlur={() => setFocused(null)}
-              placeholder="Password"
+              placeholder={t('auth.signin.password')}
               onSubmitEditing={onSubmit}
               returnKeyType="go"
               containerStyle={[styles.inputSpaced, { borderColor: borderFor('password') }]}
@@ -164,7 +166,7 @@ export const SignInScreen: React.FC = () => {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <AppText variant="h3" style={styles.ctaLabel}>
-                  Sign In
+                  {t('auth.signin.submit')}
                 </AppText>
               )}
             </Pressable>
@@ -175,24 +177,24 @@ export const SignInScreen: React.FC = () => {
               onPress={() => navigation.navigate('ForgotPassword')}
             >
               <AppText variant="h3" style={styles.helpText}>
-                Forgot password?
+                {t('auth.signin.forgot')}
               </AppText>
               <Ionicons name="chevron-forward" size={16} color="#FFFFFF" />
             </Pressable>
 
             <View style={styles.signupRow}>
               <AppText variant="body" color="textMuted">
-                New to Jubilujah?{' '}
+                {t('auth.signin.newPrompt')}
               </AppText>
               <Pressable hitSlop={6} onPress={() => navigation.navigate('SignUp')}>
                 <AppText variant="body" style={styles.signupLink}>
-                  Sign up
+                  {t('auth.signin.signUp')}
                 </AppText>
               </Pressable>
             </View>
 
             <AppText variant="bodySm" color="textMuted" style={styles.recaptcha}>
-              This page is protected to ensure you&apos;re not a bot.
+              {t('auth.signin.botNotice')}
             </AppText>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -213,7 +215,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 6,
   },
-  logo: { color: RED, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
+  logo: { color: ACCENT, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
   content: { paddingHorizontal: 22, paddingTop: 18 },
   title: { color: '#FFFFFF', fontSize: 28, lineHeight: 36, fontWeight: '800' },
   subtitle: { marginTop: 12, fontSize: 16, lineHeight: 22 },
@@ -231,7 +233,7 @@ const styles = StyleSheet.create({
   error: { marginTop: 14 },
   cta: {
     marginTop: 18,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 52,
     borderRadius: 6,
     alignItems: 'center',

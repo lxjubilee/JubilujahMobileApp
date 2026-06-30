@@ -11,11 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { AppText, IconButton } from '@/components/common';
+import { useTranslation } from 'react-i18next';
+import { AppText, BrandLogo, IconButton } from '@/components/common';
 import { useAppDispatch } from '@/hooks';
 import { forgotPassword } from '@/redux';
 
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
  * Request a password-reset email. The API is anti-enumeration (identical
@@ -25,6 +26,7 @@ const RED = '#E50914';
 export const ForgotPasswordScreen: React.FC = () => {
   const navigation = useNavigation();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
@@ -42,7 +44,7 @@ export const ForgotPasswordScreen: React.FC = () => {
       await dispatch(forgotPassword(email)).unwrap();
       setSent(true);
     } catch (e) {
-      setError(typeof e === 'string' ? e : 'Something went wrong. Please try again.');
+      setError(typeof e === 'string' ? e : t('errors.generic'));
     } finally {
       setSubmitting(false);
     }
@@ -54,7 +56,7 @@ export const ForgotPasswordScreen: React.FC = () => {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <IconButton name="arrow-back" size={26} onPress={() => navigation.goBack()} />
-          <AppText style={styles.logo}>JUBILUJAH</AppText>
+          <BrandLogo textStyle={styles.logo} />
         </View>
 
         <KeyboardAvoidingView
@@ -62,36 +64,35 @@ export const ForgotPasswordScreen: React.FC = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={styles.content}>
-            <AppText style={styles.title}>Reset your password</AppText>
+            <AppText style={styles.title}>{t('auth.forgot.title')}</AppText>
 
             {sent ? (
               <>
                 <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-                  If an account exists for {email.trim()}, we&apos;ve sent a reset link. Open it on
-                  the web to choose a new password, then come back and sign in.
+                  {t('auth.forgot.sentMessage', { email: email.trim() })}
                 </AppText>
                 <Pressable
                   onPress={() => navigation.goBack()}
                   style={({ pressed }) => [styles.cta, { opacity: pressed ? 0.85 : 1 }]}
                 >
                   <AppText variant="h3" style={styles.ctaLabel}>
-                    Back to Sign In
+                    {t('auth.forgot.backToSignIn')}
                   </AppText>
                 </Pressable>
               </>
             ) : (
               <>
                 <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-                  Enter your account email and we&apos;ll send a link to reset your password.
+                  {t('auth.forgot.instruction')}
                 </AppText>
 
                 <TextInput
                   value={email}
-                  onChangeText={(t) => {
-                    setEmail(t);
+                  onChangeText={(v) => {
+                    setEmail(v);
                     if (error) setError(null);
                   }}
-                  placeholder="Email"
+                  placeholder={t('auth.forgot.email')}
                   placeholderTextColor="#8A8A99"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -119,7 +120,7 @@ export const ForgotPasswordScreen: React.FC = () => {
                     <ActivityIndicator color="#FFFFFF" />
                   ) : (
                     <AppText variant="h3" style={styles.ctaLabel}>
-                      Send Reset Link
+                      {t('auth.forgot.submit')}
                     </AppText>
                   )}
                 </Pressable>
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 6,
   },
-  logo: { color: RED, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
+  logo: { color: ACCENT, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
   content: { paddingHorizontal: 22, paddingTop: 18 },
   title: { color: '#FFFFFF', fontSize: 28, lineHeight: 36, fontWeight: '800' },
   subtitle: { marginTop: 12, fontSize: 16, lineHeight: 22 },
@@ -162,7 +163,7 @@ const styles = StyleSheet.create({
   error: { marginTop: 14 },
   cta: {
     marginTop: 20,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 52,
     borderRadius: 6,
     alignItems: 'center',

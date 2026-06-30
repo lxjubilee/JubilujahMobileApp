@@ -1,9 +1,9 @@
 import React from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Animated, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context';
-import { useFonts, BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
-import { AppText, ProfileButton } from '@/components/common';
+import { AppText, BrandLogo, ProfileButton } from '@/components/common';
+import { langFlagUrl } from '@/localization';
 
 /** The "show everything" chip, always first in the filter row. */
 export const HOME_FILTER_ALL = 'Home';
@@ -25,6 +25,10 @@ interface HomeHeaderProps {
   bgAnim: Animated.Value;
   /** Opens the profile page. */
   onPressProfile?: () => void;
+  /** Current language code — drives the flag shown on the language button. */
+  language?: string;
+  /** Opens the language picker. */
+  onPressLanguage?: () => void;
 }
 
 /**
@@ -41,10 +45,11 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   chipsAnim,
   bgAnim,
   onPressProfile,
+  language,
+  onPressLanguage,
 }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const [fontsLoaded] = useFonts({ BebasNeue_400Regular });
 
   return (
     <View style={styles.container} pointerEvents="box-none">
@@ -58,14 +63,24 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
       <View style={[styles.inner, { paddingTop: insets.top + 6 }]}>
         <View style={styles.topRow}>
-          <AppText
-            style={[styles.brand, fontsLoaded ? styles.brandBebas : styles.brandFallback]}
-            allowFontScaling={false}
-          >
-            JUBILUJAH
-          </AppText>
+          <BrandLogo size={34} textStyle={[styles.brand, styles.brandText]} />
 
           <View style={styles.actions}>
+            {onPressLanguage ? (
+              <Pressable
+                onPress={onPressLanguage}
+                hitSlop={8}
+                style={styles.langButton}
+                accessibilityRole="button"
+                accessibilityLabel="Change language"
+              >
+                <Image
+                  source={{ uri: langFlagUrl(language ?? 'en', 80) }}
+                  style={styles.langFlag}
+                  resizeMode="cover"
+                />
+              </Pressable>
+            ) : null}
             <ProfileButton onPress={onPressProfile} />
           </View>
         </View>
@@ -128,11 +143,21 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   solidBg: { backgroundColor: '#000' },
-  brand: { color: '#E50914' },
-  // Netflix-style condensed, premium wordmark.
-  brandBebas: { fontFamily: 'BebasNeue_400Regular', fontSize: 30, lineHeight: 34, letterSpacing: 2 },
-  brandFallback: { fontSize: 24, lineHeight: 28, fontWeight: '900', letterSpacing: 1.5 },
-  actions: { flexDirection: 'row', alignItems: 'center' },
+  brand: { color: '#007FFF' },
+  // Bold mixed-case wordmark ("JubiLujah").
+  brandText: { fontSize: 26, lineHeight: 30, fontWeight: '900', letterSpacing: 0.5 },
+  actions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  langButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: '#222',
+  },
+  // Square + cover so the rectangular flag is cropped into the round button.
+  langFlag: { width: '100%', height: '100%' },
   iconWrap: { position: 'relative' },
   countBadge: {
     position: 'absolute',

@@ -11,12 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { AppText, IconButton, OtpInput } from '@/components/common';
+import { useTranslation } from 'react-i18next';
+import { AppText, BrandLogo, IconButton, OtpInput } from '@/components/common';
 import { useAppDispatch } from '@/hooks';
 import { verifySignup, resendSignup } from '@/redux';
 import type { AuthStackParamList, AuthStackScreenProps } from '@/navigation/types';
 
-const RED = '#E50914';
+const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
  * Sign-up phase 2: enter the 6-digit code emailed by /signup. On success the
@@ -27,6 +28,7 @@ export const VerifySignupScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   const { params } = useRoute<AuthStackScreenProps<'VerifySignup'>['route']>();
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export const VerifySignupScreen: React.FC = () => {
       ).unwrap();
       // Success → slice sets authenticated; RootGate swaps to the main app.
     } catch (e) {
-      setError(typeof e === 'string' ? e : 'Verification failed. Please try again.');
+      setError(typeof e === 'string' ? e : t('auth.verify.failed'));
     } finally {
       setSubmitting(false);
     }
@@ -65,7 +67,7 @@ export const VerifySignupScreen: React.FC = () => {
       await dispatch(resendSignup(params.verificationGuid)).unwrap();
       setCooldown(60);
     } catch (e) {
-      setError(typeof e === 'string' ? e : 'Could not resend the code.');
+      setError(typeof e === 'string' ? e : t('auth.verify.resendFailed'));
     }
   };
 
@@ -75,7 +77,7 @@ export const VerifySignupScreen: React.FC = () => {
       <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
         <View style={styles.header}>
           <IconButton name="arrow-back" size={26} onPress={() => navigation.goBack()} />
-          <AppText style={styles.logo}>JUBILUJAH</AppText>
+          <BrandLogo textStyle={styles.logo} />
         </View>
 
         <KeyboardAvoidingView
@@ -83,9 +85,9 @@ export const VerifySignupScreen: React.FC = () => {
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
           <View style={styles.content}>
-            <AppText style={styles.title}>Verify your email</AppText>
+            <AppText style={styles.title}>{t('auth.verify.title')}</AppText>
             <AppText variant="body" color="textSecondary" style={styles.subtitle}>
-              Enter the 6-digit code we sent to {params.email} to finish creating your account.
+              {t('auth.verify.subtitle', { email: params.email })}
             </AppText>
 
             <View style={styles.otpWrap}>
@@ -117,18 +119,18 @@ export const VerifySignupScreen: React.FC = () => {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <AppText variant="h3" style={styles.ctaLabel}>
-                  Verify & Create Account
+                  {t('auth.verify.submit')}
                 </AppText>
               )}
             </Pressable>
 
             <View style={styles.resendRow}>
               <AppText variant="body" color="textMuted">
-                Didn&apos;t get a code?{' '}
+                {t('auth.verify.noCodePrompt')}
               </AppText>
               <Pressable hitSlop={6} onPress={onResend} disabled={cooldown > 0}>
                 <AppText variant="body" style={[styles.resendLink, cooldown > 0 && styles.resendDisabled]}>
-                  {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
+                  {cooldown > 0 ? t('auth.verify.resendIn', { seconds: cooldown }) : t('auth.verify.resend')}
                 </AppText>
               </Pressable>
             </View>
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
     paddingBottom: 6,
   },
-  logo: { color: RED, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
+  logo: { color: ACCENT, fontSize: 20, lineHeight: 26, fontWeight: '900', letterSpacing: 1 },
   content: { paddingHorizontal: 22, paddingTop: 18 },
   title: { color: '#FFFFFF', fontSize: 28, lineHeight: 36, fontWeight: '800' },
   subtitle: { marginTop: 12, fontSize: 16, lineHeight: 22 },
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
   error: { marginTop: 14 },
   cta: {
     marginTop: 20,
-    backgroundColor: RED,
+    backgroundColor: ACCENT,
     height: 52,
     borderRadius: 6,
     alignItems: 'center',

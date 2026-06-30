@@ -20,6 +20,8 @@ export type RootStackParamList = {
   AlbumDetails: { albumId: string };
   ArtistDetails: { artistId: string };
   AlbumList: { title: string; artistId: string };
+  PlaylistDetails: { playlistId: string };
+  PlaylistAddSongs: { playlistId: string };
   MusicPlayer: undefined;
 };
 
@@ -38,6 +40,8 @@ export type AuthStackParamList = {
 /** Per-tab inner stacks (Library nests Profile). Downloads is hidden for v1. */
 export type LibraryStackParamList = {
   Library: undefined;
+  LikedSongs: undefined;
+  FollowedArtists: undefined;
   Profile: undefined;
   ChangePassword: undefined;
   PrivacyPolicy: undefined;

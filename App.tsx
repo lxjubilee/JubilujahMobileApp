@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
+import * as Font from 'expo-font';
+import { Orbitron_600SemiBold } from '@expo-google-fonts/orbitron';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Provider } from 'react-redux';
@@ -19,8 +21,15 @@ import { initAuthClient } from '@/services/auth';
 import { getManifest, onCatalogUpdated, invalidateCatalogIndex } from '@/services/catalog';
 import { CONFIG } from '@/constants';
 import { SplashScreen } from '@/components/SplashScreen';
+import { PlaylistMenuProvider } from '@/components/playlists';
 import { storage, STORAGE_KEYS } from '@/services/storage';
-import '@/localization'; // initialize i18next
+import { i18n } from '@/localization'; // initialize i18next
+
+/** Apply the persisted language to i18next once redux-persist has rehydrated. */
+const applyPersistedLanguage = () => {
+  const lang = store.getState().settings.language;
+  if (lang) void i18n.changeLanguage(lang);
+};
 
 /** Mounts the engine->Redux bridge exactly once, near the root. */
 const PlayerSyncGate: React.FC = () => {
@@ -58,6 +67,21 @@ const RootGate: React.FC = () => {
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  // Stable so the font-load re-render doesn't restart the splash animation.
+  const handleSplashFinish = useCallback(() => setShowSplash(false), []);
+
+  // Load the Orbitron brand font used by the JubiLujah.com wordmark (matches
+  // the web header: Orbitron 600). The splash overlay covers this window; we
+  // hold the main tree until it resolves so headers paint with the brand font
+  // instead of flashing the system font.
+  useEffect(() => {
+    Font.loadAsync({ Orbitron_600SemiBold })
+      .catch(() => {
+        // Continue even if fonts fail — the wordmark falls back to system font.
+      })
+      .finally(() => setFontsLoaded(true));
+  }, []);
 
   // Initialize the playback engine once on app start.
   useEffect(() => {
@@ -85,18 +109,20 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.flex}>
       <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
+        <PersistGate loading={null} persistor={persistor} onBeforeLift={applyPersistedLanguage}>
           <SafeAreaProvider>
             <ThemeProvider>
               <PlayerSyncGate />
-              <RootGate />
+              <PlaylistMenuProvider>
+                {fontsLoaded ? <RootGate /> : null}
+              </PlaylistMenuProvider>
             </ThemeProvider>
           </SafeAreaProvider>
         </PersistGate>
       </Provider>
 
       {/* Netflix-style intro overlay; unmounts when its animation finishes. */}
-      {showSplash ? <SplashScreen onFinish={() => setShowSplash(false)} /> : null}
+      {showSplash ? <SplashScreen onFinish={handleSplashFinish} /> : null}
     </GestureHandlerRootView>
   );
 }
