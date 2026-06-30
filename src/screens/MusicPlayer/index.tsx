@@ -5,7 +5,6 @@ import {
   FlatList,
   Modal,
   Pressable,
-  Share,
   StyleSheet,
   View,
 } from 'react-native';
@@ -21,6 +20,7 @@ import { TrackRow } from '@/components/cards';
 import { TrackOptionsModal, TrackOption } from '@/components/modals';
 import { usePlaylistMenu } from '@/components/playlists';
 import { useAppDispatch, useAppSelector, usePlayer, useSafeProgress } from '@/hooks';
+import { shareAlbum } from '@/services/share';
 import { toggleFavoriteTrack } from '@/redux';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -67,9 +67,12 @@ export const MusicPlayerScreen: React.FC = () => {
 
   const repeatActive = repeatMode !== 'off';
 
+  // Sharing is album-level: share the album the current track belongs to.
   const onShare = () => {
-    void Share.share({
-      message: `${currentTrack.title} — ${currentTrack.artistName}\nListen on Jubilujah: jubilujah://track/${currentTrack.id}`,
+    void shareAlbum({
+      code: currentTrack.albumId,
+      title: currentTrack.albumName,
+      artistName: currentTrack.artistName,
     });
   };
 

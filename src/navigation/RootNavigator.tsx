@@ -1,5 +1,10 @@
 import React from 'react';
-import { NavigationContainer, DarkTheme, Theme as NavTheme } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  DarkTheme,
+  Theme as NavTheme,
+  useNavigationContainerRef,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@/context';
 import {
@@ -12,12 +17,14 @@ import {
 } from '@/screens';
 import { MainTabNavigator } from './MainTabNavigator';
 import { linking } from './linking';
+import { ShareDeepLinks } from './useShareDeepLinks';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const RootNavigator: React.FC = () => {
   const theme = useTheme();
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
 
   const navTheme: NavTheme = {
     ...DarkTheme,
@@ -32,7 +39,7 @@ export const RootNavigator: React.FC = () => {
   };
 
   return (
-    <NavigationContainer theme={navTheme} linking={linking}>
+    <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         {/* Detail screens push full-screen over the tabs, Netflix-style. */}
@@ -46,6 +53,8 @@ export const RootNavigator: React.FC = () => {
           <Stack.Screen name="PlaylistAddSongs" component={PlaylistAddSongsScreen} />
         </Stack.Group>
       </Stack.Navigator>
+      {/* Resolves incoming share/deep links -> play the shared track. */}
+      <ShareDeepLinks navRef={navigationRef} />
     </NavigationContainer>
   );
 };

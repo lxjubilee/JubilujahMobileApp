@@ -1,9 +1,14 @@
 import type { LinkingOptions } from '@react-navigation/native';
 import type { RootStackParamList } from './types';
 
-/** Deep-link configuration, e.g. jubilujah://album/al_aurora_lights */
+/**
+ * Deep-link configuration for the custom scheme + universal/App Links on the
+ * web domain, e.g. jubilujah://album/JEIM1071EN or https://jubilujah.com/album.
+ * Album share links (…/album?c=CODE) are handled by useShareDeepLinks, which
+ * navigates to the album; React Navigation owns the path-style routes below.
+ */
 export const linking: LinkingOptions<RootStackParamList> = {
-  prefixes: ['jubilujah://', 'https://jubileeverse.com'],
+  prefixes: ['jubilujah://', 'https://jubilujah.com', 'https://www.jubilujah.com'],
   config: {
     screens: {
       MainTabs: {

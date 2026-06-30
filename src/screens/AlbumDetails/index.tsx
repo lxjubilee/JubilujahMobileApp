@@ -9,6 +9,7 @@ import { TrackRow } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
 import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
 import { usePlaylistMenu } from '@/components/playlists';
+import { shareAlbum } from '@/services/share';
 import { toggleSavedAlbum, toggleFavoriteTrack } from '@/redux';
 import { AlbumRepository } from '@/repositories';
 import { Album, Track } from '@/types';
@@ -54,6 +55,12 @@ export const AlbumDetailsScreen: React.FC = () => {
     const shuffled = [...tracks].sort(() => Math.random() - 0.5);
     playTracks(shuffled, 0);
   }, [tracks, playTracks]);
+
+  const onShare = useCallback(() => {
+    if (album) {
+      void shareAlbum({ code: album.id, title: album.title, artistName: album.artistName });
+    }
+  }, [album]);
 
   if (loading) {
     return (
@@ -115,6 +122,7 @@ export const AlbumDetailsScreen: React.FC = () => {
               size={30}
               onPress={() => dispatch(toggleSavedAlbum(album))}
             />
+            <IconButton name="share-outline" size={26} onPress={onShare} style={styles.share} />
           </View>
           <View style={styles.actionsRight}>
             <IconButton name="shuffle" size={26} onPress={onShuffle} style={styles.dl} />
@@ -159,6 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   actionsLeft: { flexDirection: 'row', alignItems: 'center' },
+  share: { marginLeft: 18 },
   actionsRight: { flexDirection: 'row', alignItems: 'center' },
   dl: { marginHorizontal: 14 },
   list: { paddingHorizontal: 16 },

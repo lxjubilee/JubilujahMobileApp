@@ -17,6 +17,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.jubilujah.app",
+      "associatedDomains": [
+        "applinks:jubilujah.com",
+        "applinks:www.jubilujah.com"
+      ],
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
@@ -34,7 +38,18 @@
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
         "android.permission.WAKE_LOCK"
       ],
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "jubilujah.com", "pathPrefix": "/album" },
+            { "scheme": "https", "host": "www.jubilujah.com", "pathPrefix": "/album" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
