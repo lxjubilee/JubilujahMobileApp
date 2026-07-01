@@ -1,6 +1,8 @@
 import { authClient } from '@/services/auth/authClient';
 import type {
   MyReview,
+  MyReviewRow,
+  ReviewContributions,
   ReviewListPage,
   ReviewSort,
   ReviewSummary,
@@ -8,12 +10,20 @@ import type {
 } from '@/types';
 import type {
   BatchSummariesResponseDto,
+  ContributionsDto,
   DeleteReviewResponseDto,
+  MyReviewRowDto,
   ReviewListResponseDto,
   ReviewSummaryDto,
   UpsertReviewResponseDto,
 } from './dto';
-import { mapMyReview, mapReviewListPage, mapSummary } from './mappers';
+import {
+  mapContributions,
+  mapMyReview,
+  mapMyReviewRow,
+  mapReviewListPage,
+  mapSummary,
+} from './mappers';
 
 /**
  * Thin client for the public reviews API (`/api/reviews/*` on
@@ -84,5 +94,17 @@ export const reviewsApi = {
   remove: async (type: ReviewTargetType, id: string): Promise<{ summary: ReviewSummary }> => {
     const { data } = await authClient.delete<DeleteReviewResponseDto>(`${BASE}/${type}/${id}`);
     return { summary: mapSummary(data.summary) };
+  },
+
+  /** The caller's aggregate rating/review activity. Requires auth. */
+  getContributions: async (): Promise<ReviewContributions> => {
+    const { data } = await authClient.get<ContributionsDto>(`${BASE}/me/contributions`);
+    return mapContributions(data);
+  },
+
+  /** The caller's own reviews (with their targets). Requires auth. */
+  getMyReviews: async (): Promise<MyReviewRow[]> => {
+    const { data } = await authClient.get<MyReviewRowDto[]>(`${BASE}/me/reviews`);
+    return (data ?? []).map(mapMyReviewRow);
   },
 };

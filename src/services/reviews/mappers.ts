@@ -1,14 +1,18 @@
 import type {
   MyReview,
+  MyReviewRow,
   RatingDistribution,
+  ReviewContributions,
   ReviewListItem,
   ReviewListPage,
   ReviewSort,
   ReviewSummary,
 } from '@/types';
 import type {
+  ContributionsDto,
   DistributionDto,
   MyReviewDto,
+  MyReviewRowDto,
   ReviewItemDto,
   ReviewListResponseDto,
   ReviewSummaryDto,
@@ -67,4 +71,19 @@ export const mapReviewListPage = (d: ReviewListResponseDto): ReviewListPage => (
   total: d.total,
   hasMore: d.has_more ?? false,
   sort: (d.sort === 'helpful' ? 'recent' : d.sort) as ReviewSort,
+});
+
+export const mapContributions = (d: ContributionsDto): ReviewContributions => ({
+  albumsRated: d.albums_rated ?? 0,
+  songsRated: d.songs_rated ?? 0,
+  reviewsWritten: d.reviews_written ?? 0,
+  totalContributions: d.total_contributions ?? 0,
+  helpfulReceived: d.helpful_received ?? 0,
+});
+
+export const mapMyReviewRow = (d: MyReviewRowDto): MyReviewRow => ({
+  ...mapMyReview(d),
+  status: d.status ?? 'published',
+  targetType: d.target_type,
+  targetId: d.target_id,
 });

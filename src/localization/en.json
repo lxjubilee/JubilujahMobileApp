@@ -193,6 +193,22 @@
     "emptyHint": "Tap “Add songs” to add music to this playlist.",
     "notFound": "Playlist not found."
   },
+  "contributions": {
+    "title": "My Contributions",
+    "albumsRated": "Albums rated",
+    "songsRated": "Songs rated",
+    "reviewsWritten": "Reviews written",
+    "helpfulReceived": "Helpful votes received",
+    "total": "Total contributions",
+    "yourReviews": "Your reviews",
+    "empty": "You haven't written any reviews yet.",
+    "target_album": "Album",
+    "target_song": "Song",
+    "status_published": "Published",
+    "status_pending": "Pending",
+    "status_hidden": "Hidden",
+    "status_rejected": "Rejected"
+  },
   "reviews": {
     "screenTitle": "Ratings & Reviews",
     "rateTitle": "Rate",

@@ -76,3 +76,18 @@ export interface DeleteReviewResponseDto {
 export interface BatchSummariesResponseDto {
   summaries: Record<string, ReviewSummaryDto>;
 }
+
+/** `GET /api/reviews/me/contributions` response. */
+export interface ContributionsDto {
+  albums_rated: number;
+  songs_rated: number;
+  reviews_written: number;
+  total_contributions: number;
+  helpful_received: number;
+}
+
+/** One row of `GET /api/reviews/me/reviews` — a MyReview plus its target. */
+export interface MyReviewRowDto extends MyReviewDto {
+  target_type: ReviewTargetTypeDto;
+  target_id: string;
+}

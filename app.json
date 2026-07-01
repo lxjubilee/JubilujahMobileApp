@@ -5,13 +5,13 @@
     "scheme": "jubilujah",
     "version": "2.0.0",
     "orientation": "portrait",
-    "icon": "./assets/Jubilujah-app-logo.png",
+    "icon": "./assets/Jubilujah-App-Icon.png",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0B0B0F",
     "newArchEnabled": false,
     "splash": {
-      "image": "./assets/Jubilujah-app-logo.png",
-      "backgroundColor": "#0B0B0F",
+      "image": "./assets/Jubilujah-App-Icon.png",
+      "backgroundColor": "#000000",
       "resizeMode": "contain"
     },
     "ios": {
@@ -30,8 +30,8 @@
     "android": {
       "package": "com.jubilujah.app",
       "adaptiveIcon": {
-        "backgroundColor": "#0B0B0F",
-        "foregroundImage": "./assets/Jubilujah-app-logo.png"
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/Jubilujah-App-Icon.png"
       },
       "permissions": [
         "android.permission.FOREGROUND_SERVICE",

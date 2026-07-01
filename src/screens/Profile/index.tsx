@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { Screen, AppText, Button, IconButton, ConfirmDialog } from '@/components/common';
+import { MyContributions } from '@/components/reviews';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { signOut, deleteAccount, clearSession } from '@/redux';
 import type { LibraryStackParamList } from '@/navigation/types';
@@ -50,56 +51,61 @@ export const ProfileScreen: React.FC = () => {
         </AppText>
       </View>
 
-      <View style={styles.body}>
-        <View
-          style={[
-            styles.avatar,
-            { backgroundColor: initial ? theme.colors.primary : theme.colors.surface },
-          ]}
-        >
-          {initial ? (
-            <AppText style={styles.avatarInitial} allowFontScaling={false}>
-              {initial}
-            </AppText>
-          ) : (
-            <Ionicons name="person" size={48} color={theme.colors.iconMuted} />
-          )}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <View style={styles.body}>
+          <View
+            style={[
+              styles.avatar,
+              { backgroundColor: initial ? theme.colors.primary : theme.colors.surface },
+            ]}
+          >
+            {initial ? (
+              <AppText style={styles.avatarInitial} allowFontScaling={false}>
+                {initial}
+              </AppText>
+            ) : (
+              <Ionicons name="person" size={48} color={theme.colors.iconMuted} />
+            )}
+          </View>
+          <AppText variant="h2" style={styles.name}>
+            {user?.displayName ?? t('profile.guest')}
+          </AppText>
+          <AppText variant="bodySm" color="textMuted">
+            {user?.email ?? t('profile.notSignedIn')}
+          </AppText>
         </View>
-        <AppText variant="h2" style={styles.name}>
-          {user?.displayName ?? t('profile.guest')}
-        </AppText>
-        <AppText variant="bodySm" color="textMuted">
-          {user?.email ?? t('profile.notSignedIn')}
-        </AppText>
-      </View>
 
-      {/* Account options. */}
-      <View style={styles.menu}>
-        <Row
-          icon="lock-closed-outline"
-          label={t('profile.changePassword')}
-          onPress={() => navigation.navigate('ChangePassword')}
-        />
-        <Row
-          icon="shield-checkmark-outline"
-          label={t('profile.privacyPolicy')}
-          onPress={() => navigation.navigate('PrivacyPolicy')}
-        />
-        <Row
-          icon="document-text-outline"
-          label={t('profile.termsOfUse')}
-          onPress={() => navigation.navigate('TermsOfUse')}
-        />
-        <Row icon="trash-outline" label={t('profile.deleteAccount')} destructive onPress={openDeleteConfirm} />
-      </View>
+        {/* Rating & review activity (mirrors the web account "My Contributions"). */}
+        <MyContributions />
 
-      <Button
-        label={t('profile.signOut')}
-        icon="log-out-outline"
-        variant="ghost"
-        onPress={() => dispatch(signOut())}
-        style={styles.cta}
-      />
+        {/* Account options. */}
+        <View style={styles.menu}>
+          <Row
+            icon="lock-closed-outline"
+            label={t('profile.changePassword')}
+            onPress={() => navigation.navigate('ChangePassword')}
+          />
+          <Row
+            icon="shield-checkmark-outline"
+            label={t('profile.privacyPolicy')}
+            onPress={() => navigation.navigate('PrivacyPolicy')}
+          />
+          <Row
+            icon="document-text-outline"
+            label={t('profile.termsOfUse')}
+            onPress={() => navigation.navigate('TermsOfUse')}
+          />
+          <Row icon="trash-outline" label={t('profile.deleteAccount')} destructive onPress={openDeleteConfirm} />
+        </View>
+
+        <Button
+          label={t('profile.signOut')}
+          icon="log-out-outline"
+          variant="ghost"
+          onPress={() => dispatch(signOut())}
+          style={styles.cta}
+        />
+      </ScrollView>
 
       <ConfirmDialog
         visible={mode === 'confirm'}
@@ -164,6 +170,7 @@ const Row: React.FC<{
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: 8 },
   title: { marginLeft: 8 },
+  scroll: { paddingBottom: 48 },
   body: { alignItems: 'center', marginTop: 40 },
   avatar: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
   avatarInitial: {

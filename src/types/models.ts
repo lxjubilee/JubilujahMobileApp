@@ -151,3 +151,26 @@ export interface ReviewListPage {
   hasMore: boolean;
   sort: ReviewSort;
 }
+
+/** The signed-in user's aggregate rating/review activity (profile section). */
+export interface ReviewContributions {
+  albumsRated: number;
+  songsRated: number;
+  reviewsWritten: number;
+  totalContributions: number;
+  helpfulReceived: number;
+}
+
+/** One of the caller's own reviews, with the target it belongs to. */
+export interface MyReviewRow {
+  id: ID;
+  stars: number;
+  title: string | null;
+  body: string | null;
+  status: string; // 'published' | 'pending' | 'hidden' | 'rejected'
+  helpfulCount: number;
+  createdAt: string;
+  edited: boolean;
+  targetType: ReviewTargetType;
+  targetId: ID;
+}
