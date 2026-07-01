@@ -19,9 +19,9 @@ import { ProgressBar } from '@/components/player';
 import { TrackRow } from '@/components/cards';
 import { TrackOptionsModal, TrackOption } from '@/components/modals';
 import { usePlaylistMenu } from '@/components/playlists';
-import { useAppDispatch, useAppSelector, usePlayer, useSafeProgress } from '@/hooks';
+import { useAppDispatch, useIsSongLiked, usePlayer, useSafeProgress } from '@/hooks';
 import { shareAlbum } from '@/services/share';
-import { toggleFavoriteTrack } from '@/redux';
+import { toggleSongLike } from '@/redux';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -50,9 +50,7 @@ export const MusicPlayerScreen: React.FC = () => {
   } = usePlayer();
   const { addToPlaylist } = usePlaylistMenu();
   const { position, duration } = useSafeProgress(250);
-  const isFavorite = useAppSelector((s) =>
-    currentTrack ? s.library.favoriteTrackIds.includes(currentTrack.id) : false,
-  );
+  const isFavorite = useIsSongLiked(currentTrack ?? { albumId: '', trackNumber: undefined });
   const [queueOpen, setQueueOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
 
@@ -82,7 +80,7 @@ export const MusicPlayerScreen: React.FC = () => {
       key: 'like',
       label: isFavorite ? t('player.removeFromLiked') : t('player.like'),
       icon: isFavorite ? 'heart' : 'heart-outline',
-      onPress: (track) => dispatch(toggleFavoriteTrack(track)),
+      onPress: (track) => dispatch(toggleSongLike(track)),
     },
     {
       key: 'album',
@@ -149,7 +147,7 @@ export const MusicPlayerScreen: React.FC = () => {
               name={isFavorite ? 'heart' : 'heart-outline'}
               size={28}
               color={isFavorite ? theme.colors.accent : theme.colors.icon}
-              onPress={() => dispatch(toggleFavoriteTrack(currentTrack))}
+              onPress={() => dispatch(toggleSongLike(currentTrack))}
             />
           </View>
         </View>

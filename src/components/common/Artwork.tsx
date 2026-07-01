@@ -62,7 +62,13 @@ export const Artwork: React.FC<ArtworkProps> = ({
           { backgroundColor: accentColor ?? theme.colors.surface },
         ]}
       >
-        <Ionicons name="musical-notes" size={iconSize} color="rgba(255,255,255,0.55)" />
+        {/* iconSize 0 is used to hide the glyph (e.g. blurred background art). A
+            size-0 Ionicons is a fontSize-0 <Text>, which throws natively when
+            measured on the New Architecture ("FontSize should be a positive
+            value") and wedges the render loop — so render no glyph in that case. */}
+        {iconSize > 0 ? (
+          <Ionicons name="musical-notes" size={iconSize} color="rgba(255,255,255,0.55)" />
+        ) : null}
       </View>
     );
   }

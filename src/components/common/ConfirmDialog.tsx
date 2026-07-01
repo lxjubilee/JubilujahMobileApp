@@ -51,8 +51,15 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   // screen can wedge the UI thread); top-anchoring keeps the buttons reachable.
   const hasInput = children != null;
 
+  // Mount the native <Modal> window ONLY while open. Rendering it permanently
+  // with visible={false} leaves a native window (and, for input dialogs, the
+  // keyboard) that lingers over a screen navigated to right after dismissal and
+  // swallows all touches (the app looks frozen). See the "modals freeze
+  // native-stack" note. Returning null fully tears the window down instead.
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={dismiss ?? onConfirm}>
+    <Modal visible transparent animationType="fade" onRequestClose={dismiss ?? onConfirm}>
       <Pressable style={[styles.backdrop, hasInput && styles.backdropTop]} onPress={dismiss}>
         {/* Inner press swallows taps so they don't close the dialog. */}
         <Pressable

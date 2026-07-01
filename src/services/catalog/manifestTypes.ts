@@ -8,8 +8,8 @@
  * change is absorbed here and never ripples into screens/redux.
  *
  * Notable gaps vs. the domain model: the manifest carries NO track duration,
- * release year, genre, artist image, or editorial home rails. Those are
- * defaulted or synthesized by the mapper.
+ * release year, artist image, or editorial home rails. Those are defaulted or
+ * synthesized by the mapper. (Album `genres` ARE present — see ManifestAlbum.)
  */
 
 export interface ManifestTrack {
@@ -48,6 +48,12 @@ export interface ManifestAlbum {
    * only an explicit `false` hides the album. See manifestMappers.hasArtwork().
    */
   hasArtwork?: boolean;
+  /**
+   * Genre tags for the album, most-specific first, e.g. ["Gospel", "Honky-Tonk"].
+   * Pre-resolved into the manifest (the web derives these from album-genres.json).
+   * Absent/empty for ~14% of albums — treat as "no genres".
+   */
+  genres?: string[];
   tracks: ManifestTrack[];
 }
 

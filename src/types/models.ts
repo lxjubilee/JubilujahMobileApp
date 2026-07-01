@@ -40,6 +40,8 @@ export interface Album {
   artistName: string;
   year?: number;
   genre?: string;
+  /** Genre tags, most-specific first, e.g. ["Gospel", "Honky-Tonk"]. */
+  genres?: string[];
   trackCount?: number;
   tracks?: Track[];
   /**
@@ -83,4 +85,69 @@ export interface SearchResults {
   albums: Album[];
   artists: Artist[];
   tracks: Track[];
+}
+
+// ---------------------------------------------------------------------------
+// Ratings & reviews (public review module — mirrors the web `/api/reviews/*`).
+// ---------------------------------------------------------------------------
+
+/** What a review targets. Matches the backend `rateable_type`. */
+export type ReviewTargetType = 'album' | 'song';
+
+/** Ordering options exposed in the mobile reviews list (helpful votes deferred). */
+export type ReviewSort = 'recent' | 'highest' | 'lowest';
+
+/** Count of ratings per star bucket, 1..5. */
+export interface RatingDistribution {
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+}
+
+/** The caller's own rating/review for a target, if they have one. */
+export interface MyReview {
+  id: ID;
+  stars: number; // 1..5
+  title: string | null;
+  body: string | null;
+  helpfulCount: number;
+  createdAt: string;
+  edited: boolean;
+}
+
+/** Aggregate rating summary for one target (+ the caller's own rating). */
+export interface ReviewSummary {
+  targetType: ReviewTargetType;
+  targetId: ID;
+  average: number | null; // 1..5, or null when there are no ratings
+  ratingCount: number;
+  reviewCount: number; // ratings that also carry a written body
+  distribution: RatingDistribution;
+  mine: MyReview | null;
+}
+
+/** A single review in a browsable list (another user's, or your own). */
+export interface ReviewListItem {
+  id: ID;
+  stars: number;
+  title: string | null;
+  body: string | null;
+  helpfulCount: number;
+  createdAt: string;
+  edited: boolean;
+  authorName: string;
+  authorAvatarUrl: string | null;
+  mine: boolean;
+}
+
+/** One page of reviews for a target. */
+export interface ReviewListPage {
+  items: ReviewListItem[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+  sort: ReviewSort;
 }

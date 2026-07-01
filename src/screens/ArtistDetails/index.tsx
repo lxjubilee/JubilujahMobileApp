@@ -74,6 +74,14 @@ export const ArtistDetailsScreen: React.FC = () => {
     );
   }
 
+  // Persona summary (mirrors the web artist header, adapted for mobile). The
+  // manifest maps the artist's role -> `bio` and its category label -> `genres[0]`;
+  // counts are over the playable albums the app actually shows.
+  const category = artist.genres?.[0];
+  const role = artist.bio?.trim() || category;
+  const albumCount = visibleAlbums.length;
+  const totalTracks = visibleAlbums.reduce((n, a) => n + (a.trackCount ?? 0), 0);
+
   return (
     <Screen safeArea={false}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
@@ -110,11 +118,35 @@ export const ArtistDetailsScreen: React.FC = () => {
           />
         </View>
 
-        {artist.bio ? (
-          <AppText variant="bodySm" color="textMuted" style={styles.bio}>
-            {artist.bio}
-          </AppText>
-        ) : null}
+        <View style={styles.summary}>
+          {category ? (
+            <AppText variant="caption" color="textMuted" style={styles.kicker}>
+              {`${category} · ${t('artist.personaSummary')}`}
+            </AppText>
+          ) : null}
+          {role || category ? (
+            <AppText variant="bodySm" color="textSecondary" style={styles.summarySub}>
+              {role ? `${role} · ` : ''}
+              {category
+                ? t('artist.albumsAnchoring', { n: albumCount, category })
+                : t('artist.albumCount', { n: albumCount })}
+            </AppText>
+          ) : null}
+          <View style={styles.stats}>
+            <View style={styles.stat}>
+              <AppText variant="caption" color="textMuted" style={styles.statLabel}>
+                {t('artist.statAlbums')}
+              </AppText>
+              <AppText variant="h2">{albumCount}</AppText>
+            </View>
+            <View style={styles.stat}>
+              <AppText variant="caption" color="textMuted" style={styles.statLabel}>
+                {t('artist.statTracks')}
+              </AppText>
+              <AppText variant="h2">{totalTracks.toLocaleString()}</AppText>
+            </View>
+          </View>
+        </View>
 
         <AppText variant="h2" style={styles.sectionTitle}>
           {t('artist.popular')}
@@ -158,7 +190,12 @@ const styles = StyleSheet.create({
   heroText: { paddingHorizontal: 16, paddingBottom: 12 },
   listeners: { marginTop: 6 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 12 },
-  bio: { paddingHorizontal: 16, marginTop: 16 },
+  summary: { paddingHorizontal: 16, marginTop: 18 },
+  kicker: { textTransform: 'uppercase', letterSpacing: 1.2 },
+  summarySub: { marginTop: 6, lineHeight: 20 },
+  stats: { flexDirection: 'row', gap: 36, marginTop: 16 },
+  stat: {},
+  statLabel: { textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
   sectionTitle: { paddingHorizontal: 16, marginTop: 28, marginBottom: 12 },
   list: { paddingHorizontal: 16 },
   albumRow: { paddingHorizontal: 16 },

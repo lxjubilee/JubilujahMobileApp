@@ -29,8 +29,14 @@ export const PlaylistPickerSheet: React.FC<PlaylistPickerSheetProps> = ({
   const theme = useTheme();
   const { t } = useTranslation();
 
+  // Mount the native <Modal> only while open. Rendering it permanently with
+  // visible={false} stacks an idle native window (several of these under one
+  // native-stack screen wedge the Android UI thread). See the "modals freeze
+  // native-stack" note.
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={[styles.backdrop, { backgroundColor: theme.colors.overlay }]} onPress={onClose}>
         <Pressable
           style={[

@@ -51,7 +51,12 @@
   "artist": {
     "monthlyListeners": "{{listeners}} monthly listeners",
     "popular": "Popular",
-    "discography": "Discography"
+    "discography": "Discography",
+    "personaSummary": "Persona Summary",
+    "albumsAnchoring": "{{n}} albums anchoring the {{category}} catalog",
+    "albumCount": "{{n}} albums",
+    "statAlbums": "Albums",
+    "statTracks": "Tracks"
   },
   "library": {
     "title": "Your Library",
@@ -187,6 +192,35 @@
     "empty": "There is no music yet",
     "emptyHint": "Tap “Add songs” to add music to this playlist.",
     "notFound": "Playlist not found."
+  },
+  "reviews": {
+    "screenTitle": "Ratings & Reviews",
+    "rateTitle": "Rate",
+    "editTitle": "Edit your review",
+    "yourRating": "Your rating",
+    "titleLabel": "Review title (optional)",
+    "titlePlaceholder": "Sum it up in a few words",
+    "reviewLabel": "Your review (optional)",
+    "reviewPlaceholder": "What did you think of it?",
+    "submit": "Submit",
+    "chooseStars": "Please choose a star rating.",
+    "saveError": "Could not save your review.",
+    "deleteError": "Could not delete your review.",
+    "rateThisAlbum": "Rate this Album",
+    "editYourRating": "Edit your rating",
+    "basedOn": "Based on {{count}} ratings",
+    "noRatingsYet": "No ratings yet — be the first",
+    "seeAllReviews": "Ratings & Reviews",
+    "seeAllReviewsCount": "Ratings & Reviews ({{count}})",
+    "rate": "Rate",
+    "yourRatingShort": "★ Your rating",
+    "noReviews": "No reviews yet — be the first to write one.",
+    "you": "You",
+    "anonymous": "Anonymous",
+    "edited": "edited",
+    "sort_recent": "Most recent",
+    "sort_highest": "Highest rated",
+    "sort_lowest": "Lowest rated"
   },
   "stub": {
     "comingSoon": "Coming soon",

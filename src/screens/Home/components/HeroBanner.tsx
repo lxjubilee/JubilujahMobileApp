@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AppText, Artwork } from '@/components/common';
-import { useAppDispatch, useAppSelector } from '@/hooks';
-import { toggleSavedAlbum } from '@/redux';
+import { useAppDispatch, useIsAlbumLiked } from '@/hooks';
+import { toggleAlbumLike } from '@/redux';
 import { Album } from '@/types';
 
 interface HeroBannerProps {
@@ -32,7 +32,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const saved = useAppSelector((s) => s.library.savedAlbums.some((a) => a.id === album.id));
+  const saved = useIsAlbumLiked(album);
 
   // Dot-separated descriptors built from the album's real metadata.
   const tags = [album.genre, album.year?.toString(), album.artistName].filter(Boolean) as string[];
@@ -86,7 +86,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
             </Pressable>
 
             <Pressable
-              onPress={() => dispatch(toggleSavedAlbum(album))}
+              onPress={() => dispatch(toggleAlbumLike(album))}
               style={({ pressed }) => [
                 styles.btn,
                 styles.listBtn,

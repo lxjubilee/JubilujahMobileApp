@@ -18,6 +18,8 @@ interface TrackRowProps {
   isActive?: boolean;
   isFavorite?: boolean;
   onToggleFavorite?: (track: Track) => void;
+  /** Optional control rendered on a second line under the artist name (e.g. the per-song rating). */
+  ratingSlot?: React.ReactNode;
 }
 
 /** Single track row — used in album listings, artist top tracks, search, queue. */
@@ -29,6 +31,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   isActive,
   isFavorite,
   onToggleFavorite,
+  ratingSlot,
 }) => {
   const theme = useTheme();
   return (
@@ -66,6 +69,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         <AppText variant="bodySm" color="textMuted" numberOfLines={1}>
           {track.artistName}
         </AppText>
+        {ratingSlot ? <View style={styles.ratingSlot}>{ratingSlot}</View> : null}
       </View>
 
       {onToggleFavorite ? (
@@ -115,6 +119,7 @@ const styles = StyleSheet.create({
   indexBox: { width: 36, alignItems: 'center', justifyContent: 'center' },
   art: { width: 48, height: 48, backgroundColor: '#222' },
   meta: { flex: 1, marginLeft: 12, marginRight: 8 },
+  ratingSlot: { marginTop: 6 },
   action: { marginHorizontal: 6 },
   durationSkeleton: { width: 30, height: 10, borderRadius: 4, marginHorizontal: 6 },
 });

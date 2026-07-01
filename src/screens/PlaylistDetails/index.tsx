@@ -26,9 +26,10 @@ import {
   removeItemFromPlaylist,
   renamePlaylist,
   reorderPlaylistItems,
-  toggleFavoriteTrack,
+  toggleSongLike,
 } from '@/redux';
 import { shuffle as shuffleArray } from '@/utils';
+import { songLikeKey } from '@/services/likes';
 import type { PlaylistItem } from '@/services/playlists';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
@@ -47,7 +48,7 @@ export const PlaylistDetailsScreen: React.FC = () => {
 
   const detail = useAppSelector((s) => s.playlists.byId[id]);
   const summary = useAppSelector((s) => s.playlists.summaries.find((p) => p.id === id));
-  const favoriteIds = useAppSelector((s) => s.library.favoriteTrackIds);
+  const likeKeys = useAppSelector((s) => s.likes.keys);
 
   const [failed, setFailed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -74,7 +75,8 @@ export const PlaylistDetailsScreen: React.FC = () => {
 
   const trackOptions = useMemo<TrackOption[]>(() => {
     if (!optionsItem) return [];
-    const isFav = favoriteIds.includes(optionsItem.track.id);
+    const likeKey = songLikeKey(optionsItem.track);
+    const isFav = likeKey ? !!likeKeys[likeKey] : false;
     return [
       {
         key: 'remove',
@@ -94,10 +96,10 @@ export const PlaylistDetailsScreen: React.FC = () => {
         key: 'like',
         label: isFav ? t('player.removeFromLiked') : t('player.like'),
         icon: isFav ? 'heart' : 'heart-outline',
-        onPress: (track) => dispatch(toggleFavoriteTrack(track)),
+        onPress: (track) => dispatch(toggleSongLike(track)),
       },
     ];
-  }, [optionsItem, favoriteIds, dispatch, t, id]);
+  }, [optionsItem, likeKeys, dispatch, t, id]);
 
   const onPlay = () => {
     if (tracks.length) void playTracks(tracks, 0);

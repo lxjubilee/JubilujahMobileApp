@@ -6,10 +6,12 @@ import {
   addAlbumToPlaylist,
   addTrackToPlaylist,
   createPlaylist,
+  fetchLikes,
   fetchMembership,
   fetchPlaylists,
-  toggleFavoriteTrack,
+  toggleSongLike,
 } from '@/redux';
+import { useIsSongLiked } from '@/hooks';
 import { TrackOptionsModal, TrackOption } from '@/components/modals';
 import { PlaylistPickerSheet } from './PlaylistPickerSheet';
 import { PlaylistNameDialog } from './PlaylistNameDialog';
@@ -41,14 +43,15 @@ export const PlaylistMenuProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const dispatch = useAppDispatch();
   const userId = useAppSelector((s) => s.auth.user?.id);
   const playlists = useAppSelector((s) => s.playlists.summaries);
-  const favoriteIds = useAppSelector((s) => s.library.favoriteTrackIds);
 
-  // Load the user's playlists (+ membership) once signed in, so the "add to
-  // playlist" picker is ready from any track list without visiting Library.
+  // Load the user's playlists (+ membership) and likes once signed in, so the
+  // "add to playlist" picker and heart state are ready from any track list
+  // without visiting Library.
   useEffect(() => {
     if (userId) {
       void dispatch(fetchPlaylists());
       void dispatch(fetchMembership());
+      void dispatch(fetchLikes());
     }
   }, [userId, dispatch]);
 
@@ -87,13 +90,13 @@ export const PlaylistMenuProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setTimeout(open, 260);
   }, []);
 
-  const isFavorite = optionsTrack ? favoriteIds.includes(optionsTrack.id) : false;
+  const isFavorite = useIsSongLiked(optionsTrack ?? { albumId: '', trackNumber: undefined });
   const trackOptions: TrackOption[] = [
     {
       key: 'like',
       label: isFavorite ? t('player.removeFromLiked') : t('player.like'),
       icon: isFavorite ? 'heart' : 'heart-outline',
-      onPress: (track) => dispatch(toggleFavoriteTrack(track)),
+      onPress: (track) => dispatch(toggleSongLike(track)),
     },
     {
       key: 'addToPlaylist',

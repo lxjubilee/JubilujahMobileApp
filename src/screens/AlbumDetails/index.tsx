@@ -6,14 +6,25 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Screen, Loader, AppText, Artwork, Button, IconButton } from '@/components/common';
+import { useTheme } from '@/context';
 import { TrackRow } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
-import { useAppDispatch, useAppSelector, usePlayer } from '@/hooks';
+import { AlbumRatingSummary, ReviewComposer, SongRatingControl } from '@/components/reviews';
+import {
+  useAppDispatch,
+  useAppSelector,
+  useIsAlbumLiked,
+  usePlayer,
+  useReviews,
+  useSongSummaries,
+} from '@/hooks';
 import { usePlaylistMenu } from '@/components/playlists';
 import { shareAlbum } from '@/services/share';
-import { toggleSavedAlbum, toggleFavoriteTrack } from '@/redux';
+import { albumUuid, trackSongUuid } from '@/services/playlists';
+import { songLikeKey } from '@/services/likes';
+import { toggleAlbumLike, toggleSongLike } from '@/redux';
 import { AlbumRepository } from '@/repositories';
-import { Album, Track } from '@/types';
+import { Album, MyReview, ReviewTargetType, Track } from '@/types';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -24,6 +35,7 @@ export const AlbumDetailsScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'AlbumDetails'>['route']>();
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
+  const theme = useTheme();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
   const { openTrackOptions, addAlbumToPlaylist } = usePlaylistMenu();
@@ -31,8 +43,8 @@ export const AlbumDetailsScreen: React.FC = () => {
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const saved = useAppSelector((s) => s.library.savedAlbums.some((a) => a.id === params.albumId));
-  const favoriteIds = useAppSelector((s) => s.library.favoriteTrackIds);
+  const albumLiked = useIsAlbumLiked({ id: params.albumId });
+  const likeKeys = useAppSelector((s) => s.likes.keys);
 
   useEffect(() => {
     let active = true;
@@ -46,6 +58,30 @@ export const AlbumDetailsScreen: React.FC = () => {
   }, [params.albumId]);
 
   const tracks = useMemo(() => album?.tracks ?? [], [album]);
+
+  // Ratings: the reviews API keys by the backend's deterministic uuids, while
+  // the mobile catalog uses codes — so convert album code -> albumUuid and each
+  // track -> its song uuid (same scheme playlists use). See songId.ts.
+  const albumTargetId = useMemo(() => (album ? albumUuid(album.id) : undefined), [album]);
+  const { summary: albumSummary, applySummary: applyAlbumSummary } = useReviews(
+    'album',
+    albumTargetId,
+  );
+  const songTargets = useMemo(
+    () =>
+      tracks
+        .map((tr) => ({ localId: tr.id, targetId: trackSongUuid(tr) }))
+        .filter((s): s is { localId: string; targetId: string } => s.targetId != null),
+    [tracks],
+  );
+  const { summaries: songSummaries, applyOne: applySongSummary } = useSongSummaries(songTargets);
+  const [composer, setComposer] = useState<{
+    type: ReviewTargetType;
+    targetId: string; // uuid sent to the API
+    localId?: string; // local Track.id, for keying the per-song summary
+    label: string;
+    initial: MyReview | null;
+  } | null>(null);
 
   const onPlay = useCallback(() => {
     if (tracks.length) playTracks(tracks, 0);
@@ -114,14 +150,31 @@ export const AlbumDetailsScreen: React.FC = () => {
             {album.year ? `${album.year} • ` : ''}
             {t('album.tracks', { count: tracks.length })}
           </AppText>
+          {album.genres?.length ? (
+            <View style={styles.genres}>
+              {/* Primary genre as a pill, the rest as muted secondary labels
+                  (mirrors the web album header: GOSPEL · Honky-Tonk). */}
+              <View style={[styles.genrePill, { borderColor: theme.colors.primary }]}>
+                <AppText variant="caption" color="primary" style={styles.genrePillText}>
+                  {album.genres[0].toUpperCase()}
+                </AppText>
+              </View>
+              {album.genres.slice(1).map((g) => (
+                <AppText key={g} variant="bodySm" color="textMuted" style={styles.genreSecondary}>
+                  {g}
+                </AppText>
+              ))}
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.actions}>
           <View style={styles.actionsLeft}>
             <IconButton
-              name={saved ? 'checkmark-circle' : 'add-circle-outline'}
-              size={30}
-              onPress={() => dispatch(toggleSavedAlbum(album))}
+              name={albumLiked ? 'heart' : 'heart-outline'}
+              size={28}
+              color={albumLiked ? theme.colors.accent : undefined}
+              onPress={() => dispatch(toggleAlbumLike(album))}
             />
             <IconButton name="share-outline" size={26} onPress={onShare} style={styles.share} />
             <Pressable
@@ -141,6 +194,22 @@ export const AlbumDetailsScreen: React.FC = () => {
           </View>
         </View>
 
+        <AlbumRatingSummary
+          summary={albumSummary}
+          onRate={() =>
+            albumTargetId &&
+            setComposer({
+              type: 'album',
+              targetId: albumTargetId,
+              label: album.title,
+              initial: albumSummary?.mine ?? null,
+            })
+          }
+          onSeeAll={() =>
+            navigation.navigate('AlbumReviews', { albumId: album.id, albumTitle: album.title })
+          }
+        />
+
         <View style={styles.list}>
           {tracks.map((track: Track, i) => (
             <TrackRow
@@ -148,15 +217,53 @@ export const AlbumDetailsScreen: React.FC = () => {
               track={track}
               index={i + 1}
               isActive={currentTrack?.id === track.id}
-              isFavorite={favoriteIds.includes(track.id)}
+              isFavorite={!!likeKeys[songLikeKey(track) ?? '']}
               onPress={() => playFrom(tracks, track.id)}
-              onToggleFavorite={(tr) => dispatch(toggleFavoriteTrack(tr))}
+              onToggleFavorite={
+                songLikeKey(track) ? (tr) => dispatch(toggleSongLike(tr)) : undefined
+              }
               onOptions={openTrackOptions}
+              ratingSlot={
+                trackSongUuid(track) ? (
+                  <SongRatingControl
+                    summary={songSummaries[track.id]}
+                    onRate={() =>
+                      setComposer({
+                        type: 'song',
+                        targetId: trackSongUuid(track)!,
+                        localId: track.id,
+                        label: track.title,
+                        initial: songSummaries[track.id]?.mine ?? null,
+                      })
+                    }
+                  />
+                ) : null
+              }
             />
           ))}
         </View>
       </ScrollView>
       <FloatingMiniPlayer />
+
+      {composer ? (
+        <ReviewComposer
+          type={composer.type}
+          id={composer.targetId}
+          targetLabel={composer.label}
+          initial={composer.initial}
+          onClose={() => setComposer(null)}
+          onSaved={(summary) =>
+            composer.type === 'album'
+              ? applyAlbumSummary(summary)
+              : applySongSummary(composer.localId!, summary)
+          }
+          onDeleted={(summary) =>
+            composer.type === 'album'
+              ? applyAlbumSummary(summary)
+              : applySongSummary(composer.localId!, summary)
+          }
+        />
+      ) : null}
     </Screen>
   );
 };
@@ -169,6 +276,17 @@ const styles = StyleSheet.create({
   art: { borderRadius: 10, marginTop: 8, backgroundColor: '#222' },
   title: { textAlign: 'center', marginTop: 16, paddingHorizontal: 24 },
   sub: { marginTop: 6 },
+  genres: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    marginTop: 10,
+    paddingHorizontal: 24,
+  },
+  genrePill: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
+  genrePillText: { letterSpacing: 0.5 },
+  genreSecondary: { marginLeft: 8 },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',

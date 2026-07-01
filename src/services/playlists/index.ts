@@ -1,5 +1,6 @@
 export {
   songUuid,
+  albumUuid,
   trackSongUuid,
   getSongUuidMap,
   peekSongUuidMap,

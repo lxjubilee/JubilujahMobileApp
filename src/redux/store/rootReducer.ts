@@ -5,6 +5,7 @@ import { persistReducer } from 'redux-persist';
 import homeReducer from '../slices/homeSlice';
 import searchReducer from '../slices/searchSlice';
 import libraryReducer from '../slices/librarySlice';
+import likesReducer from '../slices/likesSlice';
 import playlistsReducer from '../slices/playlistsSlice';
 import downloadsReducer from '../slices/downloadsSlice';
 import playerReducer from '../slices/playerSlice';
@@ -40,6 +41,13 @@ const persistedLibrary = persistReducer(
   libraryReducer,
 );
 
+// Server-backed likes: persist only the membership set so hearts paint instantly
+// on cold start (stale-while-revalidate; fetchLikes() overwrites on startup).
+const persistedLikes = persistReducer(
+  { key: 'likes', storage: AsyncStorage, whitelist: ['keys'] },
+  likesReducer,
+);
+
 const persistedDownloads = persistReducer(
   { key: 'downloads', storage: AsyncStorage },
   downloadsReducer,
@@ -63,6 +71,7 @@ export const rootReducer = combineReducers({
   home: persistedHome,
   search: persistedSearch,
   library: persistedLibrary,
+  likes: persistedLikes,
   // Playlists are server-backed (/api/me/playlists) — fetched on demand, not persisted.
   playlists: playlistsReducer,
   downloads: persistedDownloads,

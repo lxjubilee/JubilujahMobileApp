@@ -18,6 +18,7 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabParamList>;
   AlbumDetails: { albumId: string };
+  AlbumReviews: { albumId: string; albumTitle: string };
   ArtistDetails: { artistId: string };
   AlbumList: { title: string; artistId: string };
   PlaylistDetails: { playlistId: string };

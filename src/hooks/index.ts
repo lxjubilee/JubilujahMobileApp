@@ -11,5 +11,14 @@ export {
   useVisibleTracks,
   useVisibleRails,
 } from './useVisibleCatalog';
+export { useReviews, useSongSummaries, emptySummary } from './useReviews';
+export type { UseReviews, UseSongSummaries, SongSummaryTarget } from './useReviews';
+export {
+  useIsSongLiked,
+  useIsAlbumLiked,
+  useLikedSongCount,
+  useLikedTracks,
+  useLikedAlbums,
+} from './useLikes';
 export { useTheme } from '@/context/ThemeProvider';
 export { useAppDispatch, useAppSelector } from '@/redux';

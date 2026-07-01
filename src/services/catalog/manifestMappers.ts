@@ -80,7 +80,10 @@ function buildAlbum(
     cover: coverPath(album),
     artistId: artist.slug,
     artistName: artist.name,
-    genre: category.label,
+    // Real genre tags from the manifest (most-specific first). Fall back to the
+    // catalog family label for the single-value `genre` when an album has none.
+    genres: album.genres,
+    genre: album.genres?.[0] ?? category.label,
     trackCount: album.trackCount,
     accentColor: accentFor(album.code),
     ...(withTracks

@@ -5,14 +5,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Screen, Loader, AppText, Placeholder, IconButton } from '@/components/common';
 import { TrackRow } from '@/components/cards';
-import {
-  useAppDispatch,
-  useAppSelector,
-  usePlayer,
-  useTracksByIds,
-  useVisibleTracks,
-} from '@/hooks';
-import { toggleFavoriteTrack } from '@/redux';
+import { useAppDispatch, useLikedTracks, usePlayer } from '@/hooks';
+import { toggleSongLike } from '@/redux';
 import { usePlaylistMenu } from '@/components/playlists';
 import type { LibraryStackParamList } from '@/navigation/types';
 
@@ -31,10 +25,9 @@ export const LikedSongsScreen: React.FC = () => {
   const { playFrom, currentTrack } = usePlayer();
   const { openTrackOptions } = usePlaylistMenu();
 
-  const favoriteIds = useAppSelector((s) => s.library.favoriteTrackIds);
-  const { tracks: liked, loading } = useTracksByIds(favoriteIds);
-  // Personal collection — never hidden by the active catalog language.
-  const tracks = useVisibleTracks(liked, { filterByLanguage: false });
+  // Server-backed likes, resolved to playable catalog tracks (never hidden by
+  // the active catalog language — a personal collection).
+  const { tracks, loading } = useLikedTracks();
 
   return (
     <Screen>
@@ -56,7 +49,7 @@ export const LikedSongsScreen: React.FC = () => {
               isActive={currentTrack?.id === item.id}
               isFavorite
               onPress={() => playFrom(tracks, item.id)}
-              onToggleFavorite={(tr) => dispatch(toggleFavoriteTrack(tr))}
+              onToggleFavorite={(tr) => dispatch(toggleSongLike(tr))}
               onOptions={openTrackOptions}
             />
           )}

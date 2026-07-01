@@ -8,7 +8,7 @@ import { useTheme } from '@/context';
 import { Screen, AppText, Artwork, IconButton, Placeholder, ProfileButton } from '@/components/common';
 import { AlbumCard } from '@/components/cards';
 import { PlaylistNameDialog } from '@/components/playlists';
-import { useAppDispatch, useAppSelector, useVisibleAlbums } from '@/hooks';
+import { useAppDispatch, useAppSelector, useLikedAlbums, useLikedSongCount } from '@/hooks';
 import { createPlaylist, fetchPlaylists } from '@/redux';
 import type { LibraryStackParamList, RootStackParamList } from '@/navigation/types';
 
@@ -23,10 +23,10 @@ export const LibraryScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
 
-  const saved = useAppSelector((s) => s.library.savedAlbums);
-  // Personal collection — never hidden by the active catalog language.
-  const savedAlbums = useVisibleAlbums(saved, { filterByLanguage: false });
-  const likedCount = useAppSelector((s) => s.library.favoriteTrackIds.length);
+  // Liked albums (server-backed), resolved to catalog Albums; never hidden by
+  // the active catalog language (a personal collection).
+  const { albums: savedAlbums } = useLikedAlbums();
+  const likedCount = useLikedSongCount();
   const followCount = useAppSelector((s) => s.library.followedArtistIds.length);
   const summaries = useAppSelector((s) => s.playlists.summaries);
   // Hide the default "My Favorites" playlist (matches web; mobile has Liked Songs).

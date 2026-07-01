@@ -1,15 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Album, Track } from '@/types';
 
+/**
+ * Followed artists (local-only for now — there is no backend follow endpoint).
+ * Song/album likes moved to the server-backed `likes` slice; the "Favorites"
+ * shortcut and Library album grid read from there.
+ */
 interface LibraryState {
-  favoriteTrackIds: string[];
-  savedAlbums: Album[];
   followedArtistIds: string[];
 }
 
 const initialState: LibraryState = {
-  favoriteTrackIds: [],
-  savedAlbums: [],
   followedArtistIds: [],
 };
 
@@ -17,18 +17,6 @@ const librarySlice = createSlice({
   name: 'library',
   initialState,
   reducers: {
-    toggleFavoriteTrack(state, action: PayloadAction<Track | string>) {
-      const id = typeof action.payload === 'string' ? action.payload : action.payload.id;
-      state.favoriteTrackIds = state.favoriteTrackIds.includes(id)
-        ? state.favoriteTrackIds.filter((t) => t !== id)
-        : [id, ...state.favoriteTrackIds];
-    },
-    toggleSavedAlbum(state, action: PayloadAction<Album>) {
-      const exists = state.savedAlbums.some((a) => a.id === action.payload.id);
-      state.savedAlbums = exists
-        ? state.savedAlbums.filter((a) => a.id !== action.payload.id)
-        : [{ ...action.payload, tracks: undefined }, ...state.savedAlbums];
-    },
     toggleFollowArtist(state, action: PayloadAction<string>) {
       const id = action.payload;
       state.followedArtistIds = state.followedArtistIds.includes(id)
@@ -38,5 +26,5 @@ const librarySlice = createSlice({
   },
 });
 
-export const { toggleFavoriteTrack, toggleSavedAlbum, toggleFollowArtist } = librarySlice.actions;
+export const { toggleFollowArtist } = librarySlice.actions;
 export default librarySlice.reducer;

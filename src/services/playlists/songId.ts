@@ -19,6 +19,15 @@ export function songUuid(albumCode: string, trackNumber: number | string): strin
   return uuidv5(`song:${String(albumCode).toUpperCase()}:${String(trackNumber)}`, JV_NAMESPACE);
 }
 
+/**
+ * The server's deterministic id for an album — `uuidv5('album:' + UPPER(code))`.
+ * The mobile `Album.id` is the catalog code, so review endpoints (which key by
+ * this uuid, like playlists key songs by `songUuid`) must convert through here.
+ */
+export function albumUuid(albumCode: string): string {
+  return uuidv5(`album:${String(albumCode).toUpperCase()}`, JV_NAMESPACE);
+}
+
 /** The server `song_id` for a domain Track, or null if it has no track number. */
 export function trackSongUuid(track: Pick<Track, 'albumId' | 'trackNumber'>): string | null {
   if (track.trackNumber == null) return null;

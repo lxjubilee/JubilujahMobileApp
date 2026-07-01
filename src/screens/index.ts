@@ -3,6 +3,7 @@ export { BrowseScreen } from './Browse';
 export { AlbumListScreen } from './AlbumList';
 export { SearchScreen } from './Search';
 export { AlbumDetailsScreen } from './AlbumDetails';
+export { AlbumReviewsScreen } from './AlbumReviews';
 export { ArtistDetailsScreen } from './ArtistDetails';
 export { MusicPlayerScreen } from './MusicPlayer';
 export { LibraryScreen } from './Library';

@@ -9,6 +9,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTheme } from '@/context';
 import {
   AlbumDetailsScreen,
+  AlbumReviewsScreen,
   ArtistDetailsScreen,
   AlbumListScreen,
   PlaylistDetailsScreen,
@@ -44,6 +45,7 @@ export const RootNavigator: React.FC = () => {
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         {/* Detail screens push full-screen over the tabs, Netflix-style. */}
         <Stack.Screen name="AlbumDetails" component={AlbumDetailsScreen} />
+        <Stack.Screen name="AlbumReviews" component={AlbumReviewsScreen} />
         <Stack.Screen name="ArtistDetails" component={ArtistDetailsScreen} />
         <Stack.Screen name="AlbumList" component={AlbumListScreen} />
         <Stack.Screen name="PlaylistDetails" component={PlaylistDetailsScreen} />

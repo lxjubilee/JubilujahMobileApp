@@ -5,7 +5,7 @@ export { useAppDispatch, useAppSelector } from './store/hooks';
 // Slice actions/thunks
 export { fetchHomeFeed } from './slices/homeSlice';
 export { runSearch, setQuery, addRecentSearch, clearRecentSearches } from './slices/searchSlice';
-export { toggleFavoriteTrack, toggleSavedAlbum, toggleFollowArtist } from './slices/librarySlice';
+export { toggleFollowArtist } from './slices/librarySlice';
 export {
   fetchPlaylists,
   fetchMembership,
@@ -18,6 +18,13 @@ export {
   removeItemFromPlaylist,
   reorderPlaylistItems,
 } from './slices/playlistsSlice';
+export {
+  fetchLikes,
+  toggleSongLike,
+  toggleAlbumLike,
+  resetLikes,
+  setLikedLocal,
+} from './slices/likesSlice';
 export {
   enqueueDownload,
   updateDownloadProgress,
