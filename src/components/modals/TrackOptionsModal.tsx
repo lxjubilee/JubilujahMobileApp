@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context';
 import { Track } from '@/types';
@@ -27,6 +28,7 @@ export const TrackOptionsModal: React.FC<TrackOptionsModalProps> = ({
   onClose,
 }) => {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
 
   // Mount the native <Modal> only while a track is selected. Rendering it
   // permanently with visible={false} stacks an idle native window (several of
@@ -40,7 +42,12 @@ export const TrackOptionsModal: React.FC<TrackOptionsModalProps> = ({
         <Pressable
           style={[
             styles.sheet,
-            { backgroundColor: theme.colors.backgroundElevated, borderTopLeftRadius: theme.radius.xl, borderTopRightRadius: theme.radius.xl },
+            {
+              backgroundColor: theme.colors.backgroundElevated,
+              borderTopLeftRadius: theme.radius.xl,
+              borderTopRightRadius: theme.radius.xl,
+              paddingBottom: 36 + insets.bottom,
+            },
           ]}
         >
           {track ? (
@@ -94,7 +101,7 @@ export const TrackOptionsModal: React.FC<TrackOptionsModalProps> = ({
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end' },
-  sheet: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 36 },
+  sheet: { paddingHorizontal: 20, paddingTop: 16 },
   header: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
   art: { width: 52, height: 52, backgroundColor: '#222' },
   headerMeta: { flex: 1, marginLeft: 12 },

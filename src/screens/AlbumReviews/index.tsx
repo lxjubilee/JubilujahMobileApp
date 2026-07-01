@@ -125,7 +125,7 @@ export const AlbumReviewsScreen: React.FC = () => {
   );
 
   return (
-    <Screen>
+    <Screen edges={['top', 'bottom']}>
       <View style={styles.topBar}>
         <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
         <AppText variant="h2" numberOfLines={1} style={styles.topTitle}>

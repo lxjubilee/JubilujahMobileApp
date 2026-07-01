@@ -8,6 +8,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -32,6 +33,7 @@ export const MusicPlayerScreen: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const {
     currentTrack,
@@ -58,7 +60,12 @@ export const MusicPlayerScreen: React.FC = () => {
     return (
       <View style={[styles.empty, { backgroundColor: theme.colors.background }]}>
         <AppText color="textMuted">{t('player.nothingPlaying')}</AppText>
-        <IconButton name="chevron-down" size={28} onPress={() => navigation.goBack()} style={styles.emptyClose} />
+        <IconButton
+          name="chevron-down"
+          size={28}
+          onPress={() => navigation.goBack()}
+          style={{ ...styles.emptyClose, top: insets.top + 8 }}
+        />
       </View>
     );
   }
@@ -103,7 +110,7 @@ export const MusicPlayerScreen: React.FC = () => {
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background, paddingTop: insets.top + 8 }]}>
       <Artwork uri={currentTrack.artwork} style={StyleSheet.absoluteFill} blurRadius={60} iconSize={0} />
       <LinearGradient colors={['rgba(11,11,15,0.4)', '#0B0B0F']} style={StyleSheet.absoluteFill} />
 
@@ -123,7 +130,7 @@ export const MusicPlayerScreen: React.FC = () => {
         />
       </View>
 
-      <View style={styles.body}>
+      <View style={[styles.body, { paddingBottom: 36 + insets.bottom }]}>
         <View style={styles.titleRow}>
           <View style={styles.titleText}>
             <AppText variant="display" numberOfLines={1}>
@@ -210,7 +217,10 @@ export const MusicPlayerScreen: React.FC = () => {
       >
         <Pressable style={styles.queueBackdrop} onPress={() => setQueueOpen(false)}>
           <Pressable
-            style={[styles.queueSheet, { backgroundColor: theme.colors.backgroundElevated }]}
+            style={[
+              styles.queueSheet,
+              { backgroundColor: theme.colors.backgroundElevated, paddingBottom: 24 + insets.bottom },
+            ]}
           >
             <View style={styles.queueHeader}>
               <AppText variant="h2">{t('player.upNext')}</AppText>
@@ -251,13 +261,13 @@ export const MusicPlayerScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 52 },
+  container: { flex: 1 },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  emptyClose: { position: 'absolute', top: 52, left: 16 },
+  emptyClose: { position: 'absolute', left: 16 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
   artWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   art: { backgroundColor: '#222' },
-  body: { paddingHorizontal: 24, paddingBottom: 36 },
+  body: { paddingHorizontal: 24 },
   titleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
   titleText: { flex: 1, marginRight: 12 },
   titleActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
@@ -273,7 +283,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 18,
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 24,
   },
   queueHeader: {
     flexDirection: 'row',

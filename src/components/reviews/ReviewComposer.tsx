@@ -10,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AppText, IconButton } from '@/components/common';
@@ -52,6 +53,7 @@ export const ReviewComposer: React.FC<Props> = ({
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const [stars, setStars] = useState(initial?.stars ?? 0);
   const [title, setTitle] = useState(initial?.title ?? '');
   const [body, setBody] = useState(initial?.body ?? '');
@@ -111,6 +113,7 @@ export const ReviewComposer: React.FC<Props> = ({
                 backgroundColor: theme.colors.backgroundElevated,
                 borderTopLeftRadius: theme.radius.xl,
                 borderTopRightRadius: theme.radius.xl,
+                paddingBottom: 28 + insets.bottom,
               },
             ]}
           >
@@ -214,7 +217,7 @@ export const ReviewComposer: React.FC<Props> = ({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   backdrop: { flex: 1, justifyContent: 'flex-end' },
-  sheet: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 28, maxHeight: '88%' },
+  sheet: { paddingHorizontal: 20, paddingTop: 16, maxHeight: '88%' },
   header: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8 },
   headerText: { flex: 1, marginRight: 12 },
   fieldLabel: { marginTop: 18, marginBottom: 8 },

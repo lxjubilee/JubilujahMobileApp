@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
@@ -28,6 +29,7 @@ export const PlaylistPickerSheet: React.FC<PlaylistPickerSheetProps> = ({
 }) => {
   const theme = useTheme();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
 
   // Mount the native <Modal> only while open. Rendering it permanently with
   // visible={false} stacks an idle native window (several of these under one
@@ -45,6 +47,7 @@ export const PlaylistPickerSheet: React.FC<PlaylistPickerSheetProps> = ({
               backgroundColor: theme.colors.backgroundElevated,
               borderTopLeftRadius: theme.radius.xl,
               borderTopRightRadius: theme.radius.xl,
+              paddingBottom: 36 + insets.bottom,
             },
           ]}
         >
@@ -103,7 +106,7 @@ export const PlaylistPickerSheet: React.FC<PlaylistPickerSheetProps> = ({
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end' },
-  sheet: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 36, maxHeight: '70%' },
+  sheet: { paddingHorizontal: 20, paddingTop: 16, maxHeight: '70%' },
   title: { marginBottom: 12 },
   newRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
   newIcon: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },

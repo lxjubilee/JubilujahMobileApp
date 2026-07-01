@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dimensions, FlatList, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,6 +24,7 @@ export const ArtistDetailsScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'ArtistDetails'>['route']>();
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
   const { openTrackOptions } = usePlaylistMenu();
@@ -88,7 +90,7 @@ export const ArtistDetailsScreen: React.FC = () => {
         <View style={[styles.hero, { height: HERO }]}>
           <Artwork uri={artist.image} style={StyleSheet.absoluteFill} iconSize={72} />
           <LinearGradient colors={['transparent', 'transparent', '#0B0B0F']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
-          <View style={styles.topBar}>
+          <View style={[styles.topBar, { top: insets.top + 8 }]}>
             <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
           </View>
           <View style={styles.heroText}>
@@ -186,7 +188,7 @@ export const ArtistDetailsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   content: { paddingBottom: 96 },
   hero: { width: '100%', justifyContent: 'flex-end' },
-  topBar: { position: 'absolute', top: 48, left: 12 },
+  topBar: { position: 'absolute', left: 12 },
   heroText: { paddingHorizontal: 16, paddingBottom: 12 },
   listeners: { marginTop: 6 },
   actions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 12 },

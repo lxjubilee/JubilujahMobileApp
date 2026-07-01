@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -36,6 +37,7 @@ export const AlbumDetailsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
   const { openTrackOptions, addAlbumToPlaylist } = usePlaylistMenu();
@@ -129,7 +131,7 @@ export const AlbumDetailsScreen: React.FC = () => {
             iconSize={0}
           />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
-          <View style={styles.topBar}>
+          <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
             <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
           </View>
           <Artwork
@@ -272,7 +274,7 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 96 },
   header: { alignItems: 'center', paddingBottom: 16, paddingTop: 0 },
   bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
-  topBar: { width: '100%', paddingHorizontal: 12, paddingTop: 48, alignItems: 'flex-start' },
+  topBar: { width: '100%', paddingHorizontal: 12, alignItems: 'flex-start' },
   art: { borderRadius: 10, marginTop: 8, backgroundColor: '#222' },
   title: { textAlign: 'center', marginTop: 16, paddingHorizontal: 24 },
   sub: { marginTop: 6 },

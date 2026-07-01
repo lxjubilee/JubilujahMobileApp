@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
@@ -43,6 +44,7 @@ export const PlaylistDetailsScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const { t } = useTranslation();
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack } = usePlayer();
 
@@ -142,7 +144,7 @@ export const PlaylistDetailsScreen: React.FC = () => {
         <View style={styles.header}>
           <Artwork uri={cover} style={styles.bgArt} blurRadius={40} iconSize={0} />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
-          <View style={styles.topBar}>
+          <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
             <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
             {!editing ? (
               <IconButton name="ellipsis-horizontal" onPress={() => setMenuOpen(true)} />
@@ -261,6 +263,7 @@ export const PlaylistDetailsScreen: React.FC = () => {
                   backgroundColor: theme.colors.backgroundElevated,
                   borderTopLeftRadius: theme.radius.xl,
                   borderTopRightRadius: theme.radius.xl,
+                  paddingBottom: 36 + insets.bottom,
                 },
               ]}
             >
@@ -347,7 +350,7 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 96 },
   header: { alignItems: 'center', paddingBottom: 16 },
   bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
-  topBar: { width: '100%', paddingHorizontal: 12, paddingTop: 48, flexDirection: 'row', justifyContent: 'space-between' },
+  topBar: { width: '100%', paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between' },
   topBarFixed: { paddingHorizontal: 12, paddingTop: 8 },
   art: { borderRadius: 10, marginTop: 8, backgroundColor: '#222' },
   title: { textAlign: 'center', marginTop: 16, paddingHorizontal: 24 },
