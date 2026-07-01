@@ -86,4 +86,18 @@ export const playbackQueue = {
       logger.warn('playbackQueue.toggle failed', e);
     }
   },
+
+  /**
+   * Stop playback, clear the queue, and release the active track + media
+   * notification. Used on sign-out / account deletion so nothing keeps playing
+   * once the session ends.
+   */
+  async reset(): Promise<void> {
+    if (isExpoGo) return;
+    try {
+      await TrackPlayer.reset();
+    } catch (e) {
+      logger.warn('playbackQueue.reset failed', e);
+    }
+  },
 };

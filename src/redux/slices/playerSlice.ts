@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Track } from '@/types';
+import { clearSession, signOut, deleteAccount } from './authSlice';
 
 export type RepeatMode = 'off' | 'track' | 'queue';
 
@@ -65,6 +66,23 @@ const playerSlice = createSlice({
     toggleShuffle(state) {
       state.shuffle = !state.shuffle;
     },
+  },
+  extraReducers: (builder) => {
+    // On any sign-out path (sign out, account deletion, forced logout) drop the
+    // now-playing snapshot so the mini player disappears with the session. The
+    // engine itself is stopped by the playback-teardown listener in the store.
+    // Persisted prefs (repeatMode, shuffle) are intentionally left intact.
+    const clearPlayback = (state: PlayerState) => {
+      state.currentTrack = null;
+      state.queue = [];
+      state.originalQueue = [];
+      state.isPlaying = false;
+      state.isBuffering = false;
+    };
+    builder
+      .addCase(signOut.fulfilled, clearPlayback)
+      .addCase(deleteAccount.fulfilled, clearPlayback)
+      .addCase(clearSession, clearPlayback);
   },
 });
 
