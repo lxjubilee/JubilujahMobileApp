@@ -15,7 +15,7 @@ import {
 } from '@/redux';
 import { ThemeProvider } from '@/context';
 import { RootNavigator, AuthNavigator } from '@/navigation';
-import { usePlayerSync, useAppSelector } from '@/hooks';
+import { usePlayerSync, useListeningAnalytics, useAppSelector } from '@/hooks';
 import { setupPlayer } from '@/services/music';
 import { initAuthClient } from '@/services/auth';
 import { getManifest, onCatalogUpdated, invalidateCatalogIndex } from '@/services/catalog';
@@ -31,9 +31,10 @@ const applyPersistedLanguage = () => {
   if (lang) void i18n.changeLanguage(lang);
 };
 
-/** Mounts the engine->Redux bridge exactly once, near the root. */
+/** Mounts the engine->Redux bridge + listening-analytics emitter exactly once, near the root. */
 const PlayerSyncGate: React.FC = () => {
   usePlayerSync();
+  useListeningAnalytics();
   return null;
 };
 

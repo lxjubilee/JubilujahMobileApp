@@ -27,6 +27,13 @@ const Block: React.FC<{ block: LegalBlock }> = ({ block }) => {
       </View>
     );
   }
+  if (block.type === 'subheading') {
+    return (
+      <AppText variant="label" color="text" style={styles.subheading}>
+        {block.text}
+      </AppText>
+    );
+  }
   return (
     <AppText variant="body" color="textSecondary" style={[styles.paragraph, { lineHeight: 22 }]}>
       {block.text}
@@ -92,6 +99,7 @@ const styles = StyleSheet.create({
   effectiveDate: { marginBottom: 16 },
   section: { marginTop: 24 },
   sectionHeading: { marginBottom: 8 },
+  subheading: { marginTop: 14, marginBottom: 2 },
   paragraph: { marginTop: 8 },
   bulletGroup: { marginTop: 8 },
   bulletRow: { flexDirection: 'row', marginTop: 6 },
