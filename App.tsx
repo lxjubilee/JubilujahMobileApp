@@ -21,6 +21,7 @@ import { initAuthClient } from '@/services/auth';
 import { getManifest, onCatalogUpdated, invalidateCatalogIndex } from '@/services/catalog';
 import { CONFIG } from '@/constants';
 import { SplashScreen } from '@/components/SplashScreen';
+import { AppUpdateGate } from '@/components/AppUpdateGate';
 import { PlaylistMenuProvider } from '@/components/playlists';
 import { storage, STORAGE_KEYS } from '@/services/storage';
 import { i18n } from '@/localization'; // initialize i18next
@@ -117,6 +118,8 @@ export default function App() {
               <PlaylistMenuProvider>
                 {fontsLoaded ? <RootGate /> : null}
               </PlaylistMenuProvider>
+              {/* Post-splash "update available" prompt (overlays via Modal). */}
+              <AppUpdateGate enabled={!showSplash && fontsLoaded} />
             </ThemeProvider>
           </SafeAreaProvider>
         </PersistGate>

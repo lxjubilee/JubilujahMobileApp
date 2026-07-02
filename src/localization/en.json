@@ -48,6 +48,16 @@
     "tracks": "{{count}} songs",
     "addToLibrary": "Add to Library"
   },
+  "update": {
+    "title": "Update available",
+    "requiredTitle": "Update required",
+    "message": "A new version of JubiLujah is available. Update for the latest features and improvements.",
+    "requiredMessage": "A new version of JubiLujah is required to continue. Please update to keep using the app.",
+    "update": "Update",
+    "later": "Later",
+    "currentVersion": "Current version",
+    "latestVersion": "Latest version"
+  },
   "artist": {
     "monthlyListeners": "{{listeners}} monthly listeners",
     "popular": "Popular",
