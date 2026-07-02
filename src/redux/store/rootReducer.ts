@@ -12,6 +12,7 @@ import playerReducer from '../slices/playerSlice';
 import authReducer from '../slices/authSlice';
 import artworkReducer from '../slices/artworkSlice';
 import settingsReducer from '../slices/settingsSlice';
+import entitlementReducer from '../slices/entitlementSlice';
 
 /**
  * Per-slice persistence. We persist only durable data:
@@ -79,6 +80,8 @@ export const rootReducer = combineReducers({
   auth: authReducer,
   artwork: persistedArtwork,
   settings: persistedSettings,
+  // Plan entitlement is fetched fresh on auth (/api/subscriptions/me) — not persisted.
+  entitlement: entitlementReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

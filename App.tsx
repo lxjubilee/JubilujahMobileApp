@@ -12,16 +12,23 @@ import {
   fetchHomeFeed,
   restoreSession,
   clearSession,
+  fetchEntitlement,
 } from '@/redux';
 import { ThemeProvider } from '@/context';
 import { RootNavigator, AuthNavigator } from '@/navigation';
-import { usePlayerSync, useListeningAnalytics, useAppSelector } from '@/hooks';
+import {
+  usePlayerSync,
+  useListeningAnalytics,
+  usePlaybackGate,
+  useAppDispatch,
+  useAppSelector,
+} from '@/hooks';
 import { setupPlayer } from '@/services/music';
 import { initAuthClient } from '@/services/auth';
 import { getManifest, onCatalogUpdated, invalidateCatalogIndex } from '@/services/catalog';
 import { CONFIG } from '@/constants';
 import { SplashScreen } from '@/components/SplashScreen';
-import { AppUpdateGate } from '@/components/AppUpdateGate';
+import { PlaybackLimitGate } from '@/components/PlaybackLimitGate';
 import { PlaylistMenuProvider } from '@/components/playlists';
 import { storage, STORAGE_KEYS } from '@/services/storage';
 import { i18n } from '@/localization'; // initialize i18next
@@ -32,10 +39,23 @@ const applyPersistedLanguage = () => {
   if (lang) void i18n.changeLanguage(lang);
 };
 
-/** Mounts the engine->Redux bridge + listening-analytics emitter exactly once, near the root. */
+/**
+ * Mounts the engine->Redux bridge, the listening-analytics emitter, and the
+ * Free-plan playback gate exactly once, near the root. Also refreshes the user's
+ * plan entitlement whenever the session becomes authenticated (cold-start
+ * restore, sign-in, 2FA, or sign-up) so the app is plan-aware right after login.
+ */
 const PlayerSyncGate: React.FC = () => {
   usePlayerSync();
   useListeningAnalytics();
+  usePlaybackGate();
+
+  const dispatch = useAppDispatch();
+  const authed = useAppSelector((s) => s.auth.user != null);
+  useEffect(() => {
+    if (authed) void dispatch(fetchEntitlement());
+  }, [authed, dispatch]);
+
   return null;
 };
 
@@ -118,8 +138,8 @@ export default function App() {
               <PlaylistMenuProvider>
                 {fontsLoaded ? <RootGate /> : null}
               </PlaylistMenuProvider>
-              {/* Post-splash "update available" prompt (overlays via Modal). */}
-              <AppUpdateGate enabled={!showSplash && fontsLoaded} />
+              {/* Free-plan daily-limit popup (shown when playback hits the cap). */}
+              <PlaybackLimitGate />
             </ThemeProvider>
           </SafeAreaProvider>
         </PersistGate>

@@ -1,6 +1,7 @@
 export { usePlayer } from './usePlayer';
 export { usePlayerSync } from './usePlayerSync';
 export { useListeningAnalytics } from './useListeningAnalytics';
+export { usePlaybackGate } from './usePlaybackGate';
 export { useSafeProgress } from './useSafeProgress';
 export { useDebounce } from './useDebounce';
 export { useTrackDuration } from './useTrackDuration';
