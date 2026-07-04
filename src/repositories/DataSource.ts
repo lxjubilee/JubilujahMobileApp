@@ -9,6 +9,12 @@ export interface HomeConfig {
   heroAlbumId: string;
   /** Ordered album ids for the rotating hero carousel; falls back to [heroAlbumId]. */
   heroAlbumIds?: string[];
+  /** Per-page hero album ids, keyed by category label (v2); the Home screen
+   *  swaps the hero to the active chip's page. */
+  heroesByCategory?: Record<string, string[]>;
+  /** Ordered page labels for the top-nav chips (v2). Includes pages that have a
+   *  hero but no rails yet, so a new page still appears. */
+  categoryLabels?: string[];
   rails: HomeRail[];
 }
 

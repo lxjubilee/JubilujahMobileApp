@@ -6,8 +6,9 @@ import { Screen, AppText, Loader, IconButton } from '@/components/common';
 import { AlbumCard } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
 import { useVisibleAlbums } from '@/hooks';
-import { ArtistRepository } from '@/repositories';
+import { AlbumRepository, ArtistRepository } from '@/repositories';
 import { Album } from '@/types';
+import { pickByIds } from '@/utils';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -15,7 +16,9 @@ const { width } = Dimensions.get('window');
 const GAP = 16;
 const CARD_W = (width - GAP * 3) / 2;
 
-/** Full grid of every album for a given artist — the "See all" target of a Home rail. */
+/** Full grid of albums — the "See all"/"See more" target of a Home rail. Shows a
+ *  specific list (`albumIds`, e.g. a section's albums) when given, otherwise every
+ *  album for `artistId`. */
 export const AlbumListScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'AlbumList'>['route']>();
   const navigation = useNavigation<Nav>();
@@ -26,7 +29,12 @@ export const AlbumListScreen: React.FC = () => {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    ArtistRepository.getAlbums(params.artistId)
+    // A section passes an explicit `albumIds` list (order preserved); an artist
+    // rail passes `artistId` and we fetch that artist's albums.
+    const load: Promise<Album[]> = params.albumIds
+      ? AlbumRepository.list().then((all) => pickByIds(all, params.albumIds ?? []))
+      : ArtistRepository.getAlbums(params.artistId ?? '');
+    load
       .then((a) => {
         if (!active) return;
         // Dedupe by id — the catalog can list the same album in multiple places.
@@ -36,7 +44,7 @@ export const AlbumListScreen: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [params.artistId]);
+  }, [params.artistId, params.albumIds]);
 
   if (loading) {
     return (

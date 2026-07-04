@@ -39,16 +39,23 @@ export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress, o
   }
 
   if (!albums.length) return null;
+  // Show "See all" when there's a full list to open — an artist rail, or any
+  // section with more than 10 albums. In the >10 case the horizontal row previews
+  // the first 10 and "See all" opens the full grid.
+  const MAX_PREVIEW = 10;
+  const hasMore = albums.length > MAX_PREVIEW;
+  const showSeeAll = !!rail.seeAllArtistId || hasMore;
+  const preview = hasMore ? albums.slice(0, MAX_PREVIEW) : albums;
   return (
     <>
       <SectionHeader
         title={rail.title}
-        onSeeAll={rail.seeAllArtistId ? () => onSeeAll?.(rail) : undefined}
+        onSeeAll={showSeeAll ? () => onSeeAll?.(rail) : undefined}
       />
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
-        data={albums}
+        data={preview}
         keyExtractor={(a) => a.id}
         contentContainerStyle={{ paddingHorizontal: theme.spacing.lg }}
         ItemSeparatorComponent={() => <Sep />}

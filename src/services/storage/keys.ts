@@ -8,4 +8,6 @@ export const STORAGE_KEYS = {
   /** Catalog manifest is cached chunked (it exceeds Android's ~2 MB row limit). */
   CATALOG_MANIFEST_META: 'jubilujah:catalogManifest:meta',
   CATALOG_MANIFEST_CHUNK: 'jubilujah:catalogManifest:chunk:',
+  /** Admin-managed mobile category config (small JSON; stale-while-revalidate). */
+  MOBILE_CONFIG: 'jubilujah:mobileConfig',
 } as const;

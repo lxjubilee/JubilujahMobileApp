@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Image, StyleSheet, Text } from 'react-native';
+import { useFonts, Orbitron_600SemiBold } from '@expo-google-fonts/orbitron';
 
 interface SplashScreenProps {
   /** Called once the intro animation completes and the app should be revealed. */
@@ -21,7 +22,24 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   const opacity = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(1)).current;
 
+  // Gate the intro on the Orbitron brand font: the wordmark stays hidden (group
+  // opacity starts at 0) until the font is ready, so it never flashes in the
+  // system fallback font. A short safety timeout starts the intro anyway if the
+  // (bundled, normally-instant) font ever fails to report — the splash must
+  // always reveal the app. `useFonts` dedupes with App's own font load.
+  const [fontLoaded, fontError] = useFonts({ Orbitron_600SemiBold });
+  const [ready, setReady] = useState(false);
   useEffect(() => {
+    if (fontLoaded || fontError) {
+      setReady(true);
+      return undefined;
+    }
+    const t = setTimeout(() => setReady(true), 1500);
+    return () => clearTimeout(t);
+  }, [fontLoaded, fontError]);
+
+  useEffect(() => {
+    if (!ready) return undefined; // hold the intro until the brand font is ready
     const animation = Animated.sequence([
       // 1. Logo + wordmark settle in.
       Animated.parallel([
@@ -62,7 +80,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     });
 
     return () => animation.stop();
-  }, [scale, opacity, overlayOpacity, onFinish]);
+  }, [ready, scale, opacity, overlayOpacity, onFinish]);
 
   return (
     <Animated.View style={[styles.container, { opacity: overlayOpacity }]} pointerEvents="none">
@@ -72,11 +90,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.wordmark} allowFontScaling={false}>
-          <Text style={styles.white}>Jubi</Text>
-          <Text style={styles.gold}>Lujah</Text>
-          <Text style={styles.white}>.com</Text>
-        </Text>
+        {ready ? (
+          <Text style={styles.wordmark} allowFontScaling={false}>
+            <Text style={styles.white}>Jubi</Text>
+            <Text style={styles.gold}>Lujah</Text>
+            <Text style={styles.white}>.com</Text>
+          </Text>
+        ) : null}
       </Animated.View>
     </Animated.View>
   );

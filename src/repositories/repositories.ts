@@ -63,7 +63,18 @@ export const HomeRepository = {
 
     const heroIds = config.heroAlbumIds?.length ? config.heroAlbumIds : [config.heroAlbumId];
     const heroes = pickByIds(albums, heroIds);
-    return { heroes, rails };
+
+    // Resolve per-page heroes (v2) so the Home screen can swap the carousel to
+    // whichever page/chip is active.
+    let heroesByCategory: Record<string, Album[]> | undefined;
+    if (config.heroesByCategory) {
+      heroesByCategory = {};
+      for (const [label, ids] of Object.entries(config.heroesByCategory)) {
+        heroesByCategory[label] = pickByIds(albums, ids);
+      }
+    }
+
+    return { heroes, heroesByCategory, categoryLabels: config.categoryLabels, rails };
   },
 };
 

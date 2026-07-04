@@ -7,6 +7,12 @@ export type RequestStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 export interface ResolvedHomeFeed {
   /** Albums shown in the rotating hero carousel (first is the primary). */
   heroes?: import('./models').Album[];
+  /** Per-page hero albums keyed by category label (v2); the Home screen shows
+   *  the active chip's page hero, falling back to `heroes`. */
+  heroesByCategory?: Record<string, import('./models').Album[]>;
+  /** Ordered page labels for the top-nav chips (v2); pages with only a hero and
+   *  no rails still appear here. */
+  categoryLabels?: string[];
   rails: ResolvedRail[];
 }
 

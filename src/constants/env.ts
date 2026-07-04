@@ -20,6 +20,12 @@ type AppExtra = {
    * server-side, so the client never talks to JI directly. See `API docs/API.md`.
    */
   authBaseUrl: string;
+  /**
+   * Dev override for the dynamic-content config endpoint (`/api/mobile/config`)
+   * ONLY. When set, the mobile CMS config is fetched from here while auth/social
+   * stay on `authBaseUrl` and the catalog on `cdnBaseUrl`. Unset in prod.
+   */
+  mobileConfigBaseUrl?: string;
   /** Cloudflare Turnstile site key for the sign-in CAPTCHA (empty = CAPTCHA off). */
   turnstileSiteKey: string;
   /** Origin the Turnstile widget runs under (must be allow-listed for the site key). */
@@ -38,6 +44,9 @@ export const ENV = {
   DATA_SOURCE: (extra.dataSource ?? (useMock ? 'mock' : 'api')) as DataSourceKind,
   // Unified jubilujah-api — single host for every /api/auth/* call (Bearer).
   API_AUTH_BASE: extra.authBaseUrl ?? 'https://api.jubilujah.com',
+  // Host for the dynamic-content config ONLY. Defaults to the auth host so prod
+  // is unchanged; override via extra.mobileConfigBaseUrl to test a local API.
+  MOBILE_CONFIG_BASE: extra.mobileConfigBaseUrl ?? extra.authBaseUrl ?? 'https://api.jubilujah.com',
   // Cloudflare Turnstile (sign-in CAPTCHA). Empty disables the widget.
   TURNSTILE_SITE_KEY: extra.turnstileSiteKey ?? '',
   TURNSTILE_BASE_URL: extra.turnstileBaseUrl ?? 'https://jubilujah.com',

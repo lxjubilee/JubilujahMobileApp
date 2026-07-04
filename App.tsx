@@ -26,6 +26,7 @@ import {
 import { setupPlayer } from '@/services/music';
 import { initAuthClient } from '@/services/auth';
 import { getManifest, onCatalogUpdated, invalidateCatalogIndex } from '@/services/catalog';
+import { getMobileConfig, onMobileConfigUpdated } from '@/services/mobileConfig';
 import { CONFIG } from '@/constants';
 import { SplashScreen } from '@/components/SplashScreen';
 import { PlaybackLimitGate } from '@/components/PlaybackLimitGate';
@@ -124,6 +125,15 @@ export default function App() {
     void getManifest();
     return onCatalogUpdated(() => {
       invalidateCatalogIndex();
+      void store.dispatch(fetchHomeFeed());
+    });
+  }, []);
+
+  // Warm the admin-managed mobile category config, and rebuild the Home feed
+  // when it changes in the background (the overlay is applied in getHomeConfig).
+  useEffect(() => {
+    void getMobileConfig();
+    return onMobileConfigUpdated(() => {
       void store.dispatch(fetchHomeFeed());
     });
   }, []);

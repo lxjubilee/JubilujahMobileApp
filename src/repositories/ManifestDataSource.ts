@@ -1,5 +1,6 @@
 import { Album, Artist, SearchResults, Track } from '@/types';
-import { CatalogIndex, getCatalogIndex } from '@/services/catalog';
+import { CatalogIndex, getCatalogIndex, applyMobileConfig } from '@/services/catalog';
+import { getMobileConfig } from '@/services/mobileConfig';
 import { HomeConfig, MusicDataSource } from './DataSource';
 
 /**
@@ -16,7 +17,11 @@ export class ManifestDataSource implements MusicDataSource {
   }
 
   async getHomeConfig(): Promise<HomeConfig> {
-    return (await this.index()).home;
+    // Overlay the admin-managed mobile config on the catalog; falls back to the
+    // manifest-derived feed when the config is unavailable (getMobileConfig
+    // never rejects — it resolves null on any error).
+    const [index, config] = await Promise.all([this.index(), getMobileConfig()]);
+    return applyMobileConfig(index, config);
   }
 
   async listAlbums(): Promise<Album[]> {

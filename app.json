@@ -3,7 +3,7 @@
     "name": "Jubilujah",
     "slug": "jubilujah",
     "scheme": "jubilujah",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/Jubilujah-App-Icon.png",
     "userInterfaceStyle": "dark",
@@ -67,6 +67,7 @@
       "useMock": false,
       "dataSource": "manifest",
       "authBaseUrl": "https://api.jubilujah.com",
+      "mobileConfigBaseUrl": "https://api.jubilujah.com",
       "turnstileSiteKey": "0x4AAAAAADJah9FpwSaEzlLP",
       "turnstileBaseUrl": "https://jubileeinspire.com",
       "eas": {

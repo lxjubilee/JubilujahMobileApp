@@ -20,7 +20,7 @@ export type RootStackParamList = {
   AlbumDetails: { albumId: string };
   AlbumReviews: { albumId: string; albumTitle: string };
   ArtistDetails: { artistId: string };
-  AlbumList: { title: string; artistId: string };
+  AlbumList: { title: string; artistId?: string; albumIds?: string[] };
   PlaylistDetails: { playlistId: string };
   PlaylistAddSongs: { playlistId: string };
   MusicPlayer: undefined;

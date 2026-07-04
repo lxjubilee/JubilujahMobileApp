@@ -11,9 +11,11 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Screen, Loader, AppText, LanguagePanel } from '@/components/common';
 import { useAppDispatch, useAppSelector, usePlayer, useVisibleAlbums, useVisibleRails } from '@/hooks';
 import { fetchHomeFeed } from '@/redux';
+import { onMobileConfigUpdated, resetMobileConfigCache } from '@/services/mobileConfig';
 import { DEFAULT_LANG, langName } from '@/localization';
 import { AlbumRepository } from '@/repositories';
 import { Album, Artist, ResolvedRail } from '@/types';
@@ -21,7 +23,7 @@ import { logger } from '@/utils';
 import type { RootStackParamList } from '@/navigation/types';
 import { HeroCarousel } from './components/HeroCarousel';
 import { Rail } from './components/Rail';
-import { HomeHeader, HomeFilter, HOME_FILTER_ALL } from './components/HomeHeader';
+import { HomeHeader, HomeFilter, HOME_FILTER_ALL, CHIP_ROW_HEIGHT } from './components/HomeHeader';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -32,37 +34,62 @@ export const HomeScreen: React.FC = () => {
   const { playTracks } = usePlayer();
   const { feed, status } = useAppSelector((s) => s.home);
   const language = useAppSelector((s) => s.settings.language);
+  const insets = useSafeAreaInsets();
   const [filter, setFilter] = useState<HomeFilter>(HOME_FILTER_ALL);
   const [langPanelOpen, setLangPanelOpen] = useState(false);
+  // Per-page hero (v2): a page shows ONLY its own hero (empty when the admin
+  // turned it off, so a deactivated hero never renders). NB: HOME_FILTER_ALL is
+  // the string 'Home', which COLLIDES with the real "Home" page label — so we must
+  // NOT branch on it here. In config mode (categoryLabels present) every chip is a
+  // real page, so we never fall back to the default `heroes`; that fallback is
+  // only for manifest/legacy mode (no admin config).
+  const heroSource =
+    feed?.heroesByCategory?.[filter]
+    ?? (feed?.categoryLabels?.length ? [] : feed?.heroes ?? []);
   // Hero albums minus any whose cover is missing.
-  const heroes = useVisibleAlbums(feed?.heroes ?? []);
+  const heroes = useVisibleAlbums(heroSource);
   // Rails with artwork-less items removed and emptied rails dropped — so no
   // blank gap is left where an all-missing rail used to be.
   const railsWithArt = useVisibleRails(feed?.rails ?? []);
 
-  // Chips = "Home" + each distinct category that still has content (in order).
-  const filters = useMemo<HomeFilter[]>(() => {
+  // Config mode: every rail carries a categoryLabel (admin-managed categories,
+  // first one is "Home"), so the chips ARE the categories and "Home" is a real
+  // category. Fallback mode (manifest-derived): some rails are uncategorized, so
+  // we prepend a synthetic "Home" chip that shows everything (legacy behavior).
+  const { filters, showAllChip } = useMemo<{ filters: HomeFilter[]; showAllChip: boolean }>(() => {
+    // Config mode: the chips ARE the configured pages, in order — including a
+    // page that currently has only a hero and no rails, so a newly created page
+    // still appears in the nav.
+    if (feed?.categoryLabels?.length) {
+      return { filters: feed.categoryLabels, showAllChip: false };
+    }
+    // Fallback (manifest-derived): derive chips from the rails + a synthetic
+    // "all" chip (legacy behavior when there is no admin config).
     const labels: string[] = [];
+    let hasUncategorized = false;
     for (const rail of railsWithArt) {
-      if (rail.categoryLabel && !labels.includes(rail.categoryLabel)) {
-        labels.push(rail.categoryLabel);
+      if (rail.categoryLabel) {
+        if (!labels.includes(rail.categoryLabel)) labels.push(rail.categoryLabel);
+      } else {
+        hasUncategorized = true;
       }
     }
-    return [HOME_FILTER_ALL, ...labels];
-  }, [railsWithArt]);
+    const all = hasUncategorized || labels.length === 0;
+    return { filters: all ? [HOME_FILTER_ALL, ...labels] : labels, showAllChip: all };
+  }, [feed, railsWithArt]);
 
-  // Reset to "Home" if the selected category vanishes after a feed refresh.
+  // Reset to the first chip if the selected one vanishes after a feed refresh.
   useEffect(() => {
-    if (!filters.includes(filter)) setFilter(HOME_FILTER_ALL);
+    if (!filters.includes(filter)) setFilter(filters[0] ?? HOME_FILTER_ALL);
   }, [filters, filter]);
 
-  // "Home" shows every rail; any other chip shows only rails in that category.
+  // The "all" chip shows every rail; any category chip shows only its rails.
   const visibleRails = useMemo(
     () =>
-      railsWithArt.filter(
-        (rail) => filter === HOME_FILTER_ALL || rail.categoryLabel === filter,
+      railsWithArt.filter((rail) =>
+        showAllChip && filter === HOME_FILTER_ALL ? true : rail.categoryLabel === filter,
       ),
-    [railsWithArt, filter],
+    [railsWithArt, filter, showAllChip],
   );
 
   // Animated state for the collapsing header (chips) and its solid background.
@@ -112,6 +139,12 @@ export const HomeScreen: React.FC = () => {
     if (status === 'idle') dispatch(fetchHomeFeed());
   }, [dispatch, status]);
 
+  // Rebuild Home whenever the admin config changes. The config client fetches a
+  // fresh copy in the background (stale-while-revalidate) and fires this when it
+  // differs — without this subscription, added hero slides / sections / pages
+  // would never appear until the app was restarted twice.
+  useEffect(() => onMobileConfigUpdated(() => { dispatch(fetchHomeFeed()); }), [dispatch]);
+
   const openAlbum = useCallback(
     (album: Album) => navigation.navigate('AlbumDetails', { albumId: album.id }),
     [navigation],
@@ -126,8 +159,12 @@ export const HomeScreen: React.FC = () => {
   );
   const openSeeAll = useCallback(
     (rail: ResolvedRail) => {
-      if (!rail.seeAllArtistId) return;
-      navigation.navigate('AlbumList', { title: rail.title, artistId: rail.seeAllArtistId });
+      if (rail.seeAllArtistId) {
+        navigation.navigate('AlbumList', { title: rail.title, artistId: rail.seeAllArtistId });
+      } else if (rail.albums?.length) {
+        // A section with more albums than the preview shows — open the full grid.
+        navigation.navigate('AlbumList', { title: rail.title, albumIds: rail.albums.map((a) => a.id) });
+      }
     },
     [navigation],
   );
@@ -179,13 +216,18 @@ export const HomeScreen: React.FC = () => {
     <Screen safeArea={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          // No hero to sit behind the fixed header → push content below it so the
+          // first rail isn't hidden under the logo + filter chips.
+          heroes.length === 0 && { paddingTop: insets.top + 64 + CHIP_ROW_HEIGHT },
+        ]}
         onScroll={onScroll}
         scrollEventThrottle={16}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={() => dispatch(fetchHomeFeed())}
+            onRefresh={() => { resetMobileConfigCache(); dispatch(fetchHomeFeed()); }}
             tintColor="#fff"
           />
         }
