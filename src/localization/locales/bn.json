@@ -29,6 +29,20 @@
     "loadError": "আমরা আপনার সঙ্গীত লোড করতে পারিনি। রিফ্রেশ করতে টানুন বা আবার চেষ্টা করুন।",
     "comingSoon": "{{language}}-এ এখনও কোনো সঙ্গীত নেই — আমরা শীঘ্রই আরও ভাষা যোগ করছি।"
   },
+  "categories": {
+    "home": "হোম",
+    "inspire_family": "Inspire পরিবার",
+    "family_friendly": "পরিবারবান্ধব",
+    "children": "শিশুদের সঙ্গীত",
+    "music_type": "সঙ্গীতের ধরন"
+  },
+  "railTitles": {
+    "contemporary": "সমসাময়িক",
+    "praise-worship": "প্রশংসা ও উপাসনা",
+    "country": "কান্ট্রি",
+    "pentecostal-shout": "পেন্টেকস্টাল জয়ধ্বনি",
+    "gospel": "গসপেল"
+  },
   "language": {
     "title": "ভাষা",
     "search": "ভাষা অনুসন্ধান করুন…",

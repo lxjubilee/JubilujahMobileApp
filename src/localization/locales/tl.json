@@ -29,6 +29,20 @@
     "loadError": "Hindi ma-load ang iyong musika. Hilahin para mag-refresh o subukan ulit.",
     "comingSoon": "Wala pang musika sa {{language}} — magdadagdag kami ng mga wika sa lalong madaling panahon."
   },
+  "categories": {
+    "home": "Home",
+    "inspire_family": "Pamilya Inspire",
+    "family_friendly": "Pang-pamilya",
+    "children": "Musika para sa Bata",
+    "music_type": "Uri ng Musika"
+  },
+  "railTitles": {
+    "contemporary": "Kontemporaryo",
+    "praise-worship": "Papuri at Pagsamba",
+    "country": "Country",
+    "pentecostal-shout": "Sigaw Pentecostal",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Mga Wika",
     "search": "Maghanap ng mga wika…",

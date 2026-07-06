@@ -29,6 +29,20 @@
     "loadError": "Deine Musik konnte nicht geladen werden. Zum Aktualisieren ziehen oder erneut versuchen.",
     "comingSoon": "Noch keine Musik auf {{language}} – weitere Sprachen folgen bald."
   },
+  "categories": {
+    "home": "Start",
+    "inspire_family": "Inspire Familie",
+    "family_friendly": "Familienfreundlich",
+    "children": "Kindermusik",
+    "music_type": "Musikrichtung"
+  },
+  "railTitles": {
+    "contemporary": "Zeitgenössisch",
+    "praise-worship": "Lobpreis & Anbetung",
+    "country": "Country",
+    "pentecostal-shout": "Pfingstlicher Jubelruf",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Sprachen",
     "search": "Sprachen suchen…",

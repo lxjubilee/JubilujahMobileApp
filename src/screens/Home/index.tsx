@@ -16,7 +16,7 @@ import { Screen, Loader, AppText, LanguagePanel } from '@/components/common';
 import { useAppDispatch, useAppSelector, usePlayer, useVisibleAlbums, useVisibleRails } from '@/hooks';
 import { fetchHomeFeed } from '@/redux';
 import { onMobileConfigUpdated, resetMobileConfigCache } from '@/services/mobileConfig';
-import { DEFAULT_LANG, langName } from '@/localization';
+import { DEFAULT_LANG, langName, localizeCategory } from '@/localization';
 import { AlbumRepository } from '@/repositories';
 import { Album, Artist, ResolvedRail } from '@/types';
 import { logger } from '@/utils';
@@ -82,6 +82,17 @@ export const HomeScreen: React.FC = () => {
   useEffect(() => {
     if (!filters.includes(filter)) setFilter(filters[0] ?? HOME_FILTER_ALL);
   }, [filters, filter]);
+
+  // Localized chip TEXT only — the raw `value` stays the filter identity (rail
+  // match + hero lookup). Config chips translate by their stable key; the
+  // fallback-mode "all" sentinel reuses the Home tab label.
+  const labelFor = useCallback(
+    (value: HomeFilter) =>
+      value === HOME_FILTER_ALL && showAllChip
+        ? t('tabs.home', { defaultValue: value })
+        : localizeCategory(t, feed?.categoryKeys?.[value], value),
+    [t, feed?.categoryKeys, showAllChip],
+  );
 
   // The "all" chip shows every rail; any category chip shows only its rails.
   const visibleRails = useMemo(
@@ -192,6 +203,15 @@ export const HomeScreen: React.FC = () => {
     heroes.length === 0 &&
     visibleRails.length === 0;
 
+  // A selected category with no playable content on-device (e.g. its albums
+  // aren't published/playable yet). We still show the chip — categories mirror
+  // the backend — but the page shows an empty state instead of a blank scroll.
+  const emptyCategory =
+    feed != null &&
+    !emptyForLanguage &&
+    heroes.length === 0 &&
+    visibleRails.length === 0;
+
   if (status === 'loading' && !feed) {
     return (
       <Screen safeArea={false}>
@@ -238,6 +258,12 @@ export const HomeScreen: React.FC = () => {
               {t('home.comingSoon', { language: langName(language) })}
             </AppText>
           </View>
+        ) : emptyCategory ? (
+          <View style={styles.comingSoon}>
+            <AppText variant="body" color="textMuted" style={styles.comingSoonText}>
+              {t('home.emptyCategory')}
+            </AppText>
+          </View>
         ) : (
           <>
             {heroes.length ? (
@@ -268,6 +294,7 @@ export const HomeScreen: React.FC = () => {
         onPressProfile={openProfile}
         language={language}
         onPressLanguage={() => setLangPanelOpen(true)}
+        getLabel={labelFor}
       />
 
       {langPanelOpen ? (

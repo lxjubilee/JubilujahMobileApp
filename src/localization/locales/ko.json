@@ -29,6 +29,20 @@
     "loadError": "음악을 불러올 수 없습니다. 당겨서 새로고침하거나 다시 시도하세요.",
     "comingSoon": "아직 {{language}} 음악이 없습니다. 곧 더 많은 언어를 추가할 예정입니다."
   },
+  "categories": {
+    "home": "홈",
+    "inspire_family": "Inspire 패밀리",
+    "family_friendly": "가족용",
+    "children": "어린이 음악",
+    "music_type": "음악 장르"
+  },
+  "railTitles": {
+    "contemporary": "컨템포러리",
+    "praise-worship": "찬양과 경배",
+    "country": "컨트리",
+    "pentecostal-shout": "오순절 외침",
+    "gospel": "가스펠"
+  },
   "language": {
     "title": "언어",
     "search": "언어 검색…",

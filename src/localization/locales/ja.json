@@ -29,6 +29,20 @@
     "loadError": "音楽を読み込めませんでした。引っ張って更新するか、もう一度お試しください。",
     "comingSoon": "{{language}}の音楽はまだありません。近日中に対応言語を増やします。"
   },
+  "categories": {
+    "home": "ホーム",
+    "inspire_family": "Inspire ファミリー",
+    "family_friendly": "ファミリー向け",
+    "children": "子ども向け音楽",
+    "music_type": "音楽ジャンル"
+  },
+  "railTitles": {
+    "contemporary": "コンテンポラリー",
+    "praise-worship": "賛美と礼拝",
+    "country": "カントリー",
+    "pentecostal-shout": "ペンテコステの叫び",
+    "gospel": "ゴスペル"
+  },
   "language": {
     "title": "言語",
     "search": "言語を検索…",

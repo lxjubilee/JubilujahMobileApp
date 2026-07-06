@@ -29,6 +29,20 @@
     "loadError": "تعذّر تحميل موسيقاك. اسحب للتحديث أو حاول مرة أخرى.",
     "comingSoon": "لا توجد موسيقى بلغة {{language}} بعد — سنضيف المزيد من اللغات قريبًا."
   },
+  "categories": {
+    "home": "الرئيسية",
+    "inspire_family": "عائلة Inspire",
+    "family_friendly": "مناسب للعائلة",
+    "children": "موسيقى الأطفال",
+    "music_type": "نوع الموسيقى"
+  },
+  "railTitles": {
+    "contemporary": "معاصر",
+    "praise-worship": "التسبيح والعبادة",
+    "country": "كانتري",
+    "pentecostal-shout": "هتاف العنصرة",
+    "gospel": "غوسبل"
+  },
   "language": {
     "title": "اللغات",
     "search": "ابحث عن اللغات…",

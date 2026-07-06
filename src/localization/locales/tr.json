@@ -29,6 +29,20 @@
     "loadError": "Müziğiniz yüklenemedi. Yenilemek için çekin veya tekrar deneyin.",
     "comingSoon": "Henüz {{language}} dilinde müzik yok — yakında daha fazla dil ekliyoruz."
   },
+  "categories": {
+    "home": "Ana Sayfa",
+    "inspire_family": "Inspire Ailesi",
+    "family_friendly": "Aileye Uygun",
+    "children": "Çocuk Müziği",
+    "music_type": "Müzik Türü"
+  },
+  "railTitles": {
+    "contemporary": "Çağdaş",
+    "praise-worship": "Övgü ve Tapınma",
+    "country": "Country",
+    "pentecostal-shout": "Pentikostal Haykırış",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Diller",
     "search": "Dil ara…",

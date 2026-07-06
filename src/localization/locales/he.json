@@ -29,6 +29,20 @@
     "loadError": "לא הצלחנו לטעון את המוזיקה שלך. משוך לרענון או נסה שוב.",
     "comingSoon": "אין עדיין מוזיקה ב{{language}} — נוסיף בקרוב שפות נוספות."
   },
+  "categories": {
+    "home": "בית",
+    "inspire_family": "משפחת Inspire",
+    "family_friendly": "מתאים למשפחה",
+    "children": "מוזיקה לילדים",
+    "music_type": "סוג מוזיקה"
+  },
+  "railTitles": {
+    "contemporary": "עכשווי",
+    "praise-worship": "הלל וסגידה",
+    "country": "קאנטרי",
+    "pentecostal-shout": "תרועה פנטקוסטלית",
+    "gospel": "גוספל"
+  },
   "language": {
     "title": "שפות",
     "search": "חפש שפות…",

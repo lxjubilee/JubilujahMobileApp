@@ -29,6 +29,20 @@
     "loadError": "无法加载你的音乐。下拉刷新或重试。",
     "comingSoon": "暂时还没有{{language}}的音乐——我们很快会添加更多语言。"
   },
+  "categories": {
+    "home": "主页",
+    "inspire_family": "Inspire 家庭",
+    "family_friendly": "适合全家",
+    "children": "儿童音乐",
+    "music_type": "音乐类型"
+  },
+  "railTitles": {
+    "contemporary": "当代",
+    "praise-worship": "赞美与敬拜",
+    "country": "乡村",
+    "pentecostal-shout": "五旬节欢呼",
+    "gospel": "福音"
+  },
   "language": {
     "title": "语言",
     "search": "搜索语言…",

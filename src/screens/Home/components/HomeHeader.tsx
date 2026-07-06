@@ -29,6 +29,9 @@ interface HomeHeaderProps {
   language?: string;
   /** Opens the language picker. */
   onPressLanguage?: () => void;
+  /** Maps a chip's raw value (the filter identity) → its localized display text.
+   *  Defaults to identity, so the chip renders its raw value when omitted. */
+  getLabel?: (value: HomeFilter) => string;
 }
 
 /**
@@ -47,6 +50,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
   onPressProfile,
   language,
   onPressLanguage,
+  getLabel,
 }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -121,7 +125,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                     variant="label"
                     style={{ color: active ? '#000' : theme.colors.text }}
                   >
-                    {filter}
+                    {getLabel ? getLabel(filter) : filter}
                   </AppText>
                 </Pressable>
               );

@@ -29,6 +29,20 @@
     "loadError": "Hatukuweza kupakia muziki wako. Vuta ili kuonyesha upya au jaribu tena.",
     "comingSoon": "Bado hakuna muziki kwa {{language}} — tutaongeza lugha zaidi hivi karibuni."
   },
+  "categories": {
+    "home": "Nyumbani",
+    "inspire_family": "Familia ya Inspire",
+    "family_friendly": "Inayofaa Familia",
+    "children": "Muziki wa Watoto",
+    "music_type": "Aina ya Muziki"
+  },
+  "railTitles": {
+    "contemporary": "Ya Kisasa",
+    "praise-worship": "Sifa na Ibada",
+    "country": "Country",
+    "pentecostal-shout": "Kelele za Kipentekoste",
+    "gospel": "Gospeli"
+  },
   "language": {
     "title": "Lugha",
     "search": "Tafuta lugha…",

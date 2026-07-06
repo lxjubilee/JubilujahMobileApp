@@ -29,6 +29,20 @@
     "loadError": "Nismo mogli učitati tvoju glazbu. Povuci za osvježavanje ili pokušaj ponovno.",
     "comingSoon": "Još nema glazbe na jeziku {{language}} — uskoro dodajemo više jezika."
   },
+  "categories": {
+    "home": "Početna",
+    "inspire_family": "Inspire obitelj",
+    "family_friendly": "Prilagođeno obitelji",
+    "children": "Dječja glazba",
+    "music_type": "Vrsta glazbe"
+  },
+  "railTitles": {
+    "contemporary": "Suvremena",
+    "praise-worship": "Hvala i štovanje",
+    "country": "Country",
+    "pentecostal-shout": "Pentekostni poklik",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Jezici",
     "search": "Pretraži jezike…",

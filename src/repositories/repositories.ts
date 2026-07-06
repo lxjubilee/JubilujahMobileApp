@@ -74,7 +74,13 @@ export const HomeRepository = {
       }
     }
 
-    return { heroes, heroesByCategory, categoryLabels: config.categoryLabels, rails };
+    return {
+      heroes,
+      heroesByCategory,
+      categoryLabels: config.categoryLabels,
+      categoryKeys: config.categoryKeys,
+      rails,
+    };
   },
 };
 

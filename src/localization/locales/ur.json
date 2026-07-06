@@ -29,6 +29,20 @@
     "loadError": "ہم آپ کی موسیقی لوڈ نہیں کر سکے۔ ریفریش کرنے کے لیے کھینچیں یا دوبارہ کوشش کریں۔",
     "comingSoon": "{{language}} میں ابھی کوئی موسیقی نہیں ہے — ہم جلد ہی مزید زبانیں شامل کریں گے۔"
   },
+  "categories": {
+    "home": "ہوم",
+    "inspire_family": "Inspire خاندان",
+    "family_friendly": "خاندان کے لیے موزوں",
+    "children": "بچوں کی موسیقی",
+    "music_type": "موسیقی کی قسم"
+  },
+  "railTitles": {
+    "contemporary": "معاصر",
+    "praise-worship": "حمد و عبادت",
+    "country": "کنٹری",
+    "pentecostal-shout": "پینتیکوستل نعرہ",
+    "gospel": "گاسپل"
+  },
   "language": {
     "title": "زبانیں",
     "search": "زبانیں تلاش کریں…",

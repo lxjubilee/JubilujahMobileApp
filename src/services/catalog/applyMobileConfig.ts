@@ -48,14 +48,25 @@ export function applyMobileConfig(index: CatalogIndex, config: MobileConfig | nu
   // (no rails AND no heroes) — otherwise a hero-only page would be lost.
   if (!rails.length && !Object.keys(heroesByCategory).length) return index.home;
 
-  // Chips ARE the configured pages, in order. A page appears as long as it has
-  // content (a rail) OR a hero — so a brand-new page with only a hero (and no
-  // sections yet) still shows in the top nav. Empty pages (no rail, no hero) are
-  // omitted so they don't clutter the nav.
-  const railLabels = new Set(rails.map((r) => r.categoryLabel).filter((l): l is string => Boolean(l)));
-  const categoryLabels = categories
-    .map((c) => c.label)
-    .filter((label) => railLabels.has(label) || (heroesByCategory[label]?.length ?? 0) > 0);
+  // A page shows only when the admin has actually curated it — i.e. it has at
+  // least one section (or a hero, or, for music_type, its genre list). A category
+  // the admin left empty (0 sections) is hidden entirely: the backend no longer
+  // injects default membership for empty pages, so 0 admin sections means the
+  // chip does not appear. NB this is a config-level check (admin intent), NOT a
+  // resolved-content check — a curated page whose albums merely aren't playable
+  // on-device yet (e.g. Family Friendly) still has sections here, so it stays
+  // visible and the Home screen renders an empty state for it.
+  const hasAdminContent = (c: MobileCategory): boolean =>
+    (c.sections?.length ?? 0) > 0 ||
+    !!(c.hero?.enabled && (c.hero.slides?.length ?? 0) > 0) ||
+    (c.kind === 'music_type' && (c.musicTypes?.length ?? 0) > 0) ||
+    (c.items?.length ?? 0) > 0; // legacy pre-v2 flat membership
+  const shownCategories = categories.filter(hasAdminContent);
+  const categoryLabels = shownCategories.map((c) => c.label);
+  // Map each page's display label → its stable config key, so the Home chips can
+  // be translated by key while filtering stays keyed on the raw label.
+  const categoryKeys: Record<string, string> = {};
+  for (const c of shownCategories) categoryKeys[c.label] = c.key;
 
   // With admin config active, the hero is driven ENTIRELY by it: if a page has
   // its hero turned OFF it shows no hero, and if NO page has one there is no hero
@@ -65,7 +76,7 @@ export function applyMobileConfig(index: CatalogIndex, config: MobileConfig | nu
   const heroAlbumIds = firstHeroLabel ? heroesByCategory[firstHeroLabel] : [];
   const heroAlbumId = heroAlbumIds[0] ?? '';
 
-  return { heroAlbumId, heroAlbumIds, heroesByCategory, categoryLabels, rails };
+  return { heroAlbumId, heroAlbumIds, heroesByCategory, categoryLabels, categoryKeys, rails };
 }
 
 /**

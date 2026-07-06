@@ -29,6 +29,20 @@
     "loadError": "無法載入你嘅音樂。下拉重新整理或者再試一次。",
     "comingSoon": "暫時未有{{language}}嘅音樂——我哋好快會加多啲語言。"
   },
+  "categories": {
+    "home": "主頁",
+    "inspire_family": "Inspire 家庭",
+    "family_friendly": "啱全家",
+    "children": "兒童音樂",
+    "music_type": "音樂類型"
+  },
+  "railTitles": {
+    "contemporary": "當代",
+    "praise-worship": "讚美與敬拜",
+    "country": "鄉村",
+    "pentecostal-shout": "五旬節歡呼",
+    "gospel": "福音"
+  },
   "language": {
     "title": "語言",
     "search": "搜尋語言…",

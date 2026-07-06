@@ -1,8 +1,10 @@
 import React from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AlbumCard, ArtistCard } from '@/components/cards';
 import { SectionHeader } from '@/components/common';
+import { localizeTitle } from '@/localization';
 import { Album, Artist, ResolvedRail } from '@/types';
 
 interface RailProps {
@@ -15,16 +17,20 @@ interface RailProps {
 /** A single horizontally-scrolling Home row of albums or artists. */
 export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress, onSeeAll }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   // Items are already artwork-filtered upstream (useVisibleRails); empty rails
   // are dropped there too, so these guards are just defensive.
   const albums = rail.albums ?? [];
   const artists = rail.artists ?? [];
+  // Localize dynamic (config-driven) rail titles — genre and section names.
+  // Unmapped titles (artist names, custom sections) fall back to the raw string.
+  const title = localizeTitle(t, rail.title);
 
   if (rail.itemType === 'artist') {
     if (!artists.length) return null;
     return (
       <>
-        <SectionHeader title={rail.title} />
+        <SectionHeader title={title} />
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -49,7 +55,7 @@ export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress, o
   return (
     <>
       <SectionHeader
-        title={rail.title}
+        title={title}
         onSeeAll={showSeeAll ? () => onSeeAll?.(rail) : undefined}
       />
       <FlatList

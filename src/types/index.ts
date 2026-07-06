@@ -13,6 +13,9 @@ export interface ResolvedHomeFeed {
   /** Ordered page labels for the top-nav chips (v2); pages with only a hero and
    *  no rails still appear here. */
   categoryLabels?: string[];
+  /** Maps each page label (chip identity) → its stable config key, so the Home
+   *  chips can be localized by key while filtering stays keyed on the raw label. */
+  categoryKeys?: Record<string, string>;
   rails: ResolvedRail[];
 }
 

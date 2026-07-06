@@ -29,6 +29,20 @@
     "loadError": "Не вдалося завантажити вашу музику. Потягніть, щоб оновити, або повторіть спробу.",
     "comingSoon": "Музики мовою {{language}} поки немає — незабаром ми додамо більше мов."
   },
+  "categories": {
+    "home": "Головна",
+    "inspire_family": "Родина Inspire",
+    "family_friendly": "Для всієї родини",
+    "children": "Дитяча музика",
+    "music_type": "Тип музики"
+  },
+  "railTitles": {
+    "contemporary": "Сучасна",
+    "praise-worship": "Хвала і поклоніння",
+    "country": "Кантрі",
+    "pentecostal-shout": "П'ятидесятницький вигук",
+    "gospel": "Госпел"
+  },
   "language": {
     "title": "Мови",
     "search": "Пошук мов…",

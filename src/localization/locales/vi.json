@@ -29,6 +29,20 @@
     "loadError": "Không thể tải nhạc của bạn. Kéo để làm mới hoặc thử lại.",
     "comingSoon": "Chưa có nhạc bằng {{language}} — chúng tôi sẽ sớm thêm nhiều ngôn ngữ hơn."
   },
+  "categories": {
+    "home": "Trang chủ",
+    "inspire_family": "Gia đình Inspire",
+    "family_friendly": "Phù hợp với gia đình",
+    "children": "Nhạc thiếu nhi",
+    "music_type": "Thể loại nhạc"
+  },
+  "railTitles": {
+    "contemporary": "Đương đại",
+    "praise-worship": "Ngợi khen và thờ phượng",
+    "country": "Country",
+    "pentecostal-shout": "Tiếng reo Ngũ Tuần",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Ngôn ngữ",
     "search": "Tìm ngôn ngữ…",

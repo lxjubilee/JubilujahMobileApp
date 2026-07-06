@@ -29,6 +29,20 @@
     "loadError": "Vi kunne ikke indlæse din musik. Træk for at opdatere, eller prøv igen.",
     "comingSoon": "Ingen musik på {{language}} endnu – vi tilføjer snart flere sprog."
   },
+  "categories": {
+    "home": "Hjem",
+    "inspire_family": "Inspire-familien",
+    "family_friendly": "Familievenligt",
+    "children": "Børnemusik",
+    "music_type": "Musiktype"
+  },
+  "railTitles": {
+    "contemporary": "Nutidig",
+    "praise-worship": "Lovsang og tilbedelse",
+    "country": "Country",
+    "pentecostal-shout": "Pinsebevægelsens råb",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Sprog",
     "search": "Søg sprog…",

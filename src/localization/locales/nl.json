@@ -29,6 +29,20 @@
     "loadError": "We konden je muziek niet laden. Trek om te vernieuwen of probeer opnieuw.",
     "comingSoon": "Nog geen muziek in het {{language}} — we voegen binnenkort meer talen toe."
   },
+  "categories": {
+    "home": "Home",
+    "inspire_family": "Inspire-familie",
+    "family_friendly": "Familievriendelijk",
+    "children": "Kindermuziek",
+    "music_type": "Muzieksoort"
+  },
+  "railTitles": {
+    "contemporary": "Hedendaags",
+    "praise-worship": "Lofprijzing en aanbidding",
+    "country": "Country",
+    "pentecostal-shout": "Pinksterjubel",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Talen",
     "search": "Talen zoeken…",

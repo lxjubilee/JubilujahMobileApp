@@ -29,6 +29,20 @@
     "loadError": "Musiikkiasi ei voitu ladata. Päivitä vetämällä tai yritä uudelleen.",
     "comingSoon": "Ei vielä musiikkia kielellä {{language}} – lisäämme pian uusia kieliä."
   },
+  "categories": {
+    "home": "Etusivu",
+    "inspire_family": "Inspire-perhe",
+    "family_friendly": "Perheystävällinen",
+    "children": "Lastenmusiikki",
+    "music_type": "Musiikkityyppi"
+  },
+  "railTitles": {
+    "contemporary": "Nykyaikainen",
+    "praise-worship": "Ylistys ja palvonta",
+    "country": "Country",
+    "pentecostal-shout": "Helluntailainen huuto",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Kielet",
     "search": "Hae kieliä…",

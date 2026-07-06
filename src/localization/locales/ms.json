@@ -29,6 +29,20 @@
     "loadError": "Kami tidak dapat memuatkan muzik anda. Tarik untuk muat semula atau cuba lagi.",
     "comingSoon": "Belum ada muzik dalam {{language}} — kami akan menambah lebih banyak bahasa tidak lama lagi."
   },
+  "categories": {
+    "home": "Laman Utama",
+    "inspire_family": "Keluarga Inspire",
+    "family_friendly": "Mesra Keluarga",
+    "children": "Muzik Kanak-kanak",
+    "music_type": "Jenis Muzik"
+  },
+  "railTitles": {
+    "contemporary": "Kontemporari",
+    "praise-worship": "Pujian dan Penyembahan",
+    "country": "Country",
+    "pentecostal-shout": "Seruan Pentakosta",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Bahasa",
     "search": "Cari bahasa…",

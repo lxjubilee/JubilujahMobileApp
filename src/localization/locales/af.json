@@ -29,6 +29,20 @@
     "loadError": "Ons kon nie jou musiek laai nie. Trek om te verfris, of probeer weer.",
     "comingSoon": "Nog geen musiek in {{language}} nie — ons voeg binnekort meer tale by."
   },
+  "categories": {
+    "home": "Tuis",
+    "inspire_family": "Inspire-familie",
+    "family_friendly": "Gesinsvriendelik",
+    "children": "Kindermusiek",
+    "music_type": "Musiektipe"
+  },
+  "railTitles": {
+    "contemporary": "Kontemporêr",
+    "praise-worship": "Lofprysing en aanbidding",
+    "country": "Country",
+    "pentecostal-shout": "Pinkster-uitroep",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Tale",
     "search": "Soek tale…",

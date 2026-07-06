@@ -29,6 +29,20 @@
     "loadError": "Nie udało się załadować Twojej muzyki. Pociągnij, aby odświeżyć, lub spróbuj ponownie.",
     "comingSoon": "Nie ma jeszcze muzyki w języku {{language}} — wkrótce dodamy więcej języków."
   },
+  "categories": {
+    "home": "Główna",
+    "inspire_family": "Rodzina Inspire",
+    "family_friendly": "Dla całej rodziny",
+    "children": "Muzyka dla dzieci",
+    "music_type": "Rodzaj muzyki"
+  },
+  "railTitles": {
+    "contemporary": "Współczesna",
+    "praise-worship": "Uwielbienie i chwała",
+    "country": "Country",
+    "pentecostal-shout": "Zielonoświątkowy okrzyk",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Języki",
     "search": "Szukaj języków…",

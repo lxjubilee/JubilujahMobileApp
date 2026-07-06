@@ -29,6 +29,20 @@
     "loadError": "Nu am putut încărca muzica ta. Trage pentru a reîmprospăta sau încearcă din nou.",
     "comingSoon": "Încă nu există muzică în {{language}} — vom adăuga în curând mai multe limbi."
   },
+  "categories": {
+    "home": "Acasă",
+    "inspire_family": "Familia Inspire",
+    "family_friendly": "Potrivit pentru familie",
+    "children": "Muzică pentru copii",
+    "music_type": "Tip de muzică"
+  },
+  "railTitles": {
+    "contemporary": "Contemporană",
+    "praise-worship": "Laudă și închinare",
+    "country": "Country",
+    "pentecostal-shout": "Strigăt penticostal",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Limbi",
     "search": "Caută limbi…",

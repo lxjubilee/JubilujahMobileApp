@@ -29,6 +29,20 @@
     "loadError": "Musicam tuam onerare non potuimus. Trahe ut renoves vel iterum conare.",
     "comingSoon": "Nulla adhuc musica in lingua {{language}} — mox plures linguas addemus."
   },
+  "categories": {
+    "home": "Domus",
+    "inspire_family": "Familia Inspire",
+    "family_friendly": "Familiae aptum",
+    "children": "Musica puerorum",
+    "music_type": "Genus musicae"
+  },
+  "railTitles": {
+    "contemporary": "Recens",
+    "praise-worship": "Laus et adoratio",
+    "country": "Country",
+    "pentecostal-shout": "Clamor Pentecostalis",
+    "gospel": "Evangelium"
+  },
   "language": {
     "title": "Linguae",
     "search": "Quaerere linguas…",

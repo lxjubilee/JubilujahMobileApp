@@ -29,6 +29,20 @@
     "loadError": "Не успяхме да заредим музиката ви. Дръпнете за обновяване или опитайте отново.",
     "comingSoon": "Все още няма музика на {{language}} — скоро ще добавим още езици."
   },
+  "categories": {
+    "home": "Начало",
+    "inspire_family": "Семейство Inspire",
+    "family_friendly": "Подходящо за семейството",
+    "children": "Детска музика",
+    "music_type": "Тип музика"
+  },
+  "railTitles": {
+    "contemporary": "Съвременна",
+    "praise-worship": "Хваление и поклонение",
+    "country": "Кънтри",
+    "pentecostal-shout": "Петдесятнически възглас",
+    "gospel": "Госпъл"
+  },
   "language": {
     "title": "Езици",
     "search": "Търсене на езици…",

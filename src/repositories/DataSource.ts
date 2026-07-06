@@ -15,6 +15,9 @@ export interface HomeConfig {
   /** Ordered page labels for the top-nav chips (v2). Includes pages that have a
    *  hero but no rails yet, so a new page still appears. */
   categoryLabels?: string[];
+  /** Maps each page label (the chip identity) → its stable config key, so chips
+   *  can be localized by key while filtering stays keyed on the raw label. */
+  categoryKeys?: Record<string, string>;
   rails: HomeRail[];
 }
 

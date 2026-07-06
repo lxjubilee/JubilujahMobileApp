@@ -29,6 +29,20 @@
     "loadError": "Не удалось загрузить вашу музыку. Потяните, чтобы обновить, или попробуйте снова.",
     "comingSoon": "Музыки на языке {{language}} пока нет — скоро мы добавим больше языков."
   },
+  "categories": {
+    "home": "Главная",
+    "inspire_family": "Семья Inspire",
+    "family_friendly": "Для всей семьи",
+    "children": "Детская музыка",
+    "music_type": "Тип музыки"
+  },
+  "railTitles": {
+    "contemporary": "Современная",
+    "praise-worship": "Хвала и поклонение",
+    "country": "Кантри",
+    "pentecostal-shout": "Пятидесятнический возглас",
+    "gospel": "Госпел"
+  },
   "language": {
     "title": "Языки",
     "search": "Поиск языков…",

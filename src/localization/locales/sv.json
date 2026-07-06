@@ -29,6 +29,20 @@
     "loadError": "Vi kunde inte ladda din musik. Dra för att uppdatera eller försök igen.",
     "comingSoon": "Ingen musik på {{language}} ännu – vi lägger snart till fler språk."
   },
+  "categories": {
+    "home": "Hem",
+    "inspire_family": "Inspire-familjen",
+    "family_friendly": "Familjevänligt",
+    "children": "Barnmusik",
+    "music_type": "Musiktyp"
+  },
+  "railTitles": {
+    "contemporary": "Samtida",
+    "praise-worship": "Lovsång och tillbedjan",
+    "country": "Country",
+    "pentecostal-shout": "Pingströrelsens rop",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Språk",
     "search": "Sök språk…",

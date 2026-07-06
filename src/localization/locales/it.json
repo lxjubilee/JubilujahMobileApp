@@ -29,6 +29,20 @@
     "loadError": "Impossibile caricare la tua musica. Trascina per aggiornare o riprova.",
     "comingSoon": "Ancora nessuna musica in {{language}}: presto aggiungeremo altre lingue."
   },
+  "categories": {
+    "home": "Home",
+    "inspire_family": "Famiglia Inspire",
+    "family_friendly": "Per tutta la famiglia",
+    "children": "Musica per bambini",
+    "music_type": "Tipo di musica"
+  },
+  "railTitles": {
+    "contemporary": "Contemporaneo",
+    "praise-worship": "Lode e adorazione",
+    "country": "Country",
+    "pentecostal-shout": "Grido pentecostale",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Lingue",
     "search": "Cerca lingue…",

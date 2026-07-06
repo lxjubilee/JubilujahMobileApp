@@ -29,6 +29,20 @@
     "loadError": "Nepodařilo se načíst vaši hudbu. Potáhněte pro obnovení nebo to zkuste znovu.",
     "comingSoon": "Hudba v jazyce {{language}} zatím není – brzy přidáme další jazyky."
   },
+  "categories": {
+    "home": "Domů",
+    "inspire_family": "Rodina Inspire",
+    "family_friendly": "Vhodné pro rodiny",
+    "children": "Hudba pro děti",
+    "music_type": "Typ hudby"
+  },
+  "railTitles": {
+    "contemporary": "Současná",
+    "praise-worship": "Chvála a uctívání",
+    "country": "Country",
+    "pentecostal-shout": "Letniční volání",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Jazyky",
     "search": "Hledat jazyky…",

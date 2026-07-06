@@ -29,6 +29,20 @@
     "loadError": "نتوانستیم موسیقی شما را بارگذاری کنیم. برای تازه‌سازی بکشید یا دوباره تلاش کنید.",
     "comingSoon": "هنوز موسیقی به زبان {{language}} وجود ندارد — به‌زودی زبان‌های بیشتری اضافه می‌کنیم."
   },
+  "categories": {
+    "home": "خانه",
+    "inspire_family": "خانواده Inspire",
+    "family_friendly": "مناسب خانواده",
+    "children": "موسیقی کودکان",
+    "music_type": "نوع موسیقی"
+  },
+  "railTitles": {
+    "contemporary": "معاصر",
+    "praise-worship": "ستایش و پرستش",
+    "country": "کانتری",
+    "pentecostal-shout": "فریاد پنطیکاستی",
+    "gospel": "گاسپل"
+  },
   "language": {
     "title": "زبان‌ها",
     "search": "جستجوی زبان‌ها…",

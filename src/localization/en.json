@@ -27,7 +27,22 @@
     "greetingAfternoon": "Good afternoon",
     "greetingEvening": "Good evening",
     "loadError": "We couldn't load your music. Pull to refresh or try again.",
-    "comingSoon": "No music in {{language}} yet — we're adding more languages soon."
+    "comingSoon": "No music in {{language}} yet — we're adding more languages soon.",
+    "emptyCategory": "Nothing here yet — new music for this category is on the way."
+  },
+  "categories": {
+    "home": "Home",
+    "inspire_family": "Inspire Family",
+    "family_friendly": "Family Friendly",
+    "children": "Children Music",
+    "music_type": "Music Type"
+  },
+  "railTitles": {
+    "contemporary": "Contemporary",
+    "praise-worship": "Praise & Worship",
+    "country": "Country",
+    "pentecostal-shout": "Pentecostal Shout",
+    "gospel": "Gospel"
   },
   "language": {
     "title": "Languages",

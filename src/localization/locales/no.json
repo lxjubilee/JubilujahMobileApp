@@ -29,6 +29,20 @@
     "loadError": "Vi kunne ikke laste inn musikken din. Dra for å oppdatere, eller prøv igjen.",
     "comingSoon": "Ingen musikk på {{language}} ennå – vi legger snart til flere språk."
   },
+  "categories": {
+    "home": "Hjem",
+    "inspire_family": "Inspire-familien",
+    "family_friendly": "Familievennlig",
+    "children": "Barnemusikk",
+    "music_type": "Musikktype"
+  },
+  "railTitles": {
+    "contemporary": "Samtidig",
+    "praise-worship": "Lovsang og tilbedelse",
+    "country": "Country",
+    "pentecostal-shout": "Pinsevekkelsens rop",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Språk",
     "search": "Søk etter språk…",

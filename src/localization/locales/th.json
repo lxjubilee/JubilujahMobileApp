@@ -29,6 +29,20 @@
     "loadError": "ไม่สามารถโหลดเพลงของคุณได้ ดึงเพื่อรีเฟรชหรือลองอีกครั้ง",
     "comingSoon": "ยังไม่มีเพลงในภาษา{{language}} เรากำลังเพิ่มภาษาอื่นๆ เร็วๆ นี้"
   },
+  "categories": {
+    "home": "หน้าแรก",
+    "inspire_family": "ครอบครัว Inspire",
+    "family_friendly": "เหมาะสำหรับครอบครัว",
+    "children": "เพลงสำหรับเด็ก",
+    "music_type": "ประเภทเพลง"
+  },
+  "railTitles": {
+    "contemporary": "ร่วมสมัย",
+    "praise-worship": "สรรเสริญและนมัสการ",
+    "country": "คันทรี",
+    "pentecostal-shout": "เสียงโห่ร้องเพนเทคอสต์",
+    "gospel": "กอสเปล"
+  },
   "language": {
     "title": "ภาษา",
     "search": "ค้นหาภาษา…",

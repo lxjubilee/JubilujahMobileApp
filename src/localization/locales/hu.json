@@ -29,6 +29,20 @@
     "loadError": "Nem sikerült betölteni a zenédet. Húzd le a frissítéshez, vagy próbáld újra.",
     "comingSoon": "Még nincs zene {{language}} nyelven – hamarosan további nyelveket adunk hozzá."
   },
+  "categories": {
+    "home": "Kezdőlap",
+    "inspire_family": "Inspire család",
+    "family_friendly": "Családbarát",
+    "children": "Gyerekzene",
+    "music_type": "Zenetípus"
+  },
+  "railTitles": {
+    "contemporary": "Kortárs",
+    "praise-worship": "Dicséret és imádat",
+    "country": "Country",
+    "pentecostal-shout": "Pünkösdi kiáltás",
+    "gospel": "Gospel"
+  },
   "language": {
     "title": "Nyelvek",
     "search": "Nyelvek keresése…",

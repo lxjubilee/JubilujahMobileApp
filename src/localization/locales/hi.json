@@ -29,6 +29,20 @@
     "loadError": "हम आपका संगीत लोड नहीं कर सके. ताज़ा करने के लिए खींचें या फिर कोशिश करें.",
     "comingSoon": "{{language}} में अभी कोई संगीत नहीं है — हम जल्द ही और भाषाएँ जोड़ रहे हैं."
   },
+  "categories": {
+    "home": "होम",
+    "inspire_family": "Inspire परिवार",
+    "family_friendly": "परिवार के अनुकूल",
+    "children": "बच्चों का संगीत",
+    "music_type": "संगीत प्रकार"
+  },
+  "railTitles": {
+    "contemporary": "समकालीन",
+    "praise-worship": "स्तुति और आराधना",
+    "country": "कंट्री",
+    "pentecostal-shout": "पिन्तेकुस्ती जयकार",
+    "gospel": "गॉस्पेल"
+  },
   "language": {
     "title": "भाषाएँ",
     "search": "भाषाएँ खोजें…",
