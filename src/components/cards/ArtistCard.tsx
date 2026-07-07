@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Artist } from '@/types';
+import { personaImage } from '@/assets/personaImages';
 import { AppText } from '../common/AppText';
 import { Artwork } from '../common/Artwork';
 
@@ -19,6 +20,7 @@ export const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onPress, size = 
     >
       <Artwork
         uri={artist.image}
+        source={personaImage(artist.id)}
         style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }]}
         iconSize={Math.round(size * 0.3)}
       />

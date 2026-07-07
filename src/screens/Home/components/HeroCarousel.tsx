@@ -61,6 +61,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ albums, onPlay, onOp
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onMomentumEnd}
         getItemLayout={(_, i) => ({ length: W, offset: W * i, index: i })}
+        // Slides carry absolutely-positioned artwork; leave them mounted so the
+        // clipping optimization can't blank out images while paging.
+        removeClippedSubviews={false}
         renderItem={({ item }) => (
           <View style={{ width: W }}>
             <HeroBanner album={item} onPlay={onPlay} onOpen={onOpen} />

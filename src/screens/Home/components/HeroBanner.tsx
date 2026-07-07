@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Dimensions, Pressable, StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -18,14 +17,19 @@ interface HeroBannerProps {
 
 const { width: W } = Dimensions.get('window');
 const H_PADDING = 16;
-// Wide featured card spanning the content width, tall portrait crop (~Netflix hero).
+// Wide featured card spanning the content width. Its height matches the image's
+// own aspect ratio once loaded (see below), so the artwork fills the frame with
+// no cropping and no letterbox gap. Until then we fall back to a tall portrait.
 const POSTER_W = W - H_PADDING * 2;
-const POSTER_H = Math.round(POSTER_W * 1.36);
+const POSTER_H_DEFAULT = Math.round(POSTER_W * 1.36);
+// Keep pathological aspect ratios from producing an unusably tall/short banner.
+const MIN_ASPECT = 0.6; // portrait limit  (h ≈ 1.66×w)
+const MAX_ASPECT = 1.9; // landscape limit (h ≈ 0.53×w)
 
 /**
- * Featured album as a tall, full-width poster (Netflix hero) with the tag line
- * and Play / My List actions overlaid on the bottom of the image, fading in via
- * a dark gradient.
+ * Featured album as a full-width poster whose height matches the artwork's own
+ * aspect ratio, with the tag line and Play / My List actions stacked BELOW the
+ * image (not overlaid) so the cover art and its title text stay fully visible.
  */
 export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen }) => {
   const theme = useTheme();
@@ -34,6 +38,10 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
   const dispatch = useAppDispatch();
   const saved = useIsAlbumLiked(album);
 
+  // Poster height tracks the image's natural aspect ratio so the artwork fills
+  // the frame exactly — no side crop, no top/bottom empty space.
+  const [posterH, setPosterH] = useState(POSTER_H_DEFAULT);
+
   // Dot-separated descriptors built from the album's real metadata.
   const tags = [album.genre, album.year?.toString(), album.artistName].filter(Boolean) as string[];
 
@@ -41,70 +49,72 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
     <View style={[styles.container, { paddingTop: insets.top + 120 }]}>
       <Pressable
         onPress={() => onOpen(album)}
-        style={[styles.poster, { width: POSTER_W, height: POSTER_H, borderRadius: theme.radius.lg }]}
+        style={[styles.poster, { width: POSTER_W, height: posterH, borderRadius: theme.radius.lg }]}
       >
         <Artwork
           uri={album.cover}
           accentColor={album.accentColor}
           style={StyleSheet.absoluteFill}
+          contentFit="cover"
           iconSize={64}
+          onLoad={({ source }) => {
+            if (!source?.width || !source?.height) return;
+            const aspect = Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, source.width / source.height));
+            setPosterH(Math.round(POSTER_W / aspect));
+          }}
         />
 
         {/* Brand mark in the corner, like the streaming logo on the poster. */}
         <View style={styles.brandMark}>
           <Ionicons name="musical-notes" size={16} color={theme.colors.primary} />
         </View>
-
-        {/* Bottom overlay: gradient + tags + actions, sitting over the image. */}
-        <View style={styles.overlay}>
-          <LinearGradient
-            colors={['transparent', 'rgba(11,11,15,0.55)', 'rgba(11,11,15,0.95)']}
-            locations={[0, 0.45, 1]}
-            style={StyleSheet.absoluteFill}
-            pointerEvents="none"
-          />
-
-          {tags.length ? (
-            <AppText variant="bodySm" color="text" style={styles.tags} numberOfLines={1}>
-              {tags.join('   •   ')}
-            </AppText>
-          ) : null}
-
-          <View style={styles.actions}>
-            <Pressable
-              onPress={() => onPlay(album)}
-              style={({ pressed }) => [
-                styles.btn,
-                styles.playBtn,
-                { borderRadius: theme.radius.sm, opacity: pressed ? 0.85 : 1 },
-              ]}
-            >
-              <Ionicons name="play" size={20} color="#000" />
-              <AppText variant="label" style={styles.playLabel}>
-                {t('common.play')}
-              </AppText>
-            </Pressable>
-
-            <Pressable
-              onPress={() => dispatch(toggleAlbumLike(album))}
-              style={({ pressed }) => [
-                styles.btn,
-                styles.listBtn,
-                {
-                  borderRadius: theme.radius.sm,
-                  borderColor: 'rgba(255,255,255,0.25)',
-                  opacity: pressed ? 0.85 : 1,
-                },
-              ]}
-            >
-              <Ionicons name={saved ? 'checkmark' : 'add'} size={20} color={theme.colors.text} />
-              <AppText variant="label" style={styles.listLabel}>
-                My List
-              </AppText>
-            </Pressable>
-          </View>
-        </View>
       </Pressable>
+
+      {/* Tags + actions sit BELOW the artwork so nothing covers the cover/title. */}
+      {tags.length ? (
+        <AppText
+          variant="bodySm"
+          color="text"
+          style={[styles.tags, { width: POSTER_W }]}
+          numberOfLines={1}
+        >
+          {tags.join('   •   ')}
+        </AppText>
+      ) : null}
+
+      <View style={[styles.actions, { width: POSTER_W }]}>
+        <Pressable
+          onPress={() => onPlay(album)}
+          style={({ pressed }) => [
+            styles.btn,
+            styles.playBtn,
+            { borderRadius: theme.radius.sm, opacity: pressed ? 0.85 : 1 },
+          ]}
+        >
+          <Ionicons name="play" size={20} color="#000" />
+          <AppText variant="label" style={styles.playLabel}>
+            {t('common.play')}
+          </AppText>
+        </Pressable>
+
+        <Pressable
+          onPress={() => dispatch(toggleAlbumLike(album))}
+          style={({ pressed }) => [
+            styles.btn,
+            styles.listBtn,
+            {
+              borderRadius: theme.radius.sm,
+              borderColor: 'rgba(255,255,255,0.25)',
+              opacity: pressed ? 0.85 : 1,
+            },
+          ]}
+        >
+          <Ionicons name={saved ? 'checkmark' : 'add'} size={20} color={theme.colors.text} />
+          <AppText variant="label" style={styles.listLabel}>
+            My List
+          </AppText>
+        </Pressable>
+      </View>
     </View>
   );
 };
@@ -123,17 +133,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  overlay: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    paddingTop: 64,
-    paddingHorizontal: 12,
-    paddingBottom: 14,
-  },
-  tags: { textAlign: 'center', marginBottom: 14 },
-  actions: { flexDirection: 'row', gap: 10 },
+  // Sufficient breathing room between the artwork and the descriptors/actions.
+  tags: { textAlign: 'center', marginTop: 16 },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 16 },
   btn: {
     flex: 1,
     height: 46,

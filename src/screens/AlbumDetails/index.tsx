@@ -39,7 +39,7 @@ export const AlbumDetailsScreen: React.FC = () => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
-  const { playTracks, playFrom, currentTrack } = usePlayer();
+  const { playTracks, playFrom, currentTrack, isPlaying, toggle } = usePlayer();
   const { openTrackOptions, addAlbumToPlaylist } = usePlaylistMenu();
 
   const [album, setAlbum] = useState<Album | null>(null);
@@ -86,8 +86,14 @@ export const AlbumDetailsScreen: React.FC = () => {
   } | null>(null);
 
   const onPlay = useCallback(() => {
-    if (tracks.length) playTracks(tracks, 0);
-  }, [tracks, playTracks]);
+    // If this album is already the active queue, just pause/resume; otherwise
+    // start it from the top.
+    if (currentTrack && currentTrack.albumId === album?.id) {
+      toggle();
+    } else if (tracks.length) {
+      playTracks(tracks, 0);
+    }
+  }, [currentTrack, album?.id, tracks, playTracks, toggle]);
 
   const onShuffle = useCallback(() => {
     if (!tracks.length) return;
@@ -119,9 +125,16 @@ export const AlbumDetailsScreen: React.FC = () => {
     );
   }
 
+  // This album is the active queue AND currently playing → show Pause.
+  const isThisAlbumPlaying =
+    !!currentTrack && currentTrack.albumId === album.id && isPlaying;
+
   return (
     <Screen safeArea={false}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingBottom: 96 + insets.bottom }]}
+      >
         <View style={styles.header}>
           <Artwork
             uri={album.cover}
@@ -132,14 +145,21 @@ export const AlbumDetailsScreen: React.FC = () => {
           />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+            <IconButton
+              name="chevron-back"
+              onPress={() => navigation.goBack()}
+              style={styles.backBtn}
+            />
           </View>
-          <Artwork
-            uri={album.cover}
-            accentColor={album.accentColor}
-            style={[styles.art, { width: ART, height: ART }]}
-            iconSize={Math.round(ART * 0.3)}
-          />
+          <View style={[styles.artFrame, { width: ART, height: ART }]}>
+            <Artwork
+              uri={album.cover}
+              accentColor={album.accentColor}
+              style={styles.artImage}
+              contentFit="contain"
+              iconSize={Math.round(ART * 0.3)}
+            />
+          </View>
           <AppText variant="display" style={styles.title} numberOfLines={2}>
             {album.title}
           </AppText>
@@ -192,7 +212,11 @@ export const AlbumDetailsScreen: React.FC = () => {
           </View>
           <View style={styles.actionsRight}>
             <IconButton name="shuffle" size={26} onPress={onShuffle} style={styles.dl} />
-            <Button label={t('common.play')} icon="play" onPress={onPlay} />
+            <Button
+              label={isThisAlbumPlaying ? t('common.pause') : t('common.play')}
+              icon={isThisAlbumPlaying ? 'pause' : 'play'}
+              onPress={onPlay}
+            />
           </View>
         </View>
 
@@ -245,6 +269,17 @@ export const AlbumDetailsScreen: React.FC = () => {
           ))}
         </View>
       </ScrollView>
+
+      {/* Solid-black safe-area bands so nothing scrolls behind the status bar or
+          the gesture/navigation bar (kept below the mini player, which paints its
+          own backdrop while playing). */}
+      {insets.top > 0 ? (
+        <View style={[styles.safeBand, styles.safeBandTop, { height: insets.top }]} pointerEvents="none" />
+      ) : null}
+      {insets.bottom > 0 ? (
+        <View style={[styles.safeBand, styles.safeBandBottom, { height: insets.bottom }]} pointerEvents="none" />
+      ) : null}
+
       <FloatingMiniPlayer />
 
       {composer ? (
@@ -275,7 +310,24 @@ const styles = StyleSheet.create({
   header: { alignItems: 'center', paddingBottom: 16, paddingTop: 0 },
   bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
   topBar: { width: '100%', paddingHorizontal: 12, alignItems: 'flex-start' },
-  art: { borderRadius: 10, marginTop: 8, backgroundColor: '#222' },
+  // Circular scrim behind the back button so it reads over any artwork, bright
+  // or dark. Size gives an easy tap target; IconButton centers the icon.
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  // Centered "matte" frame: consistent padding around the cover so the whole
+  // artwork (contain-fit, no crop) is always visible with clean spacing, and the
+  // frame's rounded corners sit in the padding — never clipping the artwork.
+  artFrame: {
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  artImage: { flex: 1, borderRadius: 10, backgroundColor: 'transparent' },
   title: { textAlign: 'center', marginTop: 16, paddingHorizontal: 24 },
   sub: { marginTop: 6 },
   genres: {
@@ -303,6 +355,9 @@ const styles = StyleSheet.create({
   dl: { marginHorizontal: 14 },
   list: { paddingHorizontal: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  safeBand: { position: 'absolute', left: 0, right: 0, backgroundColor: '#000' },
+  safeBandTop: { top: 0 },
+  safeBandBottom: { bottom: 0 },
 });
 
 export default AlbumDetailsScreen;

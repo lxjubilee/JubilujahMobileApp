@@ -13,6 +13,7 @@ import { usePlaylistMenu } from '@/components/playlists';
 import { toggleFollowArtist } from '@/redux';
 import { ArtistRepository } from '@/repositories';
 import { Album, Artist, Track } from '@/types';
+import { personaImage } from '@/assets/personaImages';
 import { formatCount } from '@/utils';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
@@ -88,7 +89,7 @@ export const ArtistDetailsScreen: React.FC = () => {
     <Screen safeArea={false}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         <View style={[styles.hero, { height: HERO }]}>
-          <Artwork uri={artist.image} style={StyleSheet.absoluteFill} iconSize={72} />
+          <Artwork uri={artist.image} source={personaImage(artist.id)} style={StyleSheet.absoluteFill} iconSize={72} />
           <LinearGradient colors={['transparent', 'transparent', '#0B0B0F']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
           <View style={[styles.topBar, { top: insets.top + 8 }]}>
             <IconButton name="chevron-back" onPress={() => navigation.goBack()} />

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import { Image, ImageContentFit, ImageStyle } from 'expo-image';
+import { Image, ImageContentFit, ImageContentPosition, ImageLoadEventData, ImageStyle } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context';
 import { cdnUrl } from '@/utils';
@@ -9,11 +9,20 @@ import { useAppDispatch, markArtworkMissing } from '@/redux';
 interface ArtworkProps {
   /** CDN-relative or absolute path. Resolved via cdnUrl(). */
   uri?: string | null;
+  /**
+   * Local bundled image (a `require()` result). When set it wins over `uri` and
+   * renders directly, bypassing the CDN — used for local persona portraits.
+   */
+  source?: number;
   /** Background for the placeholder shown when there's no image / it fails to load. */
   accentColor?: string;
   /** Sizing/radius style — applied identically to the image and the placeholder. */
   style?: StyleProp<ImageStyle>;
   contentFit?: ImageContentFit;
+  /** Anchor point for the image within its frame (e.g. 'top' to top-align). */
+  contentPosition?: ImageContentPosition;
+  /** Fires once the image loads, carrying its natural dimensions. */
+  onLoad?: (event: ImageLoadEventData) => void;
   transition?: number;
   blurRadius?: number;
   /** Placeholder glyph size. */
@@ -28,12 +37,15 @@ interface ArtworkProps {
  */
 export const Artwork: React.FC<ArtworkProps> = ({
   uri,
+  source,
   accentColor,
   style,
   contentFit = 'cover',
+  contentPosition = 'center',
   transition = 250,
   blurRadius,
   iconSize = 28,
+  onLoad,
 }) => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
@@ -43,7 +55,7 @@ export const Artwork: React.FC<ArtworkProps> = ({
   // Reset on source change so recycled list rows re-attempt the new image.
   useEffect(() => {
     setFailed(false);
-  }, [resolved]);
+  }, [resolved, source]);
 
   const onError = () => {
     setFailed(true);
@@ -51,6 +63,21 @@ export const Artwork: React.FC<ArtworkProps> = ({
     // `uri` is the same value stored on Album.cover / Artist.image / Track.artwork.
     if (uri) dispatch(markArtworkMissing(uri));
   };
+
+  // Local bundled asset: render directly (can't 404, so no error tracking).
+  if (source != null) {
+    return (
+      <Image
+        source={source}
+        style={style}
+        contentFit={contentFit}
+        contentPosition={contentPosition}
+        transition={transition}
+        blurRadius={blurRadius}
+        onLoad={onLoad}
+      />
+    );
+  }
 
   if (!resolved || failed) {
     return (
@@ -78,10 +105,12 @@ export const Artwork: React.FC<ArtworkProps> = ({
       source={{ uri: resolved }}
       style={style}
       contentFit={contentFit}
+      contentPosition={contentPosition}
       transition={transition}
       blurRadius={blurRadius}
       recyclingKey={resolved}
       onError={onError}
+      onLoad={onLoad}
     />
   );
 };
