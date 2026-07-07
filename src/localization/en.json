@@ -50,6 +50,16 @@
     "recentlyUsed": "Recently Used",
     "allLanguages": "All Languages"
   },
+  "update": {
+    "title": "Update available",
+    "requiredTitle": "Update required",
+    "message": "A new version of JubiLujah is available. Update for the latest features and improvements.",
+    "requiredMessage": "A new version of JubiLujah is required to continue. Please update to keep using the app.",
+    "update": "Update",
+    "later": "Later",
+    "currentVersion": "Current version",
+    "latestVersion": "Latest version"
+  },
   "search": {
     "placeholder": "Artists, songs, or albums",
     "recent": "Recent searches",

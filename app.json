@@ -3,7 +3,7 @@
     "name": "Jubilujah",
     "slug": "jubilujah",
     "scheme": "jubilujah",
-    "version": "2.0.1",
+    "version": "2.0.5",
     "orientation": "portrait",
     "icon": "./assets/Jubilujah-App-Icon.png",
     "userInterfaceStyle": "dark",

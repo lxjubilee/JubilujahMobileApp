@@ -19,6 +19,12 @@ interface ConfirmDialogProps {
   confirmDisabled?: boolean;
   /** Extra content (e.g. a password input) rendered between the message and buttons. */
   children?: React.ReactNode;
+  /**
+   * Vertical placement. Defaults to auto: top-anchored when `children` are present
+   * (so a keyboard can't cover the buttons), else centered. Pass `'center'` to
+   * force centering for display-only children (e.g. version rows, no input).
+   */
+  align?: 'center' | 'top';
   onConfirm: () => void;
   onCancel?: () => void;
 }
@@ -38,6 +44,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   loading,
   confirmDisabled,
   children,
+  align,
   onConfirm,
   onCancel,
 }) => {
@@ -49,7 +56,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   // the buttons stay above it. We deliberately DON'T use KeyboardAvoidingView —
   // it's unreliable inside an Android Modal (and stacking it under a native-stack
   // screen can wedge the UI thread); top-anchoring keeps the buttons reachable.
-  const hasInput = children != null;
+  // Top-anchor only when a keyboard-raising input is present. `align` overrides
+  // the heuristic so display-only children (e.g. version rows) can stay centered.
+  const topAnchored = align ? align === 'top' : children != null;
 
   // Mount the native <Modal> window ONLY while open. Rendering it permanently
   // with visible={false} leaves a native window (and, for input dialogs, the
@@ -60,7 +69,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={dismiss ?? onConfirm}>
-      <Pressable style={[styles.backdrop, hasInput && styles.backdropTop]} onPress={dismiss}>
+      <Pressable style={[styles.backdrop, topAnchored && styles.backdropTop]} onPress={dismiss}>
         {/* Inner press swallows taps so they don't close the dialog. */}
         <Pressable
           style={[
