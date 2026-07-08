@@ -17,7 +17,7 @@ interface MiniPlayerProps {
  */
 export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onPress }) => {
   const theme = useTheme();
-  const { currentTrack, isPlaying, isBuffering, toggle, next } = usePlayer();
+  const { currentTrack, isPlaying, isBuffering, toggle, next, stop } = usePlayer();
   const { position, duration } = useSafeProgress(500);
 
   if (!currentTrack) return null;
@@ -59,6 +59,8 @@ export const MiniPlayer: React.FC<MiniPlayerProps> = ({ onPress }) => {
           />
         )}
         <IconButton name="play-skip-forward" size={22} onPress={next} style={styles.control} />
+        {/* Close: stop playback and dismiss the bar. */}
+        <IconButton name="close" size={22} onPress={stop} style={styles.control} />
       </View>
       <View style={[styles.progressTrack, { backgroundColor: theme.colors.border }]}>
         <View

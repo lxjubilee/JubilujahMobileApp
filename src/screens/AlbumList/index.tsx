@@ -64,7 +64,11 @@ export const AlbumListScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         ListHeaderComponent={
           <View style={styles.header}>
-            <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+            <IconButton
+              name="chevron-back"
+              onPress={() => navigation.goBack()}
+              style={styles.backBtn}
+            />
             <AppText variant="display" numberOfLines={2} style={styles.title}>
               {params.title}
             </AppText>
@@ -86,6 +90,9 @@ export const AlbumListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: GAP, paddingBottom: 96 },
   header: { alignItems: 'flex-start', paddingTop: 8, paddingBottom: 16 },
+  // Circular button backing the back chevron. Light translucent-white fill so it
+  // reads clearly on the dark background.
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)' },
   title: { marginTop: 8 },
   column: { gap: GAP, marginBottom: GAP },
 });

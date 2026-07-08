@@ -19,7 +19,9 @@ export function mapSummary(d: PlaylistDto): PlaylistSummary {
     isPublic: !!d.is_public,
     isDefault: !!d.is_default,
     itemCount: d.item_count ?? 0,
-    cover: d.cover ?? null,
+    // Server sends a web path (e.g. /cover/CODE.png); make it absolute so it
+    // resolves directly instead of being mistaken for a CDN-relative path.
+    cover: absCover(d.cover) || null,
     createdAt: d.created_at,
     updatedAt: d.updated_at,
   };

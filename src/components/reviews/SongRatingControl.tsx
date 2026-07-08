@@ -3,33 +3,39 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AppText } from '@/components/common';
-import type { ReviewSummary } from '@/types';
-import { StarRating } from './StarRating';
+import type { ReviewSummary, ReviewTargetType } from '@/types';
+import { RatingStars } from './RatingStars';
 
 /**
- * Compact per-song rating for the album track list (RN port of the web
- * `SongRatingControl`): tiny star indicator + rating count + a "Rate" / "★ Your
- * rating" affordance. Its own Pressable, so tapping it never triggers the row.
+ * Compact per-song rating for the album track list. The tiny stars are the
+ * shared `RatingStars` input (tap/drag to rate inline), and the small pill opens
+ * the composer for a written review. Its own Pressable, so tapping the pill never
+ * triggers the row.
  */
 
 interface Props {
   summary: ReviewSummary | null | undefined;
+  /** Backend uuid for the song. When absent the stars are display-only. */
+  targetId?: string;
+  onApplySummary: (s: ReviewSummary) => void;
   onRate: () => void;
 }
 
-export const SongRatingControl: React.FC<Props> = ({ summary, onRate }) => {
+export const SongRatingControl: React.FC<Props> = ({ summary, targetId, onApplySummary, onRate }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const avg = summary?.average ?? null;
-  const count = summary?.ratingCount ?? 0;
   const rated = !!summary?.mine;
+  const type: ReviewTargetType = 'song';
 
   return (
     <View style={styles.wrap}>
-      <StarRating value={avg ?? 0} size="sm" />
-      <AppText variant="caption" color="textMuted" style={styles.count}>
-        ({count})
-      </AppText>
+      <RatingStars
+        summary={summary ?? null}
+        type={type}
+        targetId={targetId}
+        size="sm"
+        onApplySummary={onApplySummary}
+      />
       <Pressable
         onPress={onRate}
         hitSlop={8}
@@ -42,7 +48,7 @@ export const SongRatingControl: React.FC<Props> = ({ summary, onRate }) => {
         ]}
       >
         <AppText variant="caption" color={rated ? 'accent' : 'textSecondary'}>
-          {rated ? t('reviews.yourRatingShort') : t('reviews.rate')}
+          {rated ? t('reviews.editReview') : t('reviews.writeReview')}
         </AppText>
       </Pressable>
     </View>
@@ -51,6 +57,5 @@ export const SongRatingControl: React.FC<Props> = ({ summary, onRate }) => {
 
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', alignItems: 'center' },
-  count: { marginLeft: 4 },
   rate: { marginLeft: 8, borderWidth: 1, paddingVertical: 3, paddingHorizontal: 10 },
 });

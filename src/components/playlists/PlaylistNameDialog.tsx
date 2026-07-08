@@ -45,6 +45,9 @@ export const PlaylistNameDialog: React.FC<PlaylistNameDialogProps> = ({
       confirmLabel={confirmLabel}
       cancelLabel={t('common.cancel')}
       confirmDisabled={!trimmed}
+      // Center on screen; ConfirmDialog lifts the card above the keyboard so the
+      // buttons stay reachable despite the auto-focused input.
+      align="center"
       onConfirm={() => onConfirm(trimmed)}
       onCancel={onCancel}
     >

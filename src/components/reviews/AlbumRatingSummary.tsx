@@ -4,57 +4,60 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AppText } from '@/components/common';
-import { formatCount } from '@/utils';
-import type { ReviewSummary } from '@/types';
-import { StarRating } from './StarRating';
+import type { ReviewSummary, ReviewTargetType } from '@/types';
+import { RatingStars } from './RatingStars';
 
 /**
- * Album-page rating summary (RN port of the web `PublicAlbumRating`). Shows only
- * aggregates — average, count, star indicator — plus a "Rate this album" action
- * and a link to the full Ratings & Reviews screen. Never lists reviews.
+ * Album-page rating summary. The stars themselves are the rating input (the
+ * shared `RatingStars` widget: gold average readout → accent-blue tap/drag to
+ * rate), so this card owns only the aggregate display + a "Write a review" entry
+ * (which opens the full composer for title/body) and the link to all reviews.
  */
 
 interface Props {
   summary: ReviewSummary | null;
+  /** Backend uuid the rating targets (album uuid). */
+  targetId?: string;
+  type?: ReviewTargetType;
+  /** Push a fresh summary up after an inline rating. */
+  onApplySummary: (s: ReviewSummary) => void;
+  /** Opens the composer for a written review (title + body). */
   onRate: () => void;
   /** When omitted (e.g. on the reviews screen itself), the "see all" link is hidden. */
   onSeeAll?: () => void;
 }
 
-export const AlbumRatingSummary: React.FC<Props> = ({ summary, onRate, onSeeAll }) => {
+export const AlbumRatingSummary: React.FC<Props> = ({
+  summary,
+  targetId,
+  type = 'album',
+  onApplySummary,
+  onRate,
+  onSeeAll,
+}) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const avg = summary?.average ?? null;
-  const count = summary?.ratingCount ?? 0;
   const reviewCount = summary?.reviewCount ?? 0;
   const rated = !!summary?.mine;
 
   return (
     <View style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.radius.lg }]}>
-      <View style={styles.main}>
-        <StarRating value={avg ?? 0} size="md" />
-        {avg != null ? (
-          <AppText variant="h3" style={styles.avg}>
-            {avg.toFixed(1)}
-          </AppText>
-        ) : (
-          <AppText variant="h3" color="textMuted" style={styles.avg}>
-            —
-          </AppText>
-        )}
-        <AppText variant="bodySm" color="textMuted" style={styles.count} numberOfLines={1}>
-          {count > 0 ? t('reviews.basedOn', { count: formatCount(count) }) : t('reviews.noRatingsYet')}
-        </AppText>
-      </View>
+      <RatingStars
+        summary={summary}
+        type={type}
+        targetId={targetId}
+        size="md"
+        onApplySummary={onApplySummary}
+      />
 
       <View style={styles.actions}>
         <Pressable
           onPress={onRate}
           style={[styles.rateBtn, { backgroundColor: theme.colors.accent, borderRadius: theme.radius.pill }]}
         >
-          <Ionicons name="star" size={16} color="#FFFFFF" style={styles.rateIcon} />
+          <Ionicons name="create-outline" size={16} color="#FFFFFF" style={styles.rateIcon} />
           <AppText variant="label" style={{ color: '#FFFFFF' }}>
-            {rated ? t('reviews.editYourRating') : t('reviews.rateThisAlbum')}
+            {rated ? t('reviews.editReview') : t('reviews.writeReview')}
           </AppText>
         </Pressable>
         {onSeeAll ? (
@@ -74,9 +77,6 @@ export const AlbumRatingSummary: React.FC<Props> = ({ summary, onRate, onSeeAll 
 
 const styles = StyleSheet.create({
   card: { padding: 16, marginTop: 4 },
-  main: { flexDirection: 'row', alignItems: 'center' },
-  avg: { marginLeft: 10 },
-  count: { flex: 1, marginLeft: 12 },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',

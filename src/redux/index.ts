@@ -43,6 +43,7 @@ export {
   setRepeatMode,
   cycleRepeatMode,
   toggleShuffle,
+  stopPlayback,
 } from './slices/playerSlice';
 export type { RepeatMode } from './slices/playerSlice';
 export {

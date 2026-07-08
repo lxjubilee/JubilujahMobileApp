@@ -13,31 +13,46 @@ import { useTheme } from '@/context';
 /** Conventional rating gold — reads as "rating" on the dark theme. */
 export const RATING_GOLD = '#F6B01E';
 
-type StarSize = 'sm' | 'md' | 'lg';
-const STAR_PX: Record<StarSize, number> = { sm: 14, md: 20, lg: 34 };
+export type StarSize = 'sm' | 'md' | 'lg';
+export const STAR_PX: Record<StarSize, number> = { sm: 14, md: 20, lg: 34 };
+
+/**
+ * Pixel geometry of a 5-star row for a given size. Shared so consumers that need
+ * to map a touch X → star index (e.g. the interactive `RatingStars`) use the same
+ * numbers this component lays out with, and can never drift out of sync.
+ */
+export function starRowMetrics(size: StarSize = 'md'): { px: number; gap: number; rowWidth: number } {
+  const px = STAR_PX[size];
+  const gap = Math.max(2, Math.round(px * 0.12));
+  return { px, gap, rowWidth: px * 5 + gap * 4 };
+}
 
 interface Props {
   value: number;
   onChange?: (n: number) => void;
   size?: StarSize;
+  /** Fill color for filled stars. Defaults to the rating gold. */
+  color?: string;
 }
 
-export const StarRating: React.FC<Props> = ({ value, onChange, size = 'md' }) => {
+export const StarRating: React.FC<Props> = ({ value, onChange, size = 'md', color }) => {
   const theme = useTheme();
-  const px = STAR_PX[size];
-  const gap = Math.max(2, Math.round(px * 0.12));
-  const emptyColor = theme.colors.border;
+  const { px, gap } = starRowMetrics(size);
+  const fillColor = color ?? RATING_GOLD;
+  // Muted grey, not the near-invisible border colour — empty stars must stay
+  // clearly visible against the dark card/background while reading as "unfilled".
+  const emptyColor = theme.colors.iconMuted;
 
   if (!onChange) {
     const pct = Math.max(0, Math.min(100, (value / 5) * 100));
     const rowWidth = px * 5 + gap * 4;
-    const stars = (color: string) =>
+    const stars = (c: string) =>
       [0, 1, 2, 3, 4].map((i) => (
         <Ionicons
           key={i}
           name="star"
           size={px}
-          color={color}
+          color={c}
           style={i < 4 ? { marginRight: gap } : undefined}
         />
       ));
@@ -45,7 +60,7 @@ export const StarRating: React.FC<Props> = ({ value, onChange, size = 'md' }) =>
       <View style={{ width: rowWidth, height: px }}>
         <View style={styles.row}>{stars(emptyColor)}</View>
         <View style={[styles.fillClip, { width: `${pct}%` }]}>
-          <View style={[styles.row, { width: rowWidth }]}>{stars(RATING_GOLD)}</View>
+          <View style={[styles.row, { width: rowWidth }]}>{stars(fillColor)}</View>
         </View>
       </View>
     );
@@ -65,7 +80,7 @@ export const StarRating: React.FC<Props> = ({ value, onChange, size = 'md' }) =>
           <Ionicons
             name={n <= value ? 'star' : 'star-outline'}
             size={px}
-            color={n <= value ? RATING_GOLD : emptyColor}
+            color={n <= value ? fillColor : emptyColor}
           />
         </Pressable>
       ))}

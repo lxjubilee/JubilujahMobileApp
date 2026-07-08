@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AppText } from '@/components/common';
@@ -92,7 +92,20 @@ export const MyContributions: React.FC = () => {
               {t('contributions.empty')}
             </AppText>
           ) : (
-            reviews.map((r) => <ReviewRow key={r.id} review={r} />)
+            // Bounded, independently-scrollable list so the reviews get their own
+            // scrollbar instead of stretching the whole profile page. nestedScroll
+            // lets it scroll within the outer page ScrollView on Android.
+            <ScrollView
+              style={styles.reviewList}
+              contentContainerStyle={styles.reviewListContent}
+              showsVerticalScrollIndicator
+              indicatorStyle="white"
+              nestedScrollEnabled
+            >
+              {reviews.map((r) => (
+                <ReviewRow key={r.id} review={r} />
+              ))}
+            </ScrollView>
           )}
         </>
       )}
@@ -166,6 +179,10 @@ const styles = StyleSheet.create({
   card: { flexGrow: 1, flexBasis: '30%', minWidth: 100, paddingVertical: 16, paddingHorizontal: 12, alignItems: 'center' },
   cardLbl: { marginTop: 4, textAlign: 'center' },
   subHeading: { marginTop: 24, marginBottom: 10 },
+  // Cap the reviews list height (~3 cards) so it scrolls on its own with a
+  // visible scrollbar; paddingRight keeps rows clear of the indicator.
+  reviewList: { maxHeight: 420 },
+  reviewListContent: { paddingRight: 4 },
   review: { padding: 14, marginBottom: 10 },
   reviewHead: { flexDirection: 'row', alignItems: 'center' },
   reviewTitle: { flex: 1, marginLeft: 8 },

@@ -94,7 +94,13 @@ export const AlbumReviewsScreen: React.FC = () => {
 
   const header = (
     <View>
-      <AlbumRatingSummary summary={summary} onRate={() => setComposerOpen(true)} />
+      <AlbumRatingSummary
+        summary={summary}
+        type={type}
+        targetId={id}
+        onApplySummary={applySummary}
+        onRate={() => setComposerOpen(true)}
+      />
       {summary && summary.ratingCount > 0 ? (
         <DistributionBars distribution={summary.distribution} total={summary.ratingCount} />
       ) : null}
@@ -168,8 +174,8 @@ export const AlbumReviewsScreen: React.FC = () => {
           targetLabel={params.albumTitle}
           initial={summary?.mine ?? null}
           onClose={() => setComposerOpen(false)}
-          onSaved={(nextSummary) => {
-            applySummary(nextSummary);
+          onSaved={(nextSummary, mine) => {
+            applySummary({ ...nextSummary, mine });
             loadPage(1, true);
           }}
           onDeleted={(nextSummary) => {

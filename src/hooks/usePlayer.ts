@@ -9,6 +9,7 @@ import {
   setIsBuffering,
   cycleRepeatMode,
   toggleShuffle,
+  stopPlayback,
 } from '@/redux';
 import type { RepeatMode } from '@/redux';
 import {
@@ -115,6 +116,13 @@ export function usePlayer() {
     [],
   );
 
+  // Close the mini player: stop playback entirely — reset the engine (releases
+  // the media notification) and clear the now-playing snapshot so the bar hides.
+  const stop = useCallback(() => {
+    dispatch(stopPlayback());
+    void playbackQueue.reset();
+  }, [dispatch]);
+
   const cycleRepeat = useCallback(async () => {
     const order: RepeatMode[] = ['off', 'queue', 'track'];
     const nextMode = order[(order.indexOf(repeatMode) + 1) % order.length];
@@ -154,5 +162,6 @@ export function usePlayer() {
     seekTo,
     cycleRepeat,
     toggleShuffle: onToggleShuffle,
+    stop,
   };
 }

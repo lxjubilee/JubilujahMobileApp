@@ -44,6 +44,9 @@ export const AlbumDetailsScreen: React.FC = () => {
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
+  // Natural width/height ratio of the cover, learned once it loads, so the frame
+  // can hug the artwork's real shape instead of forcing it into a square.
+  const [coverAspect, setCoverAspect] = useState(1);
 
   const albumLiked = useIsAlbumLiked({ id: params.albumId });
   const likeKeys = useAppSelector((s) => s.likes.keys);
@@ -51,6 +54,7 @@ export const AlbumDetailsScreen: React.FC = () => {
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setCoverAspect(1); // reset until the new cover reports its dimensions
     AlbumRepository.getById(params.albumId)
       .then((a) => active && setAlbum(a))
       .finally(() => active && setLoading(false));
@@ -60,6 +64,27 @@ export const AlbumDetailsScreen: React.FC = () => {
   }, [params.albumId]);
 
   const tracks = useMemo(() => album?.tracks ?? [], [album]);
+
+  // "Added to a playlist" state for the album: true once every playable track is
+  // in at least one playlist. `membership` (song uuid -> playlist count) is kept
+  // live by the add/remove thunks, so this flips the icon the moment an add
+  // succeeds — and stays flipped on return visits.
+  const membership = useAppSelector((s) => s.playlists.membership);
+  const albumInPlaylist = useMemo(() => {
+    const ids = tracks.map((tr) => trackSongUuid(tr)).filter((x): x is string => !!x);
+    return ids.length > 0 && ids.every((id) => (membership[id] ?? 0) > 0);
+  }, [tracks, membership]);
+
+  // Fit the whole cover inside an ART x ART box at its natural aspect ratio: the
+  // frame hugs the artwork so nothing is cropped and there are no empty letterbox
+  // bands, whatever the cover's shape (square, portrait or landscape).
+  const artSize = useMemo(
+    () =>
+      coverAspect >= 1
+        ? { width: ART, height: ART / coverAspect }
+        : { width: ART * coverAspect, height: ART },
+    [coverAspect],
+  );
 
   // Ratings: the reviews API keys by the backend's deterministic uuids, while
   // the mobile catalog uses codes — so convert album code -> albumUuid and each
@@ -151,13 +176,18 @@ export const AlbumDetailsScreen: React.FC = () => {
               style={styles.backBtn}
             />
           </View>
-          <View style={[styles.artFrame, { width: ART, height: ART }]}>
+          <View style={[styles.artFrame, artSize]}>
             <Artwork
               uri={album.cover}
               accentColor={album.accentColor}
               style={styles.artImage}
               contentFit="contain"
               iconSize={Math.round(ART * 0.3)}
+              onLoad={(e) => {
+                const w = e.source?.width;
+                const h = e.source?.height;
+                if (w && h) setCoverAspect(w / h);
+              }}
             />
           </View>
           <AppText variant="display" style={styles.title} numberOfLines={2}>
@@ -205,9 +235,13 @@ export const AlbumDetailsScreen: React.FC = () => {
               disabled={!tracks.length}
               style={[styles.share, { opacity: tracks.length ? 1 : 0.4 }]}
               accessibilityRole="button"
-              accessibilityLabel={t('playlist.addToPlaylist')}
+              accessibilityLabel={albumInPlaylist ? t('playlist.inPlaylist') : t('playlist.addToPlaylist')}
             >
-              <MaterialCommunityIcons name="playlist-plus" size={28} color="#FFFFFF" />
+              <MaterialCommunityIcons
+                name={albumInPlaylist ? 'playlist-check' : 'playlist-plus'}
+                size={28}
+                color={albumInPlaylist ? theme.colors.accent : '#FFFFFF'}
+              />
             </Pressable>
           </View>
           <View style={styles.actionsRight}>
@@ -222,6 +256,8 @@ export const AlbumDetailsScreen: React.FC = () => {
 
         <AlbumRatingSummary
           summary={albumSummary}
+          targetId={albumTargetId}
+          onApplySummary={applyAlbumSummary}
           onRate={() =>
             albumTargetId &&
             setComposer({
@@ -253,6 +289,8 @@ export const AlbumDetailsScreen: React.FC = () => {
                 trackSongUuid(track) ? (
                   <SongRatingControl
                     summary={songSummaries[track.id]}
+                    targetId={trackSongUuid(track)!}
+                    onApplySummary={(s) => applySongSummary(track.id, s)}
                     onRate={() =>
                       setComposer({
                         type: 'song',
@@ -289,10 +327,10 @@ export const AlbumDetailsScreen: React.FC = () => {
           targetLabel={composer.label}
           initial={composer.initial}
           onClose={() => setComposer(null)}
-          onSaved={(summary) =>
+          onSaved={(summary, mine) =>
             composer.type === 'album'
-              ? applyAlbumSummary(summary)
-              : applySongSummary(composer.localId!, summary)
+              ? applyAlbumSummary({ ...summary, mine })
+              : applySongSummary(composer.localId!, { ...summary, mine })
           }
           onDeleted={(summary) =>
             composer.type === 'album'

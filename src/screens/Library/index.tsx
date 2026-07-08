@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Dimensions, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -9,7 +9,7 @@ import { Screen, AppText, Artwork, IconButton, Placeholder, ProfileButton } from
 import { AlbumCard } from '@/components/cards';
 import { PlaylistNameDialog } from '@/components/playlists';
 import { useAppDispatch, useAppSelector, useLikedAlbums, useLikedSongCount } from '@/hooks';
-import { createPlaylist, fetchPlaylists } from '@/redux';
+import { createPlaylist, fetchPlaylistDetail, fetchPlaylists } from '@/redux';
 import type { LibraryStackParamList, RootStackParamList } from '@/navigation/types';
 
 // Library can push within its own stack (Profile) and to root details.
@@ -29,6 +29,7 @@ export const LibraryScreen: React.FC = () => {
   const likedCount = useLikedSongCount();
   const followCount = useAppSelector((s) => s.library.followedArtistIds.length);
   const summaries = useAppSelector((s) => s.playlists.summaries);
+  const playlistDetails = useAppSelector((s) => s.playlists.byId);
   // Hide the default "My Favorites" playlist (matches web; mobile has Liked Songs).
   const playlists = useMemo(() => summaries.filter((p) => !p.isDefault), [summaries]);
 
@@ -39,6 +40,29 @@ export const LibraryScreen: React.FC = () => {
     useCallback(() => {
       void dispatch(fetchPlaylists());
     }, [dispatch]),
+  );
+
+  // Prefer the first track's CDN artwork (same source album covers use, so it's
+  // reliable) over the server's web cover path. That needs the playlist's items,
+  // so warm the detail for any non-empty playlist we haven't cached yet (once each).
+  const requestedDetails = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    playlists.forEach((pl) => {
+      const haveItems = !!playlistDetails[pl.id]?.items.length;
+      if (pl.itemCount > 0 && !haveItems && !requestedDetails.current.has(pl.id)) {
+        requestedDetails.current.add(pl.id);
+        void dispatch(fetchPlaylistDetail(pl.id));
+      }
+    });
+  }, [playlists, playlistDetails, dispatch]);
+
+  // Cover for a playlist row: the first item's artwork from the (warmed) detail,
+  // falling back to the server cover (already absolutized) until it loads. byId
+  // persists across list refetches, so the cover stays stable once resolved.
+  const coverFor = useCallback(
+    (pl: (typeof playlists)[number]) =>
+      playlistDetails[pl.id]?.items?.[0]?.track.artwork || pl.cover || '',
+    [playlistDetails],
   );
 
   const onCreate = (name: string) => {
@@ -84,7 +108,7 @@ export const LibraryScreen: React.FC = () => {
             style={({ pressed }) => [styles.plRow, { opacity: pressed ? 0.7 : 1 }]}
             onPress={() => navigation.navigate('PlaylistDetails', { playlistId: pl.id })}
           >
-            <Artwork uri={pl.cover ?? ''} style={[styles.plArt, { borderRadius: theme.radius.sm }]} iconSize={20} />
+            <Artwork uri={coverFor(pl)} style={[styles.plArt, { borderRadius: theme.radius.sm }]} iconSize={20} />
             <View style={styles.plMeta}>
               <AppText variant="h3" numberOfLines={1}>
                 {pl.name}
@@ -111,7 +135,11 @@ export const LibraryScreen: React.FC = () => {
   return (
     <Screen>
       <View style={styles.header}>
-        <AppText variant="display">{t('library.title')}</AppText>
+        {/* flexShrink + single line so a longer localized title ellipsizes on one
+            line instead of wrapping and hiding the second word behind the row. */}
+        <AppText variant="display" numberOfLines={1} style={styles.headerTitle}>
+          {t('library.title')}
+        </AppText>
         <ProfileButton size={32} onPress={() => navigation.navigate('Profile')} />
       </View>
 
@@ -173,6 +201,7 @@ const Shortcut: React.FC<{
 
 const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
+  headerTitle: { flexShrink: 1, marginRight: 12 },
   shortcuts: { flexDirection: 'row', gap: 12, marginTop: 16 },
   shortcut: { flex: 1, alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8 },
   shortcutLabel: { marginTop: 8 },

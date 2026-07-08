@@ -1,5 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { Image, Modal, Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  SectionList,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
@@ -59,12 +69,21 @@ export const LanguagePanel: React.FC<LanguagePanelProps> = ({ selected, onClose 
   return (
     <Modal visible transparent animationType="slide" onRequestClose={onClose}>
       <Pressable style={styles.overlay} onPress={onClose} />
-      <View
-        style={[
-          styles.sheet,
-          { backgroundColor: theme.colors.background, paddingBottom: insets.bottom + 8 },
-        ]}
+      {/* Flex-end avoider keeps the sheet just above the keyboard: iOS pads by the
+          keyboard height; Android relies on the window resize (default layout mode),
+          so there's no double-shift and no oversized gap. box-none lets taps in the
+          empty area above the sheet fall through to the dismiss overlay. */}
+      <KeyboardAvoidingView
+        style={styles.avoider}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        pointerEvents="box-none"
       >
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: theme.colors.background, paddingBottom: insets.bottom + 8 },
+          ]}
+        >
         <View style={styles.header}>
           <AppText variant="h2">{t('language.title')}</AppText>
           <IconButton name="close" size={24} onPress={onClose} />
@@ -114,18 +133,18 @@ export const LanguagePanel: React.FC<LanguagePanelProps> = ({ selected, onClose 
             );
           }}
         />
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.6)' },
+  // Fills the modal and pins the sheet to the bottom; the keyboard shrinks this
+  // area (Android resize) or gets padded (iOS), moving the sheet up with it.
+  avoider: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
     maxHeight: '82%',
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,

@@ -46,7 +46,7 @@ export const PlaylistDetailsScreen: React.FC = () => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
-  const { playTracks, playFrom, currentTrack } = usePlayer();
+  const { playTracks, playFrom, currentTrack, isPlaying, toggle } = usePlayer();
 
   const detail = useAppSelector((s) => s.playlists.byId[id]);
   const summary = useAppSelector((s) => s.playlists.summaries.find((p) => p.id === id));
@@ -74,6 +74,12 @@ export const PlaylistDetailsScreen: React.FC = () => {
   const tracks = useMemo(() => items.map((i) => i.track), [items]);
   const name = detail?.name ?? summary?.name ?? '';
   const cover = tracks[0]?.artwork ?? '';
+
+  // "This playlist is the active queue" ≈ the current track belongs to it (its
+  // tracks span many albums, so there's no single id to compare like an album).
+  const isThisPlaylistActive =
+    !!currentTrack && tracks.some((tr) => tr.id === currentTrack.id);
+  const isThisPlaylistPlaying = isThisPlaylistActive && isPlaying;
 
   const trackOptions = useMemo<TrackOption[]>(() => {
     if (!optionsItem) return [];
@@ -104,7 +110,13 @@ export const PlaylistDetailsScreen: React.FC = () => {
   }, [optionsItem, likeKeys, dispatch, t, id]);
 
   const onPlay = () => {
-    if (tracks.length) void playTracks(tracks, 0);
+    // If this playlist is already the active queue, just pause/resume; otherwise
+    // start it from the top.
+    if (isThisPlaylistActive) {
+      toggle();
+    } else if (tracks.length) {
+      void playTracks(tracks, 0);
+    }
   };
   const onShuffle = () => {
     if (tracks.length) void playTracks(shuffleArray(tracks), 0);
@@ -140,14 +152,17 @@ export const PlaylistDetailsScreen: React.FC = () => {
 
   return (
     <Screen safeArea={false}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingBottom: 96 + insets.bottom }]}
+      >
         <View style={styles.header}>
           <Artwork uri={cover} style={styles.bgArt} blurRadius={40} iconSize={0} />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
           <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+            <IconButton name="chevron-back" onPress={() => navigation.goBack()} style={styles.backBtn} />
             {!editing ? (
-              <IconButton name="ellipsis-horizontal" onPress={() => setMenuOpen(true)} />
+              <IconButton name="ellipsis-horizontal" onPress={() => setMenuOpen(true)} style={styles.backBtn} />
             ) : null}
           </View>
           <Artwork uri={cover} style={[styles.art, { width: ART, height: ART }]} iconSize={Math.round(ART * 0.3)} />
@@ -180,7 +195,11 @@ export const PlaylistDetailsScreen: React.FC = () => {
                 style={styles.shuffle}
                 disabled={!tracks.length}
               />
-              <Button label={t('common.play')} icon="play" onPress={onPlay} />
+              <Button
+                label={isThisPlaylistPlaying ? t('common.pause') : t('common.play')}
+                icon={isThisPlaylistPlaying ? 'pause' : 'play'}
+                onPress={onPlay}
+              />
             </View>
           </View>
         )}
@@ -237,6 +256,15 @@ export const PlaylistDetailsScreen: React.FC = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Solid-black safe-area bands so the header artwork never scrolls behind the
+          status bar or the gesture/navigation bar (matches AlbumDetails). */}
+      {insets.top > 0 ? (
+        <View style={[styles.safeBand, styles.safeBandTop, { height: insets.top }]} pointerEvents="none" />
+      ) : null}
+      {insets.bottom > 0 ? (
+        <View style={[styles.safeBand, styles.safeBandBottom, { height: insets.bottom }]} pointerEvents="none" />
+      ) : null}
 
       <FloatingMiniPlayer />
 
@@ -352,6 +380,14 @@ const styles = StyleSheet.create({
   bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
   topBar: { width: '100%', paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between' },
   topBarFixed: { paddingHorizontal: 12, paddingTop: 8 },
+  // Circular scrim behind the header buttons so they read over any artwork,
+  // bright or dark (matches AlbumDetails).
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
   art: { borderRadius: 10, marginTop: 8, backgroundColor: '#222' },
   title: { textAlign: 'center', marginTop: 16, paddingHorizontal: 24 },
   sub: { marginTop: 6 },
@@ -376,6 +412,9 @@ const styles = StyleSheet.create({
   sheet: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 36 },
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
   menuLabel: { marginLeft: 16 },
+  safeBand: { position: 'absolute', left: 0, right: 0, backgroundColor: '#000' },
+  safeBandTop: { top: 0 },
+  safeBandBottom: { bottom: 0 },
 });
 
 export default PlaylistDetailsScreen;

@@ -24,6 +24,15 @@ interface PlayerState {
   shuffle: boolean;
 }
 
+/** Clear the now-playing snapshot (used by the ✕ Close action and sign-out). */
+const clearPlayback = (state: PlayerState) => {
+  state.currentTrack = null;
+  state.queue = [];
+  state.originalQueue = [];
+  state.isPlaying = false;
+  state.isBuffering = false;
+};
+
 const initialState: PlayerState = {
   currentTrack: null,
   queue: [],
@@ -41,6 +50,13 @@ const playerSlice = createSlice({
     setQueue(state, action: PayloadAction<Track[]>) {
       state.queue = action.payload;
       state.originalQueue = action.payload;
+    },
+    /**
+     * Close the mini player: stop and clear the now-playing snapshot. The engine
+     * is reset separately by usePlayer.stop(); clearing currentTrack hides the bar.
+     */
+    stopPlayback(state) {
+      clearPlayback(state);
     },
     /** Update the live play/display order only (keeps originalQueue intact). */
     setPlayOrder(state, action: PayloadAction<Track[]>) {
@@ -72,13 +88,6 @@ const playerSlice = createSlice({
     // now-playing snapshot so the mini player disappears with the session. The
     // engine itself is stopped by the playback-teardown listener in the store.
     // Persisted prefs (repeatMode, shuffle) are intentionally left intact.
-    const clearPlayback = (state: PlayerState) => {
-      state.currentTrack = null;
-      state.queue = [];
-      state.originalQueue = [];
-      state.isPlaying = false;
-      state.isBuffering = false;
-    };
     builder
       .addCase(signOut.fulfilled, clearPlayback)
       .addCase(deleteAccount.fulfilled, clearPlayback)
@@ -95,5 +104,6 @@ export const {
   setRepeatMode,
   cycleRepeatMode,
   toggleShuffle,
+  stopPlayback,
 } = playerSlice.actions;
 export default playerSlice.reducer;
