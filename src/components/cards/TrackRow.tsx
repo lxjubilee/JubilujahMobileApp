@@ -16,6 +16,9 @@ interface TrackRowProps {
   /** Trailing "add to playlist" action — shown as a circled + (takes the place
    *  of the options menu when provided). */
   onAddToPlaylist?: (track: Track) => void;
+  /** When the track is already in a playlist, the + turns into a filled accent
+   *  check so the added state reads at a glance. */
+  isInPlaylist?: boolean;
   /** Show a leading index number instead of artwork (album track listing). */
   index?: number;
   isActive?: boolean;
@@ -34,6 +37,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   onPress,
   onOptions,
   onAddToPlaylist,
+  isInPlaylist,
   index,
   isActive,
   isFavorite,
@@ -92,9 +96,9 @@ export const TrackRow: React.FC<TrackRowProps> = ({
 
       {onAddToPlaylist ? (
         <IconButton
-          name="add-circle-outline"
+          name={isInPlaylist ? 'checkmark-circle' : 'add-circle-outline'}
           size={24}
-          color={theme.colors.iconMuted}
+          color={isInPlaylist ? theme.colors.accent : theme.colors.iconMuted}
           onPress={() => onAddToPlaylist(track)}
           style={styles.action}
         />

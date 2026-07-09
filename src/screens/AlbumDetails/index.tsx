@@ -375,37 +375,43 @@ export const AlbumDetailsScreen: React.FC = () => {
 
         <View style={styles.list}>
           {tracks.map((track: Track, i) => (
-            <TrackRow
-              key={track.id}
-              track={track}
-              index={i + 1}
-              isActive={currentTrack?.id === track.id}
-              isFavorite={!!likeKeys[songLikeKey(track) ?? '']}
-              onToggleFavorite={
-                songLikeKey(track) ? (tr) => dispatch(toggleSongLike(tr)) : undefined
-              }
-              onPress={() => playFrom(tracks, track.id)}
-              onAddToPlaylist={addToPlaylist}
-              showDuration
-              ratingSlot={
-                trackSongUuid(track) ? (
-                  <SongRatingControl
-                    summary={songSummaries[track.id]}
-                    targetId={trackSongUuid(track)!}
-                    onApplySummary={(s) => applySongSummary(track.id, s)}
-                    onRate={() =>
-                      setComposer({
-                        type: 'song',
-                        targetId: trackSongUuid(track)!,
-                        localId: track.id,
-                        label: track.title,
-                        initial: songSummaries[track.id]?.mine ?? null,
-                      })
-                    }
-                  />
-                ) : null
-              }
-            />
+            <React.Fragment key={track.id}>
+              {/* Hairline separator between rows (not before the first). */}
+              {i > 0 ? (
+                <View style={[styles.trackDivider, { backgroundColor: theme.colors.border }]} />
+              ) : null}
+              <TrackRow
+                track={track}
+                index={i + 1}
+                isActive={currentTrack?.id === track.id}
+                isFavorite={!!likeKeys[songLikeKey(track) ?? '']}
+                onToggleFavorite={
+                  songLikeKey(track) ? (tr) => dispatch(toggleSongLike(tr)) : undefined
+                }
+                onPress={() => playFrom(tracks, track.id)}
+                onAddToPlaylist={addToPlaylist}
+                isInPlaylist={(membership[trackSongUuid(track) ?? ''] ?? 0) > 0}
+                showDuration
+                ratingSlot={
+                  trackSongUuid(track) ? (
+                    <SongRatingControl
+                      summary={songSummaries[track.id]}
+                      targetId={trackSongUuid(track)!}
+                      onApplySummary={(s) => applySongSummary(track.id, s)}
+                      onRate={() =>
+                        setComposer({
+                          type: 'song',
+                          targetId: trackSongUuid(track)!,
+                          localId: track.id,
+                          label: track.title,
+                          initial: songSummaries[track.id]?.mine ?? null,
+                        })
+                      }
+                    />
+                  ) : null
+                }
+              />
+            </React.Fragment>
           ))}
         </View>
 
@@ -518,6 +524,8 @@ const styles = StyleSheet.create({
   actionsRight: { flexDirection: 'row', alignItems: 'center' },
   dl: { marginHorizontal: 14 },
   list: { paddingHorizontal: 16 },
+  // Hairline rule between track rows; inset to line up with the row text.
+  trackDivider: { height: StyleSheet.hairlineWidth, marginLeft: 16 },
   // Recommendation rails below the track list.
   railSection: { marginTop: 28 },
   railContent: { paddingHorizontal: 16 },
