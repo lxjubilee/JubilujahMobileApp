@@ -36,7 +36,16 @@ import type { RootStackParamList, RootStackScreenProps } from '@/navigation/type
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 const { width } = Dimensions.get('window');
-const ART = width * 0.62;
+// Pinned black header row (below the status bar) holding the back / options
+// buttons — stays visible while the page scrolls (matches AlbumDetails).
+const HEADER_HEIGHT = 38;
+// Hero-sized cover: full content width, height tracking the artwork's aspect
+// ratio under the same clamps as the Home hero / AlbumDetails.
+const H_PADDING = 16;
+const POSTER_W = width - H_PADDING * 2;
+const POSTER_H_DEFAULT = Math.round(POSTER_W * 1.36);
+const MIN_ASPECT = 0.6;
+const MAX_ASPECT = 1.9;
 
 export const PlaylistDetailsScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'PlaylistDetails'>['route']>();
@@ -59,6 +68,9 @@ export const PlaylistDetailsScreen: React.FC = () => {
   const [optionsItem, setOptionsItem] = useState<PlaylistItem | null>(null);
   const [editing, setEditing] = useState(false);
   const [order, setOrder] = useState<PlaylistItem[]>([]);
+  // Cover height, learned once the artwork loads, so the frame tracks its real
+  // aspect ratio — exactly like the Home hero image / AlbumDetails.
+  const [posterH, setPosterH] = useState(POSTER_H_DEFAULT);
 
   // Refresh detail whenever the screen gains focus (e.g. returning from Add Songs).
   useFocusEffect(
@@ -154,18 +166,30 @@ export const PlaylistDetailsScreen: React.FC = () => {
     <Screen safeArea={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingBottom: 96 + insets.bottom }]}
+        contentContainerStyle={[
+          styles.content,
+          // Start below the fixed header so the cover isn't hidden behind it.
+          { paddingTop: insets.top + HEADER_HEIGHT, paddingBottom: 96 + insets.bottom },
+        ]}
       >
         <View style={styles.header}>
           <Artwork uri={cover} style={styles.bgArt} blurRadius={40} iconSize={0} />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
-          <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <IconButton name="chevron-back" onPress={() => navigation.goBack()} style={styles.backBtn} />
-            {!editing ? (
-              <IconButton name="ellipsis-horizontal" onPress={() => setMenuOpen(true)} style={styles.backBtn} />
-            ) : null}
+          <View style={[styles.artFrame, { width: POSTER_W, height: posterH }]}>
+            <Artwork
+              uri={cover}
+              style={styles.artImage}
+              contentFit="cover"
+              iconSize={Math.round(POSTER_W * 0.3)}
+              onLoad={(e) => {
+                const w = e.source?.width;
+                const h = e.source?.height;
+                if (!w || !h) return;
+                const aspect = Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, w / h));
+                setPosterH(Math.round(POSTER_W / aspect));
+              }}
+            />
           </View>
-          <Artwork uri={cover} style={[styles.art, { width: ART, height: ART }]} iconSize={Math.round(ART * 0.3)} />
           <AppText variant="display" style={styles.title} numberOfLines={2}>
             {name}
           </AppText>
@@ -257,14 +281,20 @@ export const PlaylistDetailsScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Solid-black safe-area bands so the header artwork never scrolls behind the
-          status bar or the gesture/navigation bar (matches AlbumDetails). */}
-      {insets.top > 0 ? (
-        <View style={[styles.safeBand, styles.safeBandTop, { height: insets.top }]} pointerEvents="none" />
-      ) : null}
+      {/* Solid-black safe-area band at the bottom so nothing scrolls behind the
+          gesture/navigation bar. The top is covered by the fixed header below. */}
       {insets.bottom > 0 ? (
         <View style={[styles.safeBand, styles.safeBandBottom, { height: insets.bottom }]} pointerEvents="none" />
       ) : null}
+
+      {/* Persistent black header with the back (and options) buttons — rendered
+          outside the ScrollView so it stays pinned while the page scrolls. */}
+      <View style={[styles.fixedHeader, { paddingTop: insets.top, height: insets.top + HEADER_HEIGHT }]}>
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+        {!editing ? (
+          <IconButton name="ellipsis-horizontal" onPress={() => setMenuOpen(true)} />
+        ) : null}
+      </View>
 
       <FloatingMiniPlayer />
 
@@ -378,17 +408,29 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 96 },
   header: { alignItems: 'center', paddingBottom: 16 },
   bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
-  topBar: { width: '100%', paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between' },
   topBarFixed: { paddingHorizontal: 12, paddingTop: 8 },
-  // Circular scrim behind the header buttons so they read over any artwork,
-  // bright or dark (matches AlbumDetails).
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+  // Solid-black header pinned to the top (outside the ScrollView) so the buttons
+  // never scroll away; also covers the status-bar area (matches AlbumDetails).
+  fixedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 8,
   },
-  art: { borderRadius: 10, marginTop: 8, backgroundColor: '#222' },
+  // Full-bleed hero cover matching AlbumDetails: no padding, rounded corners
+  // clipped via overflow; `#222` shows behind the artwork while it loads.
+  artFrame: {
+    marginTop: 8,
+    borderRadius: 18,
+    overflow: 'hidden',
+    backgroundColor: '#222',
+  },
+  artImage: { flex: 1 },
   title: { textAlign: 'center', marginTop: 16, paddingHorizontal: 24 },
   sub: { marginTop: 6 },
   actions: {
@@ -413,7 +455,6 @@ const styles = StyleSheet.create({
   menuRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14 },
   menuLabel: { marginLeft: 16 },
   safeBand: { position: 'absolute', left: 0, right: 0, backgroundColor: '#000' },
-  safeBandTop: { top: 0 },
   safeBandBottom: { bottom: 0 },
 });
 

@@ -21,6 +21,9 @@ interface TrackRowProps {
   isActive?: boolean;
   isFavorite?: boolean;
   onToggleFavorite?: (track: Track) => void;
+  /** Force the trailing duration label even when a heart is also shown (otherwise
+   *  the heart takes the duration's place). */
+  showDuration?: boolean;
   /** Optional control rendered on a second line under the artist name (e.g. the per-song rating). */
   ratingSlot?: React.ReactNode;
 }
@@ -35,6 +38,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   isActive,
   isFavorite,
   onToggleFavorite,
+  showDuration,
   ratingSlot,
 }) => {
   const theme = useTheme();
@@ -76,6 +80,16 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         {ratingSlot ? <View style={styles.ratingSlot}>{ratingSlot}</View> : null}
       </View>
 
+      {onToggleFavorite ? (
+        <IconButton
+          name={isFavorite ? 'heart' : 'heart-outline'}
+          size={20}
+          color={isFavorite ? theme.colors.accent : theme.colors.iconMuted}
+          onPress={() => onToggleFavorite(track)}
+          style={styles.action}
+        />
+      ) : null}
+
       {onAddToPlaylist ? (
         <IconButton
           name="add-circle-outline"
@@ -86,17 +100,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         />
       ) : null}
 
-      {onToggleFavorite ? (
-        <IconButton
-          name={isFavorite ? 'heart' : 'heart-outline'}
-          size={20}
-          color={isFavorite ? theme.colors.accent : theme.colors.iconMuted}
-          onPress={() => onToggleFavorite(track)}
-          style={styles.action}
-        />
-      ) : (
-        <TrackDurationLabel track={track} />
-      )}
+      {showDuration || !onToggleFavorite ? <TrackDurationLabel track={track} /> : null}
 
       {onOptions && !onAddToPlaylist ? (
         <IconButton

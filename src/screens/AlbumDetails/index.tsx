@@ -23,7 +23,8 @@ import {
 import { usePlaylistMenu } from '@/components/playlists';
 import { shareAlbum } from '@/services/share';
 import { albumUuid, trackSongUuid } from '@/services/playlists';
-import { toggleAlbumLike } from '@/redux';
+import { songLikeKey } from '@/services/likes';
+import { toggleAlbumLike, toggleSongLike } from '@/redux';
 import { AlbumRepository, ArtistRepository } from '@/repositories';
 import { Album, MyReview, ReviewTargetType, Track } from '@/types';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
@@ -58,11 +59,13 @@ const AlbumRail: React.FC<{
   title: string;
   albums: Album[];
   onPress: (album: Album) => void;
-}> = ({ title, albums, onPress }) => {
+  onSeeAll?: () => void;
+}> = ({ title, albums, onPress, onSeeAll }) => {
   if (!albums.length) return null;
   return (
     <View style={styles.railSection}>
-      <SectionHeader title={title} />
+      {/* "See all" appears once the rail holds more than 4 albums. */}
+      <SectionHeader title={title} onSeeAll={albums.length > 4 ? onSeeAll : undefined} />
       <FlatList
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -97,6 +100,7 @@ export const AlbumDetailsScreen: React.FC = () => {
   const [posterH, setPosterH] = useState(POSTER_H_DEFAULT);
 
   const albumLiked = useIsAlbumLiked({ id: params.albumId });
+  const likeKeys = useAppSelector((s) => s.likes.keys);
 
   useEffect(() => {
     let active = true;
@@ -155,6 +159,11 @@ export const AlbumDetailsScreen: React.FC = () => {
 
   const openAlbum = useCallback(
     (a: Album) => navigation.push('AlbumDetails', { albumId: a.id }),
+    [navigation],
+  );
+  const openSeeAll = useCallback(
+    (railTitle: string, list: Album[]) =>
+      navigation.push('AlbumList', { title: railTitle, albumIds: list.map((a) => a.id) }),
     [navigation],
   );
 
@@ -371,8 +380,13 @@ export const AlbumDetailsScreen: React.FC = () => {
               track={track}
               index={i + 1}
               isActive={currentTrack?.id === track.id}
+              isFavorite={!!likeKeys[songLikeKey(track) ?? '']}
+              onToggleFavorite={
+                songLikeKey(track) ? (tr) => dispatch(toggleSongLike(tr)) : undefined
+              }
               onPress={() => playFrom(tracks, track.id)}
               onAddToPlaylist={addToPlaylist}
+              showDuration
               ratingSlot={
                 trackSongUuid(track) ? (
                   <SongRatingControl
@@ -400,11 +414,15 @@ export const AlbumDetailsScreen: React.FC = () => {
           title={t('album.moreFrom', { name: album.artistName })}
           albums={moreFromArtist}
           onPress={openAlbum}
+          onSeeAll={() =>
+            openSeeAll(t('album.moreFrom', { name: album.artistName }), moreFromArtist)
+          }
         />
         <AlbumRail
           title={t('album.similarMusic')}
           albums={similarMusic}
           onPress={openAlbum}
+          onSeeAll={() => openSeeAll(t('album.similarMusic'), similarMusic)}
         />
       </ScrollView>
 
