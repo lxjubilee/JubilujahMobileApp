@@ -16,7 +16,6 @@ import {
   ConfirmDialog,
 } from '@/components/common';
 import { TrackRow } from '@/components/cards';
-import { TrackOptionsModal, TrackOption } from '@/components/modals';
 import { PlaylistNameDialog } from '@/components/playlists';
 import { FloatingMiniPlayer } from '@/components/player';
 import { useTheme } from '@/context';
@@ -65,7 +64,6 @@ export const PlaylistDetailsScreen: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [optionsItem, setOptionsItem] = useState<PlaylistItem | null>(null);
   const [editing, setEditing] = useState(false);
   const [order, setOrder] = useState<PlaylistItem[]>([]);
   // Cover height, learned once the artwork loads, so the frame tracks its real
@@ -92,34 +90,6 @@ export const PlaylistDetailsScreen: React.FC = () => {
   const isThisPlaylistActive =
     !!currentTrack && tracks.some((tr) => tr.id === currentTrack.id);
   const isThisPlaylistPlaying = isThisPlaylistActive && isPlaying;
-
-  const trackOptions = useMemo<TrackOption[]>(() => {
-    if (!optionsItem) return [];
-    const likeKey = songLikeKey(optionsItem.track);
-    const isFav = likeKey ? !!likeKeys[likeKey] : false;
-    return [
-      {
-        key: 'remove',
-        label: t('playlist.removeFromPlaylist'),
-        icon: 'remove-circle-outline',
-        destructive: true,
-        onPress: () =>
-          dispatch(
-            removeItemFromPlaylist({
-              playlistId: id,
-              itemId: optionsItem.id,
-              songId: optionsItem.songId,
-            }),
-          ),
-      },
-      {
-        key: 'like',
-        label: isFav ? t('player.removeFromLiked') : t('player.like'),
-        icon: isFav ? 'heart' : 'heart-outline',
-        onPress: (track) => dispatch(toggleSongLike(track)),
-      },
-    ];
-  }, [optionsItem, likeKeys, dispatch, t, id]);
 
   const onPlay = () => {
     // If this playlist is already the active queue, just pause/resume; otherwise
@@ -263,8 +233,21 @@ export const PlaylistDetailsScreen: React.FC = () => {
                 track={item.track}
                 index={i + 1}
                 isActive={currentTrack?.id === item.track.id}
+                isFavorite={!!likeKeys[songLikeKey(item.track) ?? '']}
+                onToggleFavorite={
+                  songLikeKey(item.track) ? (tr) => dispatch(toggleSongLike(tr)) : undefined
+                }
                 onPress={() => playFrom(tracks, item.track.id)}
-                onOptions={() => setOptionsItem(item)}
+                onRemoveFromPlaylist={() =>
+                  dispatch(
+                    removeItemFromPlaylist({
+                      playlistId: id,
+                      itemId: item.id,
+                      songId: item.songId,
+                    }),
+                  )
+                }
+                showDuration
               />
             ))}
           </View>
@@ -300,14 +283,6 @@ export const PlaylistDetailsScreen: React.FC = () => {
 
       {/* Modals mounted only while open (a stack of always-mounted RN <Modal>s wedges
           the Android UI thread on Old Arch). */}
-      {optionsItem ? (
-        <TrackOptionsModal
-          track={optionsItem.track}
-          options={trackOptions}
-          onClose={() => setOptionsItem(null)}
-        />
-      ) : null}
-
       {menuOpen ? (
         <Modal visible transparent animationType="slide" onRequestClose={() => setMenuOpen(false)}>
           <Pressable

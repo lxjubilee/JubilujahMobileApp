@@ -19,6 +19,9 @@ interface TrackRowProps {
   /** When the track is already in a playlist, the + turns into a filled accent
    *  check so the added state reads at a glance. */
   isInPlaylist?: boolean;
+  /** Trailing "remove from playlist" action — shown as a circled − (used on the
+   *  playlist screen in place of the options menu). */
+  onRemoveFromPlaylist?: (track: Track) => void;
   /** Show a leading index number instead of artwork (album track listing). */
   index?: number;
   isActive?: boolean;
@@ -38,6 +41,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   onOptions,
   onAddToPlaylist,
   isInPlaylist,
+  onRemoveFromPlaylist,
   index,
   isActive,
   isFavorite,
@@ -100,6 +104,16 @@ export const TrackRow: React.FC<TrackRowProps> = ({
           size={24}
           color={isInPlaylist ? theme.colors.accent : theme.colors.iconMuted}
           onPress={() => onAddToPlaylist(track)}
+          style={styles.action}
+        />
+      ) : null}
+
+      {onRemoveFromPlaylist ? (
+        <IconButton
+          name="remove-circle-outline"
+          size={24}
+          color={theme.colors.iconMuted}
+          onPress={() => onRemoveFromPlaylist(track)}
           style={styles.action}
         />
       ) : null}
