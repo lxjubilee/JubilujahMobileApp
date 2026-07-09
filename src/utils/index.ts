@@ -1,5 +1,5 @@
 export { cdnUrl } from './cdn';
-export { formatDuration, formatCount } from './format';
+export { formatDuration, formatCount, truncateTitle } from './format';
 export { logger } from './logger';
 
 /** Resolve helper: keep entities by an ordered list of ids. */

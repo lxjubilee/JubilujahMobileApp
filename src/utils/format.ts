@@ -12,6 +12,16 @@ export function formatDuration(totalSeconds: number): string {
   return `${m}:${ss}`;
 }
 
+/**
+ * Truncate a section title for a uniform UI: titles longer than `max` (29 by
+ * default) are cut after the first `max` characters and suffixed with an
+ * ellipsis. Shorter titles are returned unchanged.
+ */
+export function truncateTitle(title: string, max = 29): string {
+  if (title.length <= max) return title;
+  return `${title.slice(0, max)}...`;
+}
+
 /** Compact number formatting, e.g. 1200 -> "1.2K", 3_400_000 -> "3.4M". */
 export function formatCount(n?: number): string {
   if (n == null) return '';
