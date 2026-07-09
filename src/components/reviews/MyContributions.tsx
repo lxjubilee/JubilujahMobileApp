@@ -151,8 +151,13 @@ const ReviewRow: React.FC<{ review: MyReviewRow }> = ({ review }) => {
       ) : null}
 
       <View style={styles.reviewMeta}>
-        <View style={[styles.typePill, { borderColor: theme.colors.border }]}>
-          <AppText variant="caption" color="textMuted">
+        <View
+          style={[
+            styles.typePill,
+            { backgroundColor: 'rgba(255,255,255,0.14)', borderColor: theme.colors.border },
+          ]}
+        >
+          <AppText variant="caption" color="textSecondary">
             {t(`contributions.target_${review.targetType}`)}
           </AppText>
         </View>
@@ -186,7 +191,9 @@ const styles = StyleSheet.create({
   review: { padding: 14, marginBottom: 10 },
   reviewHead: { flexDirection: 'row', alignItems: 'center' },
   reviewTitle: { flex: 1, marginLeft: 8 },
-  statusPill: { marginLeft: 8, borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
+  // `marginLeft: 'auto'` keeps the status pill pinned to the right edge even when
+  // a review has no title (nothing else fills the row).
+  statusPill: { marginLeft: 'auto', borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
   reviewBody: { marginTop: 8 },
   reviewMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 10 },
   typePill: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },

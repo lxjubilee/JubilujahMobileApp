@@ -63,11 +63,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
             setPosterH(Math.round(POSTER_W / aspect));
           }}
         />
-
-        {/* Brand mark in the corner, like the streaming logo on the poster. */}
-        <View style={styles.brandMark}>
-          <Ionicons name="musical-notes" size={16} color={theme.colors.primary} />
-        </View>
       </Pressable>
 
       {/* Tags + actions sit BELOW the artwork so nothing covers the cover/title. */}
@@ -122,17 +117,6 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
 const styles = StyleSheet.create({
   container: { alignItems: 'center', paddingHorizontal: H_PADDING, paddingBottom: 20 },
   poster: { backgroundColor: '#222', overflow: 'hidden' },
-  brandMark: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   // Sufficient breathing room between the artwork and the descriptors/actions.
   tags: { textAlign: 'center', marginTop: 16 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 16 },

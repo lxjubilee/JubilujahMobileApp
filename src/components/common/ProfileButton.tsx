@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
-import { useTheme } from '@/context';
 import { useAppSelector } from '@/hooks';
 import { AppText } from './AppText';
 import { IconButton } from './IconButton';
+
+// Brand yellow/gold (matches the "Lujah" wordmark and the Profile avatar).
+const AVATAR_YELLOW = '#ffbd59';
 
 interface ProfileButtonProps {
   onPress?: () => void;
@@ -16,7 +18,6 @@ interface ProfileButtonProps {
  * in a circle. Falls back to the generic person icon when no name is available.
  */
 export const ProfileButton: React.FC<ProfileButtonProps> = ({ onPress, size = 32 }) => {
-  const theme = useTheme();
   const user = useAppSelector((s) => s.auth.user);
 
   const initial = useMemo(() => {
@@ -38,7 +39,7 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ onPress, size = 32
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: theme.colors.primary,
+          backgroundColor: AVATAR_YELLOW,
         },
       ]}
     >
@@ -51,5 +52,5 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ onPress, size = 32
 
 const styles = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
-  text: { color: '#fff', fontWeight: '700' },
+  text: { color: '#0B0B0F', fontWeight: '700' },
 });

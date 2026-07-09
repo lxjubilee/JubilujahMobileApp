@@ -13,6 +13,9 @@ import type { LibraryStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<LibraryStackParamList>;
 
+// Brand yellow/gold (matches the "Lujah" wordmark) used for the profile avatar.
+const AVATAR_YELLOW = '#ffbd59';
+
 export const ProfileScreen: React.FC = () => {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -56,7 +59,7 @@ export const ProfileScreen: React.FC = () => {
           <View
             style={[
               styles.avatar,
-              { backgroundColor: initial ? theme.colors.primary : theme.colors.surface },
+              { backgroundColor: initial ? AVATAR_YELLOW : theme.colors.surface },
             ]}
           >
             {initial ? (
@@ -174,7 +177,7 @@ const styles = StyleSheet.create({
   body: { alignItems: 'center', marginTop: 40 },
   avatar: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
   avatarInitial: {
-    color: '#fff',
+    color: '#0B0B0F',
     fontSize: 46,
     lineHeight: 54,
     fontWeight: '700',
