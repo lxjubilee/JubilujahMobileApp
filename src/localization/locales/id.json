@@ -34,7 +34,8 @@
     "inspire_family": "Keluarga Inspire",
     "family_friendly": "Ramah Keluarga",
     "children": "Musik Anak",
-    "music_type": "Jenis Musik"
+    "music_type": "Jenis Musik",
+    "christmas": "Natal"
   },
   "railTitles": {
     "contemporary": "Kontemporer",

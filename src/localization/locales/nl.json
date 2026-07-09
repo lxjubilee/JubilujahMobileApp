@@ -34,7 +34,8 @@
     "inspire_family": "Inspire-familie",
     "family_friendly": "Familievriendelijk",
     "children": "Kindermuziek",
-    "music_type": "Muzieksoort"
+    "music_type": "Muzieksoort",
+    "christmas": "Kerstmis"
   },
   "railTitles": {
     "contemporary": "Hedendaags",

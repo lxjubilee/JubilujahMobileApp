@@ -34,7 +34,8 @@
     "inspire_family": "Familia Inspire",
     "family_friendly": "Familiae aptum",
     "children": "Musica puerorum",
-    "music_type": "Genus musicae"
+    "music_type": "Genus musicae",
+    "christmas": "Nativitas"
   },
   "railTitles": {
     "contemporary": "Recens",

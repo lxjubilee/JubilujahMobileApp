@@ -271,19 +271,25 @@ export const RatingStars: React.FC<Props> = ({
               </AppText>
             )}
           </View>
+        ) : rated && phase === 'idle' ? (
+          <View style={styles.readout}>
+            <AppText variant="caption" color="accent">
+              {t('reviews.yourRating')}
+            </AppText>
+            <AppText variant="caption" color="textMuted">
+              {'  ·  ' + t('reviews.tapToChange')}
+            </AppText>
+          </View>
         ) : null}
       </View>
 
-      <View style={styles.labelRow}>
-        <AppText variant="caption" color={showInput ? 'accent' : 'textMuted'}>
-          {showInput ? t('reviews.yourRating') : t('reviews.communityRating')}
-        </AppText>
-        {phase === 'idle' && rated ? (
-          <AppText variant="caption" color="textMuted">
-            {'  ·  ' + t('reviews.tapToChange')}
+      {!(rated && phase === 'idle') ? (
+        <View style={styles.labelRow}>
+          <AppText variant="caption" color={showInput ? 'accent' : 'textMuted'}>
+            {showInput ? t('reviews.yourRating') : t('reviews.communityRating')}
           </AppText>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
 
       {rated && phase === 'idle' && average != null ? (
         <AppText variant="caption" color="textMuted" style={styles.secondary}>

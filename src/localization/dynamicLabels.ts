@@ -21,7 +21,11 @@ import type { TFunction } from 'i18next';
  */
 export function localizeCategory(t: TFunction, key: string | undefined, rawLabel: string): string {
   if (!key) return rawLabel;
-  return t(`categories.${key}`, { defaultValue: rawLabel });
+  // Backend keys drift between `_` and `-` separators (e.g. it sends `music-type`
+  // while the locale files key it as `music_type`). Normalize to underscore so the
+  // separator style can't silently break a translation and fall back to English.
+  const normalized = key.replace(/-/g, '_');
+  return t(`categories.${normalized}`, { defaultValue: rawLabel });
 }
 
 /**

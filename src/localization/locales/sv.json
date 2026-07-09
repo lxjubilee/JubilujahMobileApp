@@ -34,7 +34,8 @@
     "inspire_family": "Inspire-familjen",
     "family_friendly": "Familjevänligt",
     "children": "Barnmusik",
-    "music_type": "Musiktyp"
+    "music_type": "Musiktyp",
+    "christmas": "Jul"
   },
   "railTitles": {
     "contemporary": "Samtida",

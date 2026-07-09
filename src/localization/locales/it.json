@@ -34,7 +34,8 @@
     "inspire_family": "Famiglia Inspire",
     "family_friendly": "Per tutta la famiglia",
     "children": "Musica per bambini",
-    "music_type": "Tipo di musica"
+    "music_type": "Tipo di musica",
+    "christmas": "Natale"
   },
   "railTitles": {
     "contemporary": "Contemporaneo",

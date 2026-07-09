@@ -34,7 +34,8 @@
     "inspire_family": "عائلة Inspire",
     "family_friendly": "مناسب للعائلة",
     "children": "موسيقى الأطفال",
-    "music_type": "نوع الموسيقى"
+    "music_type": "نوع الموسيقى",
+    "christmas": "عيد الميلاد"
   },
   "railTitles": {
     "contemporary": "معاصر",

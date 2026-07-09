@@ -34,7 +34,8 @@
     "inspire_family": "Inspire Ailesi",
     "family_friendly": "Aileye Uygun",
     "children": "Çocuk Müziği",
-    "music_type": "Müzik Türü"
+    "music_type": "Müzik Türü",
+    "christmas": "Noel"
   },
   "railTitles": {
     "contemporary": "Çağdaş",

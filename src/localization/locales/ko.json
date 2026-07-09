@@ -34,7 +34,8 @@
     "inspire_family": "Inspire 패밀리",
     "family_friendly": "가족용",
     "children": "어린이 음악",
-    "music_type": "음악 장르"
+    "music_type": "음악 장르",
+    "christmas": "크리스마스"
   },
   "railTitles": {
     "contemporary": "컨템포러리",

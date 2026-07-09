@@ -34,7 +34,8 @@
     "inspire_family": "Inspire-perhe",
     "family_friendly": "Perheystävällinen",
     "children": "Lastenmusiikki",
-    "music_type": "Musiikkityyppi"
+    "music_type": "Musiikkityyppi",
+    "christmas": "Joulu"
   },
   "railTitles": {
     "contemporary": "Nykyaikainen",

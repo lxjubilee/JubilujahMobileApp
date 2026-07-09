@@ -34,7 +34,8 @@
     "inspire_family": "Inspire-familien",
     "family_friendly": "Familievennlig",
     "children": "Barnemusikk",
-    "music_type": "Musikktype"
+    "music_type": "Musikktype",
+    "christmas": "Jul"
   },
   "railTitles": {
     "contemporary": "Samtidig",
