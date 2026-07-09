@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Dimensions, FlatList, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Screen, AppText, Loader, IconButton } from '@/components/common';
@@ -15,6 +16,9 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const { width } = Dimensions.get('window');
 const GAP = 16;
 const CARD_W = (width - GAP * 3) / 2;
+// Height of the pinned black header row (below the status bar) that holds the
+// back button and stays visible while the grid scrolls.
+const HEADER_HEIGHT = 38;
 
 /** Full grid of albums — the "See all"/"See more" target of a Home rail. Shows a
  *  specific list (`albumIds`, e.g. a section's albums) when given, otherwise every
@@ -22,6 +26,7 @@ const CARD_W = (width - GAP * 3) / 2;
 export const AlbumListScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'AlbumList'>['route']>();
   const navigation = useNavigation<Nav>();
+  const insets = useSafeAreaInsets();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const visibleAlbums = useVisibleAlbums(albums);
@@ -55,20 +60,19 @@ export const AlbumListScreen: React.FC = () => {
   }
 
   return (
-    <Screen>
+    <Screen safeArea={false}>
       <FlatList
         data={visibleAlbums}
         keyExtractor={(a) => a.id}
         numColumns={2}
         columnWrapperStyle={styles.column}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          // Clear the fixed header at the top and the mini player / nav bar at the bottom.
+          { paddingTop: insets.top + HEADER_HEIGHT + 8, paddingBottom: 96 + insets.bottom },
+        ]}
         ListHeaderComponent={
           <View style={styles.header}>
-            <IconButton
-              name="chevron-back"
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-            />
             <AppText variant="display" numberOfLines={2} style={styles.title}>
               {params.title}
             </AppText>
@@ -82,17 +86,34 @@ export const AlbumListScreen: React.FC = () => {
           />
         )}
       />
+
+      {/* Persistent black header with the back button — rendered outside the
+          FlatList so it stays pinned while the grid scrolls. */}
+      <View style={[styles.fixedHeader, { paddingTop: insets.top, height: insets.top + HEADER_HEIGHT }]}>
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+      </View>
+
       <FloatingMiniPlayer />
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: GAP, paddingBottom: 96 },
-  header: { alignItems: 'flex-start', paddingTop: 8, paddingBottom: 16 },
-  // Circular button backing the back chevron. Light translucent-white fill so it
-  // reads clearly on the dark background.
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.16)' },
+  content: { paddingHorizontal: GAP },
+  header: { alignItems: 'flex-start', paddingBottom: 16 },
+  // Solid-black header pinned to the top (outside the FlatList) so the back
+  // button never scrolls away. `paddingTop: insets.top` drops the chevron below
+  // the status bar.
+  fixedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
   title: { marginTop: 8 },
   column: { gap: GAP, marginBottom: GAP },
 });

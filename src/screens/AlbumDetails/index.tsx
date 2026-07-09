@@ -22,15 +22,34 @@ import {
 import { usePlaylistMenu } from '@/components/playlists';
 import { shareAlbum } from '@/services/share';
 import { albumUuid, trackSongUuid } from '@/services/playlists';
-import { songLikeKey } from '@/services/likes';
-import { toggleAlbumLike, toggleSongLike } from '@/redux';
+import { toggleAlbumLike } from '@/redux';
 import { AlbumRepository } from '@/repositories';
 import { Album, MyReview, ReviewTargetType, Track } from '@/types';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 const { width } = Dimensions.get('window');
-const ART = width * 0.62;
+// Match the Home hero image's poster size exactly (see HeroBanner): full content
+// width, with the height tracking the artwork's own aspect ratio under the same
+// clamps so the cover fills its frame with no crop and no letterbox.
+const H_PADDING = 16;
+const POSTER_W = width - H_PADDING * 2;
+const POSTER_H_DEFAULT = Math.round(POSTER_W * 1.36);
+const MIN_ASPECT = 0.6; // portrait limit  (h ≈ 1.66×w)
+const MAX_ASPECT = 1.9; // landscape limit (h ≈ 0.53×w)
+// Height of the pinned black header row (below the status bar) that holds the
+// back button and stays visible while the page scrolls.
+const HEADER_HEIGHT = 38;
+// Green used for the primary-genre pill (border + text), matching the web album
+// header — not the app's purple `primary` accent.
+const GENRE_GREEN = '#3FA45C';
+
+/** "·" separator between items in the one-line album metadata row. */
+const MetaDot: React.FC = () => (
+  <AppText variant="bodySm" color="textMuted" style={styles.metaDot}>
+    ·
+  </AppText>
+);
 
 export const AlbumDetailsScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'AlbumDetails'>['route']>();
@@ -40,21 +59,20 @@ export const AlbumDetailsScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const { playTracks, playFrom, currentTrack, isPlaying, toggle } = usePlayer();
-  const { openTrackOptions, addAlbumToPlaylist } = usePlaylistMenu();
+  const { addToPlaylist, addAlbumToPlaylist } = usePlaylistMenu();
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
-  // Natural width/height ratio of the cover, learned once it loads, so the frame
-  // can hug the artwork's real shape instead of forcing it into a square.
-  const [coverAspect, setCoverAspect] = useState(1);
+  // Poster height, learned once the cover loads, so the frame tracks the
+  // artwork's real aspect ratio — exactly like the Home hero image.
+  const [posterH, setPosterH] = useState(POSTER_H_DEFAULT);
 
   const albumLiked = useIsAlbumLiked({ id: params.albumId });
-  const likeKeys = useAppSelector((s) => s.likes.keys);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
-    setCoverAspect(1); // reset until the new cover reports its dimensions
+    setPosterH(POSTER_H_DEFAULT); // reset until the new cover reports its dimensions
     AlbumRepository.getById(params.albumId)
       .then((a) => active && setAlbum(a))
       .finally(() => active && setLoading(false));
@@ -75,16 +93,9 @@ export const AlbumDetailsScreen: React.FC = () => {
     return ids.length > 0 && ids.every((id) => (membership[id] ?? 0) > 0);
   }, [tracks, membership]);
 
-  // Fit the whole cover inside an ART x ART box at its natural aspect ratio: the
-  // frame hugs the artwork so nothing is cropped and there are no empty letterbox
-  // bands, whatever the cover's shape (square, portrait or landscape).
-  const artSize = useMemo(
-    () =>
-      coverAspect >= 1
-        ? { width: ART, height: ART / coverAspect }
-        : { width: ART * coverAspect, height: ART },
-    [coverAspect],
-  );
+  // Same footprint as the Home hero image: full content width, height driven by
+  // the cover's aspect ratio (learned on load) so nothing is cropped.
+  const artSize = { width: POSTER_W, height: posterH };
 
   // Ratings: the reviews API keys by the backend's deterministic uuids, while
   // the mobile catalog uses codes — so convert album code -> albumUuid and each
@@ -158,7 +169,11 @@ export const AlbumDetailsScreen: React.FC = () => {
     <Screen safeArea={false}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { paddingBottom: 96 + insets.bottom }]}
+        contentContainerStyle={[
+          styles.content,
+          // Start below the fixed header so the cover isn't hidden behind it.
+          { paddingTop: insets.top + HEADER_HEIGHT, paddingBottom: 96 + insets.bottom },
+        ]}
       >
         <View style={styles.header}>
           <Artwork
@@ -169,52 +184,54 @@ export const AlbumDetailsScreen: React.FC = () => {
             iconSize={0}
           />
           <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
-          <View style={[styles.topBar, { paddingTop: insets.top + 8 }]}>
-            <IconButton
-              name="chevron-back"
-              onPress={() => navigation.goBack()}
-              style={styles.backBtn}
-            />
-          </View>
           <View style={[styles.artFrame, artSize]}>
             <Artwork
               uri={album.cover}
               accentColor={album.accentColor}
               style={styles.artImage}
-              contentFit="contain"
-              iconSize={Math.round(ART * 0.3)}
+              contentFit="cover"
+              iconSize={Math.round(POSTER_W * 0.3)}
               onLoad={(e) => {
                 const w = e.source?.width;
                 const h = e.source?.height;
-                if (w && h) setCoverAspect(w / h);
+                if (!w || !h) return;
+                // Clamp the same way the hero does so a pathological aspect ratio
+                // can't produce an unusably tall/short cover.
+                const aspect = Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, w / h));
+                setPosterH(Math.round(POSTER_W / aspect));
               }}
             />
           </View>
           <AppText variant="display" style={styles.title} numberOfLines={2}>
             {album.title}
           </AppText>
-          <Pressable onPress={() => navigation.navigate('ArtistDetails', { artistId: album.artistId })}>
-            <AppText variant="h3" color="primary">
-              {album.artistName}
+          {/* Metadata over two lines (mirrors the web album header):
+              line 1 — persona · N songs;  line 2 — GENRE pill · secondary genres. */}
+          <View style={styles.metaRow}>
+            <Pressable onPress={() => navigation.navigate('ArtistDetails', { artistId: album.artistId })}>
+              <AppText variant="bodySm" color="text">
+                {album.artistName}
+              </AppText>
+            </Pressable>
+            <MetaDot />
+            <AppText variant="bodySm" color="textMuted">
+              {t('album.tracks', { count: tracks.length })}
             </AppText>
-          </Pressable>
-          <AppText variant="bodySm" color="textMuted" style={styles.sub}>
-            {album.year ? `${album.year} • ` : ''}
-            {t('album.tracks', { count: tracks.length })}
-          </AppText>
+          </View>
           {album.genres?.length ? (
-            <View style={styles.genres}>
-              {/* Primary genre as a pill, the rest as muted secondary labels
-                  (mirrors the web album header: GOSPEL · Honky-Tonk). */}
-              <View style={[styles.genrePill, { borderColor: theme.colors.primary }]}>
-                <AppText variant="caption" color="primary" style={styles.genrePillText}>
+            <View style={styles.metaRow}>
+              <View style={[styles.genrePill, { borderColor: GENRE_GREEN }]}>
+                <AppText variant="caption" style={[styles.genrePillText, { color: GENRE_GREEN }]}>
                   {album.genres[0].toUpperCase()}
                 </AppText>
               </View>
               {album.genres.slice(1).map((g) => (
-                <AppText key={g} variant="bodySm" color="textMuted" style={styles.genreSecondary}>
-                  {g}
-                </AppText>
+                <React.Fragment key={g}>
+                  <MetaDot />
+                  <AppText variant="bodySm" color="text">
+                    {g}
+                  </AppText>
+                </React.Fragment>
               ))}
             </View>
           ) : null}
@@ -279,12 +296,8 @@ export const AlbumDetailsScreen: React.FC = () => {
               track={track}
               index={i + 1}
               isActive={currentTrack?.id === track.id}
-              isFavorite={!!likeKeys[songLikeKey(track) ?? '']}
               onPress={() => playFrom(tracks, track.id)}
-              onToggleFavorite={
-                songLikeKey(track) ? (tr) => dispatch(toggleSongLike(tr)) : undefined
-              }
-              onOptions={openTrackOptions}
+              onAddToPlaylist={addToPlaylist}
               ratingSlot={
                 trackSongUuid(track) ? (
                   <SongRatingControl
@@ -308,15 +321,19 @@ export const AlbumDetailsScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Solid-black safe-area bands so nothing scrolls behind the status bar or
-          the gesture/navigation bar (kept below the mini player, which paints its
-          own backdrop while playing). */}
-      {insets.top > 0 ? (
-        <View style={[styles.safeBand, styles.safeBandTop, { height: insets.top }]} pointerEvents="none" />
-      ) : null}
+      {/* Solid-black safe-area band at the bottom so nothing scrolls behind the
+          gesture/navigation bar (kept below the mini player, which paints its own
+          backdrop while playing). The top is covered by the fixed header below. */}
       {insets.bottom > 0 ? (
         <View style={[styles.safeBand, styles.safeBandBottom, { height: insets.bottom }]} pointerEvents="none" />
       ) : null}
+
+      {/* Persistent black header with the back button — rendered outside the
+          ScrollView so it stays pinned while the page scrolls, keeping "back"
+          reachable at any scroll depth without returning to the top. */}
+      <View style={[styles.fixedHeader, { paddingTop: insets.top, height: insets.top + HEADER_HEIGHT }]}>
+        <IconButton name="chevron-back" onPress={() => navigation.goBack()} />
+      </View>
 
       <FloatingMiniPlayer />
 
@@ -347,28 +364,32 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 96 },
   header: { alignItems: 'center', paddingBottom: 16, paddingTop: 0 },
   bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
-  topBar: { width: '100%', paddingHorizontal: 12, alignItems: 'flex-start' },
-  // Circular scrim behind the back button so it reads over any artwork, bright
-  // or dark. Size gives an easy tap target; IconButton centers the icon.
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+  // Solid-black header pinned to the top (outside the ScrollView) so it never
+  // scrolls away. It also covers the status-bar area, replacing the top safe
+  // band. `paddingTop: insets.top` pushes the back button below the status bar.
+  fixedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#000',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
   },
-  // Centered "matte" frame: consistent padding around the cover so the whole
-  // artwork (contain-fit, no crop) is always visible with clean spacing, and the
-  // frame's rounded corners sit in the padding — never clipping the artwork.
+  // Full-bleed poster matching the Home hero image's footprint: no padding so
+  // the cover fills the frame edge-to-edge; rounded corners are clipped via
+  // overflow. `#222` shows behind the artwork while it loads.
   artFrame: {
     marginTop: 8,
-    padding: 14,
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    overflow: 'hidden',
+    backgroundColor: '#222',
   },
-  artImage: { flex: 1, borderRadius: 10, backgroundColor: 'transparent' },
+  artImage: { flex: 1 },
   title: { textAlign: 'center', marginTop: 16, paddingHorizontal: 24 },
-  sub: { marginTop: 6 },
-  genres: {
+  // Single metadata line: persona · N songs · GENRE pill · secondary genres.
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -376,9 +397,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingHorizontal: 24,
   },
+  metaDot: { marginHorizontal: 6 },
   genrePill: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3 },
   genrePillText: { letterSpacing: 0.5 },
-  genreSecondary: { marginLeft: 8 },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -394,7 +415,6 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 16 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   safeBand: { position: 'absolute', left: 0, right: 0, backgroundColor: '#000' },
-  safeBandTop: { top: 0 },
   safeBandBottom: { bottom: 0 },
 });
 

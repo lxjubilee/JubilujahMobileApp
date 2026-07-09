@@ -13,6 +13,9 @@ interface TrackRowProps {
   track: Track;
   onPress?: (track: Track) => void;
   onOptions?: (track: Track) => void;
+  /** Trailing "add to playlist" action — shown as a circled + (takes the place
+   *  of the options menu when provided). */
+  onAddToPlaylist?: (track: Track) => void;
   /** Show a leading index number instead of artwork (album track listing). */
   index?: number;
   isActive?: boolean;
@@ -27,6 +30,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
   track,
   onPress,
   onOptions,
+  onAddToPlaylist,
   index,
   isActive,
   isFavorite,
@@ -72,6 +76,16 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         {ratingSlot ? <View style={styles.ratingSlot}>{ratingSlot}</View> : null}
       </View>
 
+      {onAddToPlaylist ? (
+        <IconButton
+          name="add-circle-outline"
+          size={24}
+          color={theme.colors.iconMuted}
+          onPress={() => onAddToPlaylist(track)}
+          style={styles.action}
+        />
+      ) : null}
+
       {onToggleFavorite ? (
         <IconButton
           name={isFavorite ? 'heart' : 'heart-outline'}
@@ -84,7 +98,7 @@ export const TrackRow: React.FC<TrackRowProps> = ({
         <TrackDurationLabel track={track} />
       )}
 
-      {onOptions ? (
+      {onOptions && !onAddToPlaylist ? (
         <IconButton
           name="ellipsis-horizontal"
           size={20}
