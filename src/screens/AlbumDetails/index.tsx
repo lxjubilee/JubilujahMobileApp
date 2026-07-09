@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Screen, Loader, AppText, Artwork, Button, IconButton } from '@/components/common';
+import { Screen, Loader, AppText, Artwork, Button, IconButton, SectionHeader } from '@/components/common';
 import { useTheme } from '@/context';
-import { TrackRow } from '@/components/cards';
+import { TrackRow, AlbumCard } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
 import { AlbumRatingSummary, ReviewComposer, SongRatingControl } from '@/components/reviews';
 import {
@@ -18,12 +18,13 @@ import {
   usePlayer,
   useReviews,
   useSongSummaries,
+  useVisibleAlbums,
 } from '@/hooks';
 import { usePlaylistMenu } from '@/components/playlists';
 import { shareAlbum } from '@/services/share';
 import { albumUuid, trackSongUuid } from '@/services/playlists';
 import { toggleAlbumLike } from '@/redux';
-import { AlbumRepository } from '@/repositories';
+import { AlbumRepository, ArtistRepository } from '@/repositories';
 import { Album, MyReview, ReviewTargetType, Track } from '@/types';
 import type { RootStackParamList, RootStackScreenProps } from '@/navigation/types';
 
@@ -51,6 +52,30 @@ const MetaDot: React.FC = () => (
   </AppText>
 );
 
+/** Horizontal album rail (recommendations below the track list). Renders nothing
+ *  when there are no albums to show, so an empty section leaves no gap. */
+const AlbumRail: React.FC<{
+  title: string;
+  albums: Album[];
+  onPress: (album: Album) => void;
+}> = ({ title, albums, onPress }) => {
+  if (!albums.length) return null;
+  return (
+    <View style={styles.railSection}>
+      <SectionHeader title={title} />
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        data={albums}
+        keyExtractor={(a) => a.id}
+        contentContainerStyle={styles.railContent}
+        ItemSeparatorComponent={() => <View style={styles.railSep} />}
+        renderItem={({ item }) => <AlbumCard album={item} onPress={onPress} />}
+      />
+    </View>
+  );
+};
+
 export const AlbumDetailsScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'AlbumDetails'>['route']>();
   const navigation = useNavigation<Nav>();
@@ -63,6 +88,10 @@ export const AlbumDetailsScreen: React.FC = () => {
 
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
+  // Whole catalog + this artist's albums, used to build the recommendation rails
+  // (Popular Albums / More from … / Similar Music) below the track list.
+  const [catalog, setCatalog] = useState<Album[]>([]);
+  const [artistAlbums, setArtistAlbums] = useState<Album[]>([]);
   // Poster height, learned once the cover loads, so the frame tracks the
   // artwork's real aspect ratio — exactly like the Home hero image.
   const [posterH, setPosterH] = useState(POSTER_H_DEFAULT);
@@ -76,12 +105,58 @@ export const AlbumDetailsScreen: React.FC = () => {
     AlbumRepository.getById(params.albumId)
       .then((a) => active && setAlbum(a))
       .finally(() => active && setLoading(false));
+    AlbumRepository.list().then((all) => active && setCatalog(all));
     return () => {
       active = false;
     };
   }, [params.albumId]);
 
+  // This artist's other albums, once we know who the artist is.
+  useEffect(() => {
+    if (!album?.artistId) return;
+    let active = true;
+    ArtistRepository.getAlbums(album.artistId).then((a) => active && setArtistAlbums(a));
+    return () => {
+      active = false;
+    };
+  }, [album?.artistId]);
+
   const tracks = useMemo(() => album?.tracks ?? [], [album]);
+
+  // Recommendation rails shown below the track list. All exclude the current
+  // album; each is capped so the horizontal rails stay light.
+  const RAIL_MAX = 12;
+  const moreFromArtistRaw = useMemo(
+    () => artistAlbums.filter((a) => a.id !== album?.id).slice(0, RAIL_MAX),
+    [artistAlbums, album?.id],
+  );
+  const similarMusicRaw = useMemo(() => {
+    if (!album) return [];
+    const genres = new Set(
+      (album.genres?.length ? album.genres : album.genre ? [album.genre] : []).map((g) =>
+        g.toLowerCase(),
+      ),
+    );
+    if (!genres.size) return [];
+    return catalog
+      .filter(
+        (a) =>
+          a.id !== album.id &&
+          a.artistId !== album.artistId &&
+          (a.genres?.length ? a.genres : a.genre ? [a.genre] : []).some((g) =>
+            genres.has(g.toLowerCase()),
+          ),
+      )
+      .slice(0, RAIL_MAX);
+  }, [catalog, album]);
+  // Hide artwork-less / out-of-language albums the same way the rest of the app does.
+  const moreFromArtist = useVisibleAlbums(moreFromArtistRaw);
+  const similarMusic = useVisibleAlbums(similarMusicRaw);
+
+  const openAlbum = useCallback(
+    (a: Album) => navigation.push('AlbumDetails', { albumId: a.id }),
+    [navigation],
+  );
 
   // "Added to a playlist" state for the album: true once every playable track is
   // in at least one playlist. `membership` (song uuid -> playlist count) is kept
@@ -319,6 +394,18 @@ export const AlbumDetailsScreen: React.FC = () => {
             />
           ))}
         </View>
+
+        {/* Recommendation rails below the song list. */}
+        <AlbumRail
+          title={t('album.moreFrom', { name: album.artistName })}
+          albums={moreFromArtist}
+          onPress={openAlbum}
+        />
+        <AlbumRail
+          title={t('album.similarMusic')}
+          albums={similarMusic}
+          onPress={openAlbum}
+        />
       </ScrollView>
 
       {/* Solid-black safe-area band at the bottom so nothing scrolls behind the
@@ -413,6 +500,10 @@ const styles = StyleSheet.create({
   actionsRight: { flexDirection: 'row', alignItems: 'center' },
   dl: { marginHorizontal: 14 },
   list: { paddingHorizontal: 16 },
+  // Recommendation rails below the track list.
+  railSection: { marginTop: 28 },
+  railContent: { paddingHorizontal: 16 },
+  railSep: { width: 14 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   safeBand: { position: 'absolute', left: 0, right: 0, backgroundColor: '#000' },
   safeBandBottom: { bottom: 0 },

@@ -72,7 +72,9 @@
   },
   "album": {
     "tracks": "{{count}} songs",
-    "addToLibrary": "Add to Library"
+    "addToLibrary": "Add to Library",
+    "moreFrom": "More from {{name}}",
+    "similarMusic": "Similar Music"
   },
   "playbackLimit": {
     "title": "Daily Limit Reached",
