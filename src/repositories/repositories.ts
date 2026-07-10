@@ -57,6 +57,8 @@ export const HomeRepository = {
         itemType: rail.itemType,
         seeAllArtistId: rail.seeAllArtistId,
         categoryLabel: rail.categoryLabel,
+        showGenre: rail.showGenre,
+        genreByItem: rail.genreByItem,
         albums: pickByIds(albums, rail.itemIds),
       };
     });

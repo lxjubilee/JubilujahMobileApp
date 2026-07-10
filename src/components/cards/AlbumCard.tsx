@@ -10,10 +10,13 @@ interface AlbumCardProps {
   onPress?: (album: Album) => void;
   /** Card width; height of the cover matches width (square artwork). */
   width?: number;
+  /** Overrides the album title on the primary line — a section that shows genres
+   *  passes the album's primary genre. Falls back to the title when unset. */
+  caption?: string;
 }
 
 /** Vertical album tile used in Home rails and grids. */
-export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onPress, width = 150 }) => {
+export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onPress, width = 150, caption }) => {
   const theme = useTheme();
   return (
     <Pressable
@@ -28,7 +31,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onPress, width = 15
       />
       <View style={styles.meta}>
         <AppText variant="h3" numberOfLines={1}>
-          {album.title}
+          {caption || album.title}
         </AppText>
         <AppText variant="body" color="textMuted" numberOfLines={1}>
           {album.artistName}

@@ -65,7 +65,13 @@ export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress, o
         keyExtractor={(a) => a.id}
         contentContainerStyle={{ paddingHorizontal: theme.spacing.lg }}
         ItemSeparatorComponent={() => <Sep />}
-        renderItem={({ item }) => <AlbumCard album={item} onPress={onAlbumPress} />}
+        renderItem={({ item }) => (
+          <AlbumCard
+            album={item}
+            onPress={onAlbumPress}
+            caption={rail.showGenre ? rail.genreByItem?.[item.id] : undefined}
+          />
+        )}
       />
     </>
   );

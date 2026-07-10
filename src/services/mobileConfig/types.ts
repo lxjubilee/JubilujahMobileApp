@@ -9,6 +9,11 @@ export interface MobileConfigItem {
   /** Collection only: its display title + ordered album codes. */
   title?: string;
   albums?: string[];
+  /** Album only, and only inside a `showGenre` section: the album's primary genre.
+   *  Absent when the catalog gives the album no genre — caption falls back to the
+   *  album title. Do NOT substitute the on-device `Album.genre`, which falls back
+   *  to the category label rather than being absent. */
+  genre?: string;
 }
 
 export interface MobileMusicType {
@@ -41,6 +46,9 @@ export interface MobileSection {
   kind: 'artists' | 'albums';
   order: number;
   items: MobileConfigItem[];
+  /** Album sections only: caption each cover with the album's primary genre
+   *  instead of its name. Omitted by the API when off. */
+  showGenre?: boolean;
 }
 
 export interface MobileCategory {

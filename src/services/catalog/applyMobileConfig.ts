@@ -98,11 +98,19 @@ function sectionRails(index: CatalogIndex, cat: MobileCategory): HomeRail[] {
         out.push({ id: `sec-${cat.key}-${i}`, title: sec.name, itemType: 'artist', itemIds, categoryLabel: cat.label });
       }
     } else {
-      const itemIds = items
-        .filter((it) => it.type === 'album' && index.albumsById.has(it.ref))
-        .map((it) => it.ref);
+      const albums = items.filter((it) => it.type === 'album' && index.albumsById.has(it.ref));
+      const itemIds = albums.map((it) => it.ref);
       if (itemIds.length) {
-        out.push({ id: `sec-${cat.key}-${i}`, title: sec.name, itemType: 'album', itemIds, categoryLabel: cat.label });
+        // The config carries a per-album `genre` only for a showGenre section, and
+        // only where the catalog has one; albums it omits keep their title.
+        const genreByItem: Record<string, string> = {};
+        if (sec.showGenre) {
+          for (const it of albums) if (it.genre) genreByItem[it.ref] = it.genre;
+        }
+        out.push({
+          id: `sec-${cat.key}-${i}`, title: sec.name, itemType: 'album', itemIds, categoryLabel: cat.label,
+          ...(sec.showGenre ? { showGenre: true, genreByItem } : {}),
+        });
       }
     }
   });

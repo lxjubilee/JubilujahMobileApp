@@ -30,4 +30,8 @@ export interface ResolvedRail {
   seeAllArtistId?: string;
   /** Catalog category label this rail belongs to, used by the Home filter chips. */
   categoryLabel?: string;
+  /** Caption covers with each album's primary genre instead of its title. */
+  showGenre?: boolean;
+  /** Album id → primary genre, from the config. */
+  genreByItem?: Record<string, string>;
 }

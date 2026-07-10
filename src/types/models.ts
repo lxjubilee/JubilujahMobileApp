@@ -73,6 +73,11 @@ export interface HomeRail {
   seeAllArtistId?: ID;
   /** Catalog category label this rail belongs to, used by the Home filter chips. */
   categoryLabel?: string;
+  /** Caption covers with each album's primary genre instead of its title. */
+  showGenre?: boolean;
+  /** Album id → primary genre, from the config. Only the albums the catalog gives
+   *  a genre appear here; the rest keep their title as the caption. */
+  genreByItem?: Record<ID, string>;
 }
 
 export interface HomeFeed {

@@ -82,6 +82,7 @@ export const AlbumListScreen: React.FC = () => {
           <AlbumCard
             album={item}
             width={CARD_W}
+            caption={params.genreByItem?.[item.id]}
             onPress={(al) => navigation.navigate('AlbumDetails', { albumId: al.id })}
           />
         )}

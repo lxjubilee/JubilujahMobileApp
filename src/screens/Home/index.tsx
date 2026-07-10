@@ -174,7 +174,11 @@ export const HomeScreen: React.FC = () => {
         navigation.navigate('AlbumList', { title: rail.title, artistId: rail.seeAllArtistId });
       } else if (rail.albums?.length) {
         // A section with more albums than the preview shows — open the full grid.
-        navigation.navigate('AlbumList', { title: rail.title, albumIds: rail.albums.map((a) => a.id) });
+        navigation.navigate('AlbumList', {
+          title: rail.title,
+          albumIds: rail.albums.map((a) => a.id),
+          ...(rail.showGenre ? { genreByItem: rail.genreByItem } : {}),
+        });
       }
     },
     [navigation],
