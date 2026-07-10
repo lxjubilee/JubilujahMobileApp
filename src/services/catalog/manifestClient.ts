@@ -20,7 +20,10 @@ import { CatalogManifest } from './manifestTypes';
  * read back reliably. All storage access is best-effort — any failure degrades
  * to a plain network fetch.
  */
-const MANIFEST_URL = `${ENV.CDN_BASE_URL.replace(/\/+$/, '')}/music/catalog-manifest.json`;
+// CATALOG_BASE_URL, not CDN_BASE_URL: the manifest can be served from a local
+// web server for testing while audio and covers still come from the CDN (the
+// only host that has them). Defaults to the CDN when no override is set.
+const MANIFEST_URL = `${ENV.CATALOG_BASE_URL.replace(/\/+$/, '')}/music/catalog-manifest.json`;
 const CHUNK_SIZE = 512 * 1024; // characters
 
 let current: CatalogManifest | null = null;

@@ -26,6 +26,13 @@ type AppExtra = {
    * stay on `authBaseUrl` and the catalog on `cdnBaseUrl`. Unset in prod.
    */
   mobileConfigBaseUrl?: string;
+  /**
+   * Dev override for the catalog manifest (`/music/catalog-manifest.json`) ONLY —
+   * the source of albums, artists and categories. Media (audio, covers) keeps
+   * flowing through `cdnBaseUrl`, which is the only host that serves it. Point
+   * this at a local web server to browse a locally-built catalog. Unset in prod.
+   */
+  catalogBaseUrl?: string;
   /** Cloudflare Turnstile site key for the sign-in CAPTCHA (empty = CAPTCHA off). */
   turnstileSiteKey: string;
   /** Origin the Turnstile widget runs under (must be allow-listed for the site key). */
@@ -47,6 +54,10 @@ export const ENV = {
   // Host for the dynamic-content config ONLY. Defaults to the auth host so prod
   // is unchanged; override via extra.mobileConfigBaseUrl to test a local API.
   MOBILE_CONFIG_BASE: extra.mobileConfigBaseUrl ?? extra.authBaseUrl ?? 'https://api.jubilujah.com',
+  // Host for the catalog MANIFEST ONLY (albums/artists/categories). Defaults to
+  // the CDN so prod is unchanged; override via extra.catalogBaseUrl to browse a
+  // locally-built catalog. Media still resolves against CDN_BASE_URL.
+  CATALOG_BASE_URL: extra.catalogBaseUrl ?? extra.cdnBaseUrl ?? 'https://cdn.jubileeverse.com',
   // Cloudflare Turnstile (sign-in CAPTCHA). Empty disables the widget.
   TURNSTILE_SITE_KEY: extra.turnstileSiteKey ?? '',
   TURNSTILE_BASE_URL: extra.turnstileBaseUrl ?? 'https://jubilujah.com',
