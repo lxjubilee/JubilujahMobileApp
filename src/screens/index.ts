@@ -6,7 +6,7 @@ export { AlbumDetailsScreen } from './AlbumDetails';
 export { AlbumReviewsScreen } from './AlbumReviews';
 export { ArtistDetailsScreen } from './ArtistDetails';
 export { MusicPlayerScreen } from './MusicPlayer';
-export { LibraryScreen } from './Library';
+export { PlaylistsScreen } from './Playlists';
 export { LikedSongsScreen } from './LikedSongs';
 export { FollowedArtistsScreen } from './FollowedArtists';
 export { PlaylistDetailsScreen } from './PlaylistDetails';

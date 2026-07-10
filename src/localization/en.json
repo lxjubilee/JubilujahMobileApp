@@ -14,13 +14,14 @@
     "cancel": "Cancel",
     "ok": "OK",
     "delete": "Delete",
-    "done": "Done"
+    "done": "Done",
+    "open": "Open"
   },
   "tabs": {
     "home": "Home",
     "browse": "Browse",
     "search": "Search",
-    "library": "Library"
+    "playlists": "Playlists"
   },
   "home": {
     "greetingMorning": "Good morning",
@@ -60,6 +61,9 @@
     "later": "Later",
     "currentVersion": "Current version",
     "latestVersion": "Latest version"
+  },
+  "browse": {
+    "searchPlaceholder": "Search albums"
   },
   "search": {
     "placeholder": "Artists, songs, or albums",

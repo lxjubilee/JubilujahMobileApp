@@ -8,9 +8,9 @@ import { TrackRow } from '@/components/cards';
 import { useAppDispatch, useLikedTracks, usePlayer } from '@/hooks';
 import { toggleSongLike } from '@/redux';
 import { usePlaylistMenu } from '@/components/playlists';
-import type { LibraryStackParamList } from '@/navigation/types';
+import type { PlaylistsStackParamList } from '@/navigation/types';
 
-type Nav = NativeStackNavigationProp<LibraryStackParamList>;
+type Nav = NativeStackNavigationProp<PlaylistsStackParamList>;
 
 /**
  * The full list of liked songs (reached from the Library "Liked Songs"

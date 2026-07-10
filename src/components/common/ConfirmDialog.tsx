@@ -91,7 +91,9 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     };
   }, [visible]);
 
-  const confirmBg = destructive ? theme.colors.danger : theme.colors.primary;
+  // Match Button's primary variant (accent, not colors.primary) so a dialog's
+  // confirm button looks like every other primary button in the app.
+  const confirmBg = destructive ? theme.colors.danger : theme.colors.accent;
   const dismiss = loading ? undefined : onCancel;
   const primaryDisabled = loading || confirmDisabled;
   // Dialogs with an input (children) get a keyboard. Anchor them near the top so

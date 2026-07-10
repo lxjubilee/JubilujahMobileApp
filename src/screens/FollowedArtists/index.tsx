@@ -8,10 +8,10 @@ import { ArtistCard } from '@/components/cards';
 import { useAppSelector, useVisibleArtists } from '@/hooks';
 import { getCatalogIndex } from '@/services/catalog';
 import { Artist } from '@/types';
-import type { LibraryStackParamList, RootStackParamList } from '@/navigation/types';
+import type { PlaylistsStackParamList, RootStackParamList } from '@/navigation/types';
 
-// Pushes within the Library stack; opens ArtistDetails on the root stack.
-type Nav = NativeStackNavigationProp<LibraryStackParamList & RootStackParamList>;
+// Pushes within the Playlists stack; opens ArtistDetails on the root stack.
+type Nav = NativeStackNavigationProp<PlaylistsStackParamList & RootStackParamList>;
 const { width } = Dimensions.get('window');
 const COL_W = (width - 48) / 2;
 

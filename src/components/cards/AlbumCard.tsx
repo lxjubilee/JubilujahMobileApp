@@ -30,7 +30,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onPress, width = 15
         <AppText variant="h3" numberOfLines={1}>
           {album.title}
         </AppText>
-        <AppText variant="bodySm" color="textMuted" numberOfLines={1}>
+        <AppText variant="body" color="textMuted" numberOfLines={1}>
           {album.artistName}
         </AppText>
       </View>

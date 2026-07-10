@@ -1,7 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
-  LibraryScreen,
+  PlaylistsScreen,
   LikedSongsScreen,
   FollowedArtistsScreen,
   ProfileScreen,
@@ -9,15 +9,15 @@ import {
   PrivacyPolicyScreen,
   TermsOfUseScreen,
 } from '@/screens';
-import type { LibraryStackParamList } from './types';
+import type { PlaylistsStackParamList } from './types';
 
-const Stack = createNativeStackNavigator<LibraryStackParamList>();
+const Stack = createNativeStackNavigator<PlaylistsStackParamList>();
 
 // Downloads is hidden for v1 (feature not wired); re-add the screen here when it lands.
-/** Inner stack for the Library tab: Library -> Profile. */
-export const LibraryStackNavigator: React.FC = () => (
+/** Inner stack for the Playlists tab: Playlists -> Profile -> LikedSongs / FollowedArtists. */
+export const PlaylistsStackNavigator: React.FC = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
-    <Stack.Screen name="Library" component={LibraryScreen} />
+    <Stack.Screen name="Playlists" component={PlaylistsScreen} />
     <Stack.Screen name="LikedSongs" component={LikedSongsScreen} />
     <Stack.Screen name="FollowedArtists" component={FollowedArtistsScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />

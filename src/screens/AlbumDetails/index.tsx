@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Dimensions, FlatList, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -260,14 +259,6 @@ export const AlbumDetailsScreen: React.FC = () => {
         ]}
       >
         <View style={styles.header}>
-          <Artwork
-            uri={album.cover}
-            accentColor={album.accentColor}
-            style={styles.bgArt}
-            blurRadius={40}
-            iconSize={0}
-          />
-          <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
           <View style={[styles.artFrame, artSize]}>
             <Artwork
               uri={album.cover}
@@ -474,7 +465,6 @@ export const AlbumDetailsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   content: { paddingBottom: 96 },
   header: { alignItems: 'center', paddingBottom: 16, paddingTop: 0 },
-  bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
   // Solid-black header pinned to the top (outside the ScrollView) so it never
   // scrolls away. It also covers the status-bar area, replacing the top safe
   // band. `paddingTop: insets.top` pushes the back button below the status bar.

@@ -165,7 +165,7 @@ export const HomeScreen: React.FC = () => {
     [navigation],
   );
   const openProfile = useCallback(
-    () => navigation.navigate('MainTabs', { screen: 'LibraryTab', params: { screen: 'Profile' } }),
+    () => navigation.navigate('MainTabs', { screen: 'PlaylistsTab', params: { screen: 'Profile' } }),
     [navigation],
   );
   const openSeeAll = useCallback(

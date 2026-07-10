@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { MiniPlayer } from '@/components/player';
 import { HomeScreen, BrowseScreen, SearchScreen } from '@/screens';
-import { LibraryStackNavigator } from './LibraryStackNavigator';
+import { PlaylistsStackNavigator } from './PlaylistsStackNavigator';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -20,7 +20,7 @@ const ICONS: Record<keyof MainTabParamList, React.ComponentProps<typeof Ionicons
   HomeTab: 'home',
   BrowseTab: 'grid',
   SearchTab: 'search',
-  LibraryTab: 'library',
+  PlaylistsTab: 'musical-notes',
 };
 
 /** Routes (nested in a tab's stack) where the MiniPlayer should be hidden. */
@@ -66,17 +66,17 @@ export const MainTabNavigator: React.FC = () => {
       <Tab.Screen name="BrowseTab" component={BrowseScreen} options={{ title: t('tabs.browse') }} />
       <Tab.Screen name="SearchTab" component={SearchScreen} options={{ title: t('tabs.search') }} />
       <Tab.Screen
-        name="LibraryTab"
-        component={LibraryStackNavigator}
-        options={{ title: t('tabs.library') }}
+        name="PlaylistsTab"
+        component={PlaylistsStackNavigator}
+        options={{ title: t('tabs.playlists') }}
         listeners={({ navigation }) => ({
-          // Tapping the Library tab always returns to the Library root. Without
+          // Tapping the Playlists tab always returns to the Playlists root. Without
           // this, a sub-screen left over from a previous visit (e.g. Profile,
           // reached here or deep-linked from Home) would re-appear instead of
-          // the library — wrong, since the user tapped "Library".
+          // the playlists — wrong, since the user tapped "Playlists".
           tabPress: (e) => {
             e.preventDefault();
-            navigation.navigate('LibraryTab', { screen: 'Library' });
+            navigation.navigate('PlaylistsTab', { screen: 'Playlists' });
           },
         })}
       />

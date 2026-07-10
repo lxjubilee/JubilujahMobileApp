@@ -3,12 +3,12 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { CompositeScreenProps } from '@react-navigation/native';
 
-/** Bottom-tab routes. LibraryTab nests its own stack, so it carries those params. */
+/** Bottom-tab routes. PlaylistsTab nests its own stack, so it carries those params. */
 export type MainTabParamList = {
   HomeTab: undefined;
   BrowseTab: undefined;
   SearchTab: undefined;
-  LibraryTab: NavigatorScreenParams<LibraryStackParamList>;
+  PlaylistsTab: NavigatorScreenParams<PlaylistsStackParamList>;
 };
 
 /**
@@ -38,9 +38,13 @@ export type AuthStackParamList = {
   TermsOfUse: undefined;
 };
 
-/** Per-tab inner stacks (Library nests Profile). Downloads is hidden for v1. */
-export type LibraryStackParamList = {
-  Library: undefined;
+/**
+ * Per-tab inner stack for the Playlists tab. Profile nests here, and it now owns
+ * the entry points to LikedSongs / FollowedArtists (previously on the Library
+ * screen, which the playlists-only tab replaced).
+ */
+export type PlaylistsStackParamList = {
+  Playlists: undefined;
   LikedSongs: undefined;
   FollowedArtists: undefined;
   Profile: undefined;
@@ -65,8 +69,8 @@ export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScre
   RootStackScreenProps<keyof RootStackParamList>
 >;
 
-export type LibraryStackScreenProps<T extends keyof LibraryStackParamList> =
-  NativeStackScreenProps<LibraryStackParamList, T>;
+export type PlaylistsStackScreenProps<T extends keyof PlaylistsStackParamList> =
+  NativeStackScreenProps<PlaylistsStackParamList, T>;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { Screen, AppText, Button, IconButton, ConfirmDialog } from '@/components/common';
+import { AlbumCard } from '@/components/cards';
 import { MyContributions } from '@/components/reviews';
-import { useAppDispatch, useAppSelector } from '@/hooks';
+import { useAppDispatch, useAppSelector, useLikedAlbums, useLikedSongCount } from '@/hooks';
 import { signOut, deleteAccount, clearSession } from '@/redux';
-import type { LibraryStackParamList } from '@/navigation/types';
+import type { PlaylistsStackParamList, RootStackParamList } from '@/navigation/types';
 
-type Nav = NativeStackNavigationProp<LibraryStackParamList>;
+// Pushes within the Playlists stack; opens AlbumDetails on the root stack.
+type Nav = NativeStackNavigationProp<PlaylistsStackParamList & RootStackParamList>;
+const { width } = Dimensions.get('window');
+const CARD_W = (width - 48) / 2;
 
 // Brand yellow/gold (matches the "Lujah" wordmark) used for the profile avatar.
 const AVATAR_YELLOW = '#ffbd59';
@@ -22,6 +26,11 @@ export const ProfileScreen: React.FC = () => {
   const navigation = useNavigation<Nav>();
   const dispatch = useAppDispatch();
   const user = useAppSelector((s) => s.auth.user);
+  // Liked albums (server-backed), resolved to catalog Albums; never hidden by
+  // the active catalog language (a personal collection).
+  const { albums: savedAlbums } = useLikedAlbums();
+  const likedCount = useLikedSongCount();
+  const followCount = useAppSelector((s) => s.library.followedArtistIds.length);
   const initial = (user?.firstName || user?.displayName || user?.email || '')
     .trim()
     .charAt(0)
@@ -78,8 +87,52 @@ export const ProfileScreen: React.FC = () => {
           </AppText>
         </View>
 
+        {/* Liked Songs / Followed Artists. These moved here from the old Library
+            screen, which the playlists-only tab replaced — Profile is now their
+            only entry point. */}
+        <View style={styles.shortcuts}>
+          <Shortcut
+            icon="heart"
+            label={t('library.favorites')}
+            meta={`${likedCount}`}
+            color={theme.colors.accent}
+            onPress={() => navigation.navigate('LikedSongs')}
+          />
+          <Shortcut
+            icon="people"
+            label={t('library.artists')}
+            meta={`${followCount}`}
+            onPress={() => navigation.navigate('FollowedArtists')}
+          />
+        </View>
+
         {/* Rating & review activity (mirrors the web account "My Contributions"). */}
         <MyContributions />
+
+        {/* Saved albums, also relocated from the Library screen. Laid out as a
+            wrapping row rather than a FlatList — nesting a virtualized list in
+            this ScrollView would warn and break scrolling. */}
+        <View style={styles.albumsSection}>
+          <AppText variant="h2" style={styles.albumsTitle}>
+            {t('library.albums')}
+          </AppText>
+          {savedAlbums.length ? (
+            <View style={styles.albumGrid}>
+              {savedAlbums.map((album) => (
+                <AlbumCard
+                  key={album.id}
+                  album={album}
+                  width={CARD_W}
+                  onPress={(al) => navigation.navigate('AlbumDetails', { albumId: al.id })}
+                />
+              ))}
+            </View>
+          ) : (
+            <AppText variant="bodySm" color="textMuted">
+              {t('library.empty')}
+            </AppText>
+          )}
+        </View>
 
         {/* Account options. */}
         <View style={styles.menu}>
@@ -139,6 +192,32 @@ export const ProfileScreen: React.FC = () => {
   );
 };
 
+const Shortcut: React.FC<{
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  meta?: string;
+  color?: string;
+  onPress?: () => void;
+}> = ({ icon, label, meta, color, onPress }) => {
+  const theme = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[styles.shortcut, { backgroundColor: theme.colors.surface, borderRadius: theme.radius.md }]}
+    >
+      <Ionicons name={icon} size={22} color={color ?? theme.colors.icon} />
+      <AppText variant="label" style={styles.shortcutLabel} numberOfLines={1}>
+        {label}
+      </AppText>
+      {meta ? (
+        <AppText variant="caption" color="textMuted">
+          {meta}
+        </AppText>
+      ) : null}
+    </Pressable>
+  );
+};
+
 const Row: React.FC<{
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
@@ -185,6 +264,12 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   name: { marginTop: 16 },
+  shortcuts: { flexDirection: 'row', gap: 12, marginTop: 28, paddingHorizontal: 16 },
+  shortcut: { flex: 1, alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8 },
+  shortcutLabel: { marginTop: 8 },
+  albumsSection: { marginTop: 28, paddingHorizontal: 16 },
+  albumsTitle: { marginBottom: 12 },
+  albumGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
   menu: { marginTop: 36, paddingHorizontal: 16, gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 14 },
   rowLabel: { flex: 1, marginLeft: 12 },

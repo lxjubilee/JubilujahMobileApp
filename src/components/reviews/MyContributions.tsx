@@ -15,6 +15,9 @@ import { StarRating } from './StarRating';
  * their own reviews. Fetched from `/api/reviews/me/*` via authClient.
  */
 
+/** Brand yellow, matching the profile avatars and splash mark. */
+const CONTRIBUTION_YELLOW = '#ffbd59';
+
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
@@ -74,10 +77,10 @@ export const MyContributions: React.FC = () => {
                 key={c.label}
                 style={[styles.card, { backgroundColor: theme.colors.surface, borderRadius: theme.radius.md }]}
               >
-                <AppText variant="h1" color="accent">
+                <AppText variant="h1" style={styles.cardValue}>
                   {formatCount(c.value)}
                 </AppText>
-                <AppText variant="caption" color="textMuted" style={styles.cardLbl}>
+                <AppText variant="bodySm" color="textMuted" style={styles.cardLbl}>
                   {c.label}
                 </AppText>
               </View>
@@ -182,6 +185,7 @@ const styles = StyleSheet.create({
   spinner: { marginVertical: 16, alignSelf: 'flex-start' },
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   card: { flexGrow: 1, flexBasis: '30%', minWidth: 100, paddingVertical: 16, paddingHorizontal: 12, alignItems: 'center' },
+  cardValue: { color: CONTRIBUTION_YELLOW },
   cardLbl: { marginTop: 4, textAlign: 'center' },
   subHeading: { marginTop: 24, marginBottom: 10 },
   // Cap the reviews list height (~3 cards) so it scrolls on its own with a

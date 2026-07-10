@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -143,8 +142,6 @@ export const PlaylistDetailsScreen: React.FC = () => {
         ]}
       >
         <View style={styles.header}>
-          <Artwork uri={cover} style={styles.bgArt} blurRadius={40} iconSize={0} />
-          <LinearGradient colors={['transparent', '#0B0B0F']} style={StyleSheet.absoluteFill} />
           <View style={[styles.artFrame, { width: POSTER_W, height: posterH }]}>
             <Artwork
               uri={cover}
@@ -382,7 +379,6 @@ export const PlaylistDetailsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   content: { paddingBottom: 96 },
   header: { alignItems: 'center', paddingBottom: 16 },
-  bgArt: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0.5 },
   topBarFixed: { paddingHorizontal: 12, paddingTop: 8 },
   // Solid-black header pinned to the top (outside the ScrollView) so the buttons
   // never scroll away; also covers the status-bar area (matches AlbumDetails).

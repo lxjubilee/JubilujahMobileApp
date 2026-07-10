@@ -6,9 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { Screen, AppText, IconButton, PasswordInput } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { changePassword } from '@/redux';
-import type { LibraryStackParamList } from '@/navigation/types';
+import type { PlaylistsStackParamList } from '@/navigation/types';
 
-type Nav = NativeStackNavigationProp<LibraryStackParamList>;
+type Nav = NativeStackNavigationProp<PlaylistsStackParamList>;
 const ACCENT = '#007FFF'; // Azure blue accent
 
 /**
