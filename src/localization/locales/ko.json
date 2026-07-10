@@ -132,13 +132,13 @@
       "password": "비밀번호",
       "submit": "로그인",
       "forgot": "비밀번호를 잊으셨나요?",
-      "newPrompt": "Jubilujah가 처음이신가요? ",
+      "newPrompt": "JubiLujah가 처음이신가요? ",
       "signUp": "회원가입",
       "botNotice": "이 페이지는 봇이 아닌지 확인하기 위해 보호됩니다."
     },
     "signup": {
       "title": "계정 만들기",
-      "subtitle": "Jubilujah에 가입하여 음악을 저장하고 플레이리스트를 만들고 어디서나 들어보세요.",
+      "subtitle": "JubiLujah에 가입하여 음악을 저장하고 플레이리스트를 만들고 어디서나 들어보세요.",
       "firstName": "이름",
       "lastName": "성",
       "dateOfBirth": "생년월일",

@@ -132,13 +132,13 @@
       "password": "Salasana",
       "submit": "Kirjaudu sisään",
       "forgot": "Unohditko salasanan?",
-      "newPrompt": "Uusi Jubilujahissa? ",
+      "newPrompt": "Uusi JubiLujahissa? ",
       "signUp": "Rekisteröidy",
       "botNotice": "Tämä sivu on suojattu sen varmistamiseksi, ettet ole botti."
     },
     "signup": {
       "title": "Luo tilisi",
-      "subtitle": "Liity Jubilujahiin, tallenna musiikkisi, luo soittolistoja ja kuuntele missä tahansa.",
+      "subtitle": "Liity JubiLujahiin, tallenna musiikkisi, luo soittolistoja ja kuuntele missä tahansa.",
       "firstName": "Etunimi",
       "lastName": "Sukunimi",
       "dateOfBirth": "Syntymäaika",

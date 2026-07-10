@@ -132,13 +132,13 @@
       "password": "Kata sandi",
       "submit": "Masuk",
       "forgot": "Lupa kata sandi?",
-      "newPrompt": "Baru di Jubilujah? ",
+      "newPrompt": "Baru di JubiLujah? ",
       "signUp": "Daftar",
       "botNotice": "Halaman ini dilindungi untuk memastikan Anda bukan bot."
     },
     "signup": {
       "title": "Buat akun Anda",
-      "subtitle": "Bergabunglah dengan Jubilujah untuk menyimpan musik, membuat playlist, dan mendengarkan di mana saja.",
+      "subtitle": "Bergabunglah dengan JubiLujah untuk menyimpan musik, membuat playlist, dan mendengarkan di mana saja.",
       "firstName": "Nama depan",
       "lastName": "Nama belakang",
       "dateOfBirth": "Tanggal lahir",

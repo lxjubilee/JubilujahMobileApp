@@ -132,13 +132,13 @@
       "password": "Tessera",
       "submit": "Inire",
       "forgot": "Tesseram oblitus es?",
-      "newPrompt": "Novus in Jubilujah? ",
+      "newPrompt": "Novus in JubiLujah? ",
       "signUp": "Subscribere",
       "botNotice": "Haec pagina munita est ut confirmetur te automaton non esse."
     },
     "signup": {
       "title": "Crea rationem tuam",
-      "subtitle": "Iunge te Jubilujah ut musicam tuam serves, indices cantuum creas et ubique audias.",
+      "subtitle": "Iunge te JubiLujah ut musicam tuam serves, indices cantuum creas et ubique audias.",
       "firstName": "Praenomen",
       "lastName": "Cognomen",
       "dateOfBirth": "Dies natalis",

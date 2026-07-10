@@ -132,13 +132,13 @@
       "password": "Wachtwoord",
       "submit": "Inloggen",
       "forgot": "Wachtwoord vergeten?",
-      "newPrompt": "Nieuw bij Jubilujah? ",
+      "newPrompt": "Nieuw bij JubiLujah? ",
       "signUp": "Registreren",
       "botNotice": "Deze pagina is beveiligd om te controleren dat je geen bot bent."
     },
     "signup": {
       "title": "Maak je account aan",
-      "subtitle": "Word lid van Jubilujah om je muziek op te slaan, afspeellijsten te maken en overal te luisteren.",
+      "subtitle": "Word lid van JubiLujah om je muziek op te slaan, afspeellijsten te maken en overal te luisteren.",
       "firstName": "Voornaam",
       "lastName": "Achternaam",
       "dateOfBirth": "Geboortedatum",

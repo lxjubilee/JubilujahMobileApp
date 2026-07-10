@@ -132,13 +132,13 @@
       "password": "Contraseña",
       "submit": "Iniciar sesión",
       "forgot": "¿Olvidaste tu contraseña?",
-      "newPrompt": "¿Nuevo en Jubilujah? ",
+      "newPrompt": "¿Nuevo en JubiLujah? ",
       "signUp": "Regístrate",
       "botNotice": "Esta página está protegida para asegurar que no eres un bot."
     },
     "signup": {
       "title": "Crea tu cuenta",
-      "subtitle": "Únete a Jubilujah para guardar tu música, crear listas y escuchar donde sea.",
+      "subtitle": "Únete a JubiLujah para guardar tu música, crear listas y escuchar donde sea.",
       "firstName": "Nombre",
       "lastName": "Apellido",
       "dateOfBirth": "Fecha de nacimiento",

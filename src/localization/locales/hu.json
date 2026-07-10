@@ -132,13 +132,13 @@
       "password": "Jelszó",
       "submit": "Bejelentkezés",
       "forgot": "Elfelejtetted a jelszót?",
-      "newPrompt": "Új vagy a Jubilujah-on? ",
+      "newPrompt": "Új vagy a JubiLujah-on? ",
       "signUp": "Regisztráció",
       "botNotice": "Ez az oldal védett, hogy megbizonyosodjunk arról, hogy nem vagy robot."
     },
     "signup": {
       "title": "Hozd létre a fiókodat",
-      "subtitle": "Csatlakozz a Jubilujah-hoz, hogy elmentsd a zenédet, lejátszási listákat hozz létre, és bárhol hallgass.",
+      "subtitle": "Csatlakozz a JubiLujah-hoz, hogy elmentsd a zenédet, lejátszási listákat hozz létre, és bárhol hallgass.",
       "firstName": "Keresztnév",
       "lastName": "Vezetéknév",
       "dateOfBirth": "Születési dátum",

@@ -132,13 +132,13 @@
       "password": "Password",
       "submit": "Mag-sign in",
       "forgot": "Nakalimutan ang password?",
-      "newPrompt": "Bago sa Jubilujah? ",
+      "newPrompt": "Bago sa JubiLujah? ",
       "signUp": "Mag-sign up",
       "botNotice": "Protektado ang page na ito para matiyak na hindi ka bot."
     },
     "signup": {
       "title": "Gumawa ng iyong account",
-      "subtitle": "Sumali sa Jubilujah para i-save ang iyong musika, gumawa ng mga playlist, at makinig kahit saan.",
+      "subtitle": "Sumali sa JubiLujah para i-save ang iyong musika, gumawa ng mga playlist, at makinig kahit saan.",
       "firstName": "Pangalan",
       "lastName": "Apelyido",
       "dateOfBirth": "Petsa ng kapanganakan",

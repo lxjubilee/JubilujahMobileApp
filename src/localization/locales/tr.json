@@ -132,13 +132,13 @@
       "password": "Şifre",
       "submit": "Giriş yap",
       "forgot": "Şifrenizi mi unuttunuz?",
-      "newPrompt": "Jubilujah'ta yeni misiniz? ",
+      "newPrompt": "JubiLujah'ta yeni misiniz? ",
       "signUp": "Kaydol",
       "botNotice": "Bu sayfa, bot olmadığınızdan emin olmak için korunmaktadır."
     },
     "signup": {
       "title": "Hesabınızı oluşturun",
-      "subtitle": "Müziğinizi kaydetmek, çalma listeleri oluşturmak ve her yerde dinlemek için Jubilujah'a katılın.",
+      "subtitle": "Müziğinizi kaydetmek, çalma listeleri oluşturmak ve her yerde dinlemek için JubiLujah'a katılın.",
       "firstName": "Ad",
       "lastName": "Soyad",
       "dateOfBirth": "Doğum tarihi",

@@ -155,13 +155,13 @@
       "password": "Password",
       "submit": "Sign In",
       "forgot": "Forgot password?",
-      "newPrompt": "New to Jubilujah? ",
+      "newPrompt": "New to JubiLujah? ",
       "signUp": "Sign up",
       "botNotice": "This page is protected to ensure you're not a bot."
     },
     "signup": {
       "title": "Create your account",
-      "subtitle": "Join Jubilujah to save your music, build playlists, and listen anywhere.",
+      "subtitle": "Join JubiLujah to save your music, build playlists, and listen anywhere.",
       "firstName": "First name",
       "lastName": "Last name",
       "dateOfBirth": "Date of birth",

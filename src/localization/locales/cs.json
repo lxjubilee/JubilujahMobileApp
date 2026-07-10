@@ -132,13 +132,13 @@
       "password": "Heslo",
       "submit": "Přihlásit se",
       "forgot": "Zapomněli jste heslo?",
-      "newPrompt": "Nováček v Jubilujah? ",
+      "newPrompt": "Nováček v JubiLujah? ",
       "signUp": "Registrovat se",
       "botNotice": "Tato stránka je chráněna, abychom ověřili, že nejste robot."
     },
     "signup": {
       "title": "Vytvořte si účet",
-      "subtitle": "Připojte se k Jubilujah, ukládejte si hudbu, vytvářejte playlisty a poslouchejte kdekoli.",
+      "subtitle": "Připojte se k JubiLujah, ukládejte si hudbu, vytvářejte playlisty a poslouchejte kdekoli.",
       "firstName": "Jméno",
       "lastName": "Příjmení",
       "dateOfBirth": "Datum narození",

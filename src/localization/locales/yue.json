@@ -132,13 +132,13 @@
       "password": "密碼",
       "submit": "登入",
       "forgot": "唔記得密碼？",
-      "newPrompt": "第一次用 Jubilujah？ ",
+      "newPrompt": "第一次用 JubiLujah？ ",
       "signUp": "註冊",
       "botNotice": "呢個頁面受保護，以確認你唔係機械人。"
     },
     "signup": {
       "title": "建立你嘅帳戶",
-      "subtitle": "加入 Jubilujah，儲存你嘅音樂、建立播放清單，隨時隨地收聽。",
+      "subtitle": "加入 JubiLujah，儲存你嘅音樂、建立播放清單，隨時隨地收聽。",
       "firstName": "名",
       "lastName": "姓",
       "dateOfBirth": "出生日期",

@@ -132,13 +132,13 @@
       "password": "Mật khẩu",
       "submit": "Đăng nhập",
       "forgot": "Quên mật khẩu?",
-      "newPrompt": "Mới đến với Jubilujah? ",
+      "newPrompt": "Mới đến với JubiLujah? ",
       "signUp": "Đăng ký",
       "botNotice": "Trang này được bảo vệ để đảm bảo bạn không phải là bot."
     },
     "signup": {
       "title": "Tạo tài khoản của bạn",
-      "subtitle": "Tham gia Jubilujah để lưu nhạc, tạo danh sách phát và nghe ở mọi nơi.",
+      "subtitle": "Tham gia JubiLujah để lưu nhạc, tạo danh sách phát và nghe ở mọi nơi.",
       "firstName": "Tên",
       "lastName": "Họ",
       "dateOfBirth": "Ngày sinh",

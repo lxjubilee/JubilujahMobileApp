@@ -20,6 +20,10 @@ import type { RootStackParamList, RootStackScreenProps } from '@/navigation/type
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 const { width } = Dimensions.get('window');
 const HERO = width * 0.95;
+// The overlaid artist name must never wrap: it shrinks from displayLg (34px)
+// down to 40% of that (~14px) so even the longest persona name fits one line on
+// a narrow phone. Never 0 — a fontSize of 0 hard-crashes Text on Fabric.
+const MIN_NAME_SCALE = 0.4;
 
 export const ArtistDetailsScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'ArtistDetails'>['route']>();
@@ -155,7 +159,12 @@ export const ArtistDetailsScreen: React.FC = () => {
               style={StyleSheet.absoluteFill}
             />
             <View style={styles.bannerText}>
-              <AppText variant="displayLg" numberOfLines={2}>
+              <AppText
+                variant="displayLg"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={MIN_NAME_SCALE}
+              >
                 {artist.name}
               </AppText>
             </View>
@@ -168,7 +177,12 @@ export const ArtistDetailsScreen: React.FC = () => {
             <Artwork uri={artist.image} source={personaImage(artist.id)} style={StyleSheet.absoluteFill} iconSize={72} />
             <LinearGradient colors={['transparent', 'transparent', '#0B0B0F']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
             <View style={styles.heroText}>
-              <AppText variant="displayLg" numberOfLines={2}>
+              <AppText
+                variant="displayLg"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={MIN_NAME_SCALE}
+              >
                 {artist.name}
               </AppText>
               {artist.monthlyListeners ? (

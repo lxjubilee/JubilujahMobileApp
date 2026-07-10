@@ -132,13 +132,13 @@
       "password": "Adgangskode",
       "submit": "Log ind",
       "forgot": "Glemt adgangskode?",
-      "newPrompt": "Ny på Jubilujah? ",
+      "newPrompt": "Ny på JubiLujah? ",
       "signUp": "Tilmeld dig",
       "botNotice": "Denne side er beskyttet for at sikre, at du ikke er en bot."
     },
     "signup": {
       "title": "Opret din konto",
-      "subtitle": "Bliv en del af Jubilujah for at gemme din musik, oprette afspilningslister og lytte overalt.",
+      "subtitle": "Bliv en del af JubiLujah for at gemme din musik, oprette afspilningslister og lytte overalt.",
       "firstName": "Fornavn",
       "lastName": "Efternavn",
       "dateOfBirth": "Fødselsdato",

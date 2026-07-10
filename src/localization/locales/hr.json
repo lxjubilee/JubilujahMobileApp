@@ -132,13 +132,13 @@
       "password": "Lozinka",
       "submit": "Prijava",
       "forgot": "Zaboravljena lozinka?",
-      "newPrompt": "Nov na Jubilujah? ",
+      "newPrompt": "Nov na JubiLujah? ",
       "signUp": "Registracija",
       "botNotice": "Ova je stranica zaštićena kako bismo potvrdili da nisi bot."
     },
     "signup": {
       "title": "Izradi svoj račun",
-      "subtitle": "Pridruži se Jubilujah da spremaš glazbu, izrađuješ popise za reprodukciju i slušaš bilo gdje.",
+      "subtitle": "Pridruži se JubiLujah da spremaš glazbu, izrađuješ popise za reprodukciju i slušaš bilo gdje.",
       "firstName": "Ime",
       "lastName": "Prezime",
       "dateOfBirth": "Datum rođenja",

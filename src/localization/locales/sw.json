@@ -132,13 +132,13 @@
       "password": "Nenosiri",
       "submit": "Ingia",
       "forgot": "Umesahau nenosiri?",
-      "newPrompt": "Mgeni kwenye Jubilujah? ",
+      "newPrompt": "Mgeni kwenye JubiLujah? ",
       "signUp": "Jisajili",
       "botNotice": "Ukurasa huu umelindwa ili kuhakikisha wewe si roboti."
     },
     "signup": {
       "title": "Fungua akaunti yako",
-      "subtitle": "Jiunge na Jubilujah ili kuhifadhi muziki wako, kuunda orodha za kucheza na kusikiliza popote.",
+      "subtitle": "Jiunge na JubiLujah ili kuhifadhi muziki wako, kuunda orodha za kucheza na kusikiliza popote.",
       "firstName": "Jina la kwanza",
       "lastName": "Jina la mwisho",
       "dateOfBirth": "Tarehe ya kuzaliwa",
