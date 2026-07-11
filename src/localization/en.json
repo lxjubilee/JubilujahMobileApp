@@ -93,7 +93,8 @@
     "albumsAnchoring": "{{n}} albums anchoring the {{category}} catalog",
     "albumCount": "{{n}} albums",
     "statAlbums": "Albums",
-    "statTracks": "Tracks"
+    "statTracks": "Tracks",
+    "noAlbums": "No albums available yet — new music from this artist is on the way."
   },
   "library": {
     "title": "Library",

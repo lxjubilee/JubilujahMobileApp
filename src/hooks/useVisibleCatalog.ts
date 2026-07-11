@@ -59,8 +59,11 @@ function filterArtists(
     // Artist has albums, but none in the active language → hide entirely.
     if (albums.length > 0 && langAlbums.length === 0) continue;
     const covers = langAlbums.map((al) => al.cover);
-    // "All albums" rule — drop the artist when no (language) album has artwork.
-    if (covers.length > 0 && covers.every((c) => missing[c])) continue;
+    // A curated/featured artist is kept even when every album cover has 404'd:
+    // the avatar falls back to a local persona portrait (or a placeholder), and
+    // the artist page shows a "no albums yet" empty state. Previously a single
+    // transient image failure could permanently hide an artist whose only
+    // in-language album's cover was marked missing (see ArtworkSlice trapdoor).
     // Avatar cover missing but other albums have art → show a good cover.
     if (artist.image && missing[artist.image]) {
       const firstGood = covers.find((c) => !missing[c]);

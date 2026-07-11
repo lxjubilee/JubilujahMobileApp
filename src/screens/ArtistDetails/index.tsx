@@ -260,17 +260,25 @@ export const ArtistDetailsScreen: React.FC = () => {
             }
           />
         </View>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={visibleAlbums}
-          keyExtractor={(a) => a.id}
-          contentContainerStyle={styles.albumRow}
-          ItemSeparatorComponent={() => <View style={styles.sep} />}
-          renderItem={({ item }) => (
-            <AlbumCard album={item} onPress={(al) => navigation.navigate('AlbumDetails', { albumId: al.id })} />
-          )}
-        />
+        {visibleAlbums.length ? (
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={visibleAlbums}
+            keyExtractor={(a) => a.id}
+            contentContainerStyle={styles.albumRow}
+            ItemSeparatorComponent={() => <View style={styles.sep} />}
+            renderItem={({ item }) => (
+              <AlbumCard album={item} onPress={(al) => navigation.navigate('AlbumDetails', { albumId: al.id })} />
+            )}
+          />
+        ) : (
+          <View style={styles.emptyAlbums}>
+            <AppText variant="bodySm" color="textMuted" style={styles.emptyAlbumsText}>
+              {t('artist.noAlbums')}
+            </AppText>
+          </View>
+        )}
 
         {similarAlbums.length ? (
           <>
@@ -345,6 +353,8 @@ const styles = StyleSheet.create({
   // (spacing.lg = 16, matching the album rows) and bottom margin.
   sectionHead: { marginTop: 28 },
   albumRow: { paddingHorizontal: 16 },
+  emptyAlbums: { paddingHorizontal: 16, paddingVertical: 8 },
+  emptyAlbumsText: { lineHeight: 20 },
   sep: { width: 14 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   safeBand: { position: 'absolute', left: 0, right: 0, backgroundColor: '#000' },
