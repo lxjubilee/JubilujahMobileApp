@@ -37,17 +37,21 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const saved = useIsAlbumLiked(album);
-  const { currentTrack, isPlaying, toggle } = usePlayer();
+  const { currentTrack, isPlaying, queue, toggle } = usePlayer();
 
-  // This hero's album is the one currently loaded in the player (tracks carry
-  // their albumId), so its Play button reflects that album's playback state —
-  // any other hero keeps showing "Play".
-  const isActiveAlbum = currentTrack?.albumId === album.id;
-  const showPause = isActiveAlbum && isPlaying;
+  // The hero launches its album from the top, so its "own" track is the album's
+  // first track — queue[0] (the queue keeps the album's original order, even
+  // when shuffle reorders playback). The Play button reflects that specific
+  // track's state: it only shows "Pause" while the hero's own track is the one
+  // playing. Skipping to another track (Next in the mini player) or any other
+  // album flips this hero back to "Play".
+  const isHeroTrackActive =
+    currentTrack?.albumId === album.id && currentTrack?.id === queue[0]?.id;
+  const showPause = isHeroTrackActive && isPlaying;
 
-  // Pressing the button pauses/resumes when it's already this album; otherwise
-  // it starts the album from the top.
-  const onPressPlay = () => (isActiveAlbum ? toggle() : onPlay(album));
+  // Pressing the button pauses/resumes when the hero's own track is current;
+  // otherwise it (re)starts the album from the top.
+  const onPressPlay = () => (isHeroTrackActive ? toggle() : onPlay(album));
 
   // Poster height tracks the image's natural aspect ratio so the artwork fills
   // the frame exactly — no side crop, no top/bottom empty space.
