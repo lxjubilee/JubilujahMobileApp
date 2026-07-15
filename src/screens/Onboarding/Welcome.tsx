@@ -37,7 +37,7 @@ const SLIDES: Slide[] = [
     key: 'only',
     visual: { type: 'collage' },
     headline: 'Only on JubiLujah',
-    subtitle: 'Millions of songs, albums and artists — all in one place.',
+    subtitle: 'Thousands of songs, albums and artists — all in one place.',
   },
   {
     key: 'new',
@@ -126,7 +126,7 @@ export const Welcome: React.FC<WelcomeProps> = ({ onGetStarted }) => {
                 <LinearGradient
                   colors={['transparent', 'rgba(11,11,15,0.5)', '#0B0B0F']}
                   locations={[0.55, 0.85, 1]}
-                  style={StyleSheet.absoluteFill}
+                  style={styles.overlay}
                   pointerEvents="none"
                 />
               </View>
@@ -195,6 +195,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#14141c',
     overflow: 'hidden',
   },
+  // Overshoot every edge so the card's rounded `overflow: hidden` clips the
+  // overlay to the exact card shape — no bright seam of the background collage
+  // peeking through on the left/right/bottom (or under the 1px border).
+  overlay: { position: 'absolute', top: -2, left: -2, right: -2, bottom: -2 },
   headline: { fontSize: 30, lineHeight: 36, textAlign: 'center', marginTop: 20 },
   subtitle: { textAlign: 'center', marginTop: 10, paddingHorizontal: 8, marginBottom: 4 },
   dots: { flexDirection: 'row', alignSelf: 'center', gap: 7, marginTop: 14, marginBottom: 16 },
