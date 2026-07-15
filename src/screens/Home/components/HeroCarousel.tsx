@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useTheme } from '@/context';
+import { usePlayer } from '@/hooks';
 import { Album } from '@/types';
 import { HeroBanner } from './HeroBanner';
 
@@ -30,16 +31,22 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ albums, onPlay, onOp
   const theme = useTheme();
   const listRef = useRef<FlatList<Album>>(null);
   const [index, setIndex] = useState(0);
+  const { currentTrack, isPlaying } = usePlayer();
+
+  // Hold on the current hero while one of these albums is actually playing — a
+  // user who just hit Play shouldn't have the carousel rotate away from it. The
+  // timer resumes once playback stops or moves to a non-hero album.
+  const heroPlaying = isPlaying && albums.some((a) => a.id === currentTrack?.albumId);
 
   useEffect(() => {
-    if (albums.length <= 1) return undefined;
+    if (albums.length <= 1 || heroPlaying) return undefined;
     const timer = setTimeout(() => {
       const next = (index + 1) % albums.length;
       listRef.current?.scrollToIndex({ index: next, animated: true });
       setIndex(next);
     }, ROTATE_MS);
     return () => clearTimeout(timer);
-  }, [index, albums.length]);
+  }, [index, albums.length, heroPlaying]);
 
   const onMomentumEnd = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
     setIndex(Math.round(e.nativeEvent.contentOffset.x / W));

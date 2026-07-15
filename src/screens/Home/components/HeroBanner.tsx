@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context';
 import { AppText, Artwork } from '@/components/common';
-import { useAppDispatch, useIsAlbumLiked } from '@/hooks';
+import { useAppDispatch, useIsAlbumLiked, usePlayer } from '@/hooks';
 import { toggleAlbumLike } from '@/redux';
 import { Album } from '@/types';
 
@@ -37,6 +37,17 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const saved = useIsAlbumLiked(album);
+  const { currentTrack, isPlaying, toggle } = usePlayer();
+
+  // This hero's album is the one currently loaded in the player (tracks carry
+  // their albumId), so its Play button reflects that album's playback state —
+  // any other hero keeps showing "Play".
+  const isActiveAlbum = currentTrack?.albumId === album.id;
+  const showPause = isActiveAlbum && isPlaying;
+
+  // Pressing the button pauses/resumes when it's already this album; otherwise
+  // it starts the album from the top.
+  const onPressPlay = () => (isActiveAlbum ? toggle() : onPlay(album));
 
   // Poster height tracks the image's natural aspect ratio so the artwork fills
   // the frame exactly — no side crop, no top/bottom empty space.
@@ -79,16 +90,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ album, onPlay, onOpen })
 
       <View style={[styles.actions, { width: POSTER_W }]}>
         <Pressable
-          onPress={() => onPlay(album)}
+          onPress={onPressPlay}
           style={({ pressed }) => [
             styles.btn,
             styles.playBtn,
             { borderRadius: theme.radius.sm, opacity: pressed ? 0.85 : 1 },
           ]}
         >
-          <Ionicons name="play" size={20} color="#000" />
+          <Ionicons name={showPause ? 'pause' : 'play'} size={20} color="#000" />
           <AppText variant="label" style={styles.playLabel}>
-            {t('common.play')}
+            {showPause ? t('common.pause') : t('common.play')}
           </AppText>
         </Pressable>
 
