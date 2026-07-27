@@ -15,6 +15,12 @@ import { CatalogManifest } from './manifestTypes';
  * the UI can rebuild. Only the first-ever launch (no snapshot) blocks on the
  * network.
  *
+ * A snapshot is also replaced when it was fetched from a different manifest URL
+ * than the one configured now, regardless of `generated`. Hosts can publish the
+ * same catalog build under different path conventions, so keeping a snapshot
+ * across a `cdnBaseUrl` change would resolve every cover and track against paths
+ * the new host does not have.
+ *
  * The snapshot is stored CHUNKED because the stringified manifest (~2 MB) sits
  * at the edge of Android's AsyncStorage CursorWindow read limit; ~512 KB chunks
  * read back reliably. All storage access is best-effort — any failure degrades
@@ -29,6 +35,12 @@ const CHUNK_SIZE = 512 * 1024; // characters
 let current: CatalogManifest | null = null;
 let initialLoad: Promise<CatalogManifest> | null = null;
 let revalidated = false;
+/**
+ * Set when the cached snapshot came from a DIFFERENT manifest URL than the one
+ * configured now (or from a build that predates source tracking). Such a cache
+ * must be replaced even if `generated` is unchanged — see `revalidate`.
+ */
+let sourceChanged = false;
 const subscribers = new Set<() => void>();
 
 /** Subscribe to background catalog refreshes (new `generated`). Returns an unsubscribe fn. */
@@ -70,7 +82,11 @@ async function revalidate(): Promise<void> {
   revalidated = true;
   try {
     const fresh = await fetchManifest();
-    if (!current || fresh.generated !== current.generated) {
+    // `generated` alone is not enough: two hosts can publish the same catalog
+    // build under different path conventions, so a host swap must replace the
+    // cache even when the timestamp matches.
+    if (sourceChanged || !current || fresh.generated !== current.generated) {
+      sourceChanged = false;
       current = fresh;
       void writeChunkedCache(fresh);
       subscribers.forEach((cb) => {
@@ -95,12 +111,21 @@ async function fetchManifest(): Promise<CatalogManifest> {
 interface ChunkMeta {
   count: number;
   generated: string;
+  /**
+   * The manifest URL this snapshot was fetched from. Absent on caches written by
+   * builds before source tracking existed, which are treated as changed so they
+   * get replaced once on upgrade.
+   */
+  source?: string;
 }
 
 async function readChunkedCache(): Promise<CatalogManifest | null> {
   try {
     const meta = await storage.getItem<ChunkMeta>(STORAGE_KEYS.CATALOG_MANIFEST_META);
     if (!meta?.count) return null;
+    // Serve the snapshot either way (offline upgrades keep working), but flag a
+    // host change so `revalidate` swaps it in unconditionally.
+    if (meta.source !== MANIFEST_URL) sourceChanged = true;
     const parts: string[] = [];
     for (let i = 0; i < meta.count; i += 1) {
       const part = await AsyncStorage.getItem(`${STORAGE_KEYS.CATALOG_MANIFEST_CHUNK}${i}`);
@@ -128,6 +153,7 @@ async function writeChunkedCache(manifest: CatalogManifest): Promise<void> {
     await storage.setItem<ChunkMeta>(STORAGE_KEYS.CATALOG_MANIFEST_META, {
       count,
       generated: manifest.generated,
+      source: MANIFEST_URL,
     });
   } catch (err) {
     logger.warn('catalog cache write failed', err);
@@ -139,4 +165,5 @@ export function resetManifestCache(): void {
   current = null;
   initialLoad = null;
   revalidated = false;
+  sourceChanged = false;
 }
