@@ -22,8 +22,16 @@ export type RootStackParamList = {
   ArtistDetails: { artistId: string };
   /** `genreByItem` is carried from a showGenre section so its "See all" grid
    *  captions covers the same way the Home rail does. Albums absent from the map
-   *  (the catalog gives them no genre) keep their title. */
-  AlbumList: { title: string; artistId?: string; albumIds?: string[]; genreByItem?: Record<string, string> };
+   *  (the catalog gives them no genre) keep their title.
+   *  `showAlbumGenre` is set when "See all" was opened from the Home page, so the
+   *  grid prints each album's genre under its title like the rail it came from. */
+  AlbumList: {
+    title: string;
+    artistId?: string;
+    albumIds?: string[];
+    genreByItem?: Record<string, string>;
+    showAlbumGenre?: boolean;
+  };
   PlaylistDetails: { playlistId: string };
   PlaylistAddSongs: { playlistId: string };
   MusicPlayer: undefined;

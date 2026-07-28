@@ -185,18 +185,26 @@ export const HomeScreen: React.FC = () => {
   );
   const openSeeAll = useCallback(
     (rail: ResolvedRail) => {
+      // Carry the Home page's genre-under-title treatment into the grid, so
+      // "See all" looks like the rail it was opened from.
+      const genreLine = showAlbumGenre ? { showAlbumGenre: true } : {};
       if (rail.seeAllArtistId) {
-        navigation.navigate('AlbumList', { title: rail.title, artistId: rail.seeAllArtistId });
+        navigation.navigate('AlbumList', {
+          title: rail.title,
+          artistId: rail.seeAllArtistId,
+          ...genreLine,
+        });
       } else if (rail.albums?.length) {
         // A section with more albums than the preview shows — open the full grid.
         navigation.navigate('AlbumList', {
           title: rail.title,
           albumIds: rail.albums.map((a) => a.id),
           ...(rail.showGenre ? { genreByItem: rail.genreByItem } : {}),
+          ...genreLine,
         });
       }
     },
-    [navigation],
+    [navigation, showAlbumGenre],
   );
 
   /** Hero "Play" — fetch the album's tracks then start the queue. */

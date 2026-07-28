@@ -3,10 +3,12 @@ import { Dimensions, FlatList, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { Screen, AppText, Loader, IconButton } from '@/components/common';
 import { AlbumCard } from '@/components/cards';
 import { FloatingMiniPlayer } from '@/components/player';
 import { useVisibleAlbums } from '@/hooks';
+import { localizeTitle } from '@/localization';
 import { AlbumRepository, ArtistRepository } from '@/repositories';
 import { Album } from '@/types';
 import { pickByIds } from '@/utils';
@@ -27,6 +29,7 @@ export const AlbumListScreen: React.FC = () => {
   const { params } = useRoute<RootStackScreenProps<'AlbumList'>['route']>();
   const navigation = useNavigation<Nav>();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
   const visibleAlbums = useVisibleAlbums(albums);
@@ -78,14 +81,21 @@ export const AlbumListScreen: React.FC = () => {
             </AppText>
           </View>
         }
-        renderItem={({ item }) => (
-          <AlbumCard
-            album={item}
-            width={CARD_W}
-            caption={params.genreByItem?.[item.id]}
-            onPress={(al) => navigation.navigate('AlbumDetails', { albumId: al.id })}
-          />
-        )}
+        renderItem={({ item }) => {
+          // Opened from Home → mirror the rail and print the genre under the
+          // title. Real manifest tags only, matching Rail: `album.genre` would
+          // fall back to the catalog family label and just echo the grid title.
+          const genre = params.showAlbumGenre ? item.genres?.[0] : undefined;
+          return (
+            <AlbumCard
+              album={item}
+              width={CARD_W}
+              caption={params.genreByItem?.[item.id]}
+              subtitle={genre ? localizeTitle(t, genre) : undefined}
+              onPress={(al) => navigation.navigate('AlbumDetails', { albumId: al.id })}
+            />
+          );
+        }}
       />
 
       {/* Persistent black header with the back button — rendered outside the
