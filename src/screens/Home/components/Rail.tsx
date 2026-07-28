@@ -12,10 +12,18 @@ interface RailProps {
   onAlbumPress: (album: Album) => void;
   onArtistPress: (artist: Artist) => void;
   onSeeAll?: (rail: ResolvedRail) => void;
+  /** Print each album's genre under its title. Set on the Home page only. */
+  showAlbumGenre?: boolean;
 }
 
 /** A single horizontally-scrolling Home row of albums or artists. */
-export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress, onSeeAll }) => {
+export const Rail: React.FC<RailProps> = ({
+  rail,
+  onAlbumPress,
+  onArtistPress,
+  onSeeAll,
+  showAlbumGenre,
+}) => {
   const theme = useTheme();
   const { t } = useTranslation();
   // Items are already artwork-filtered upstream (useVisibleRails); empty rails
@@ -65,13 +73,20 @@ export const Rail: React.FC<RailProps> = ({ rail, onAlbumPress, onArtistPress, o
         keyExtractor={(a) => a.id}
         contentContainerStyle={{ paddingHorizontal: theme.spacing.lg }}
         ItemSeparatorComponent={() => <Sep />}
-        renderItem={({ item }) => (
-          <AlbumCard
-            album={item}
-            onPress={onAlbumPress}
-            caption={rail.showGenre ? rail.genreByItem?.[item.id] : undefined}
-          />
-        )}
+        renderItem={({ item }) => {
+          // Only the album's real manifest tags. `item.genre` falls back to the
+          // catalog family label, which would just echo the rail title under
+          // every card — untagged albums show the title alone instead.
+          const genre = showAlbumGenre ? item.genres?.[0] : undefined;
+          return (
+            <AlbumCard
+              album={item}
+              onPress={onAlbumPress}
+              caption={rail.showGenre ? rail.genreByItem?.[item.id] : undefined}
+              subtitle={genre ? localizeTitle(t, genre) : undefined}
+            />
+          );
+        }}
       />
     </>
   );

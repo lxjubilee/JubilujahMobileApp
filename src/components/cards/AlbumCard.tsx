@@ -13,10 +13,19 @@ interface AlbumCardProps {
   /** Overrides the album title on the primary line — a section that shows genres
    *  passes the album's primary genre. Falls back to the title when unset. */
   caption?: string;
+  /** Secondary line under the title — Home rails pass the album's genre. Ignored
+   *  when `caption` is set, since that already shows the genre on the line above. */
+  subtitle?: string;
 }
 
 /** Vertical album tile used in Home rails and grids. */
-export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onPress, width = 150, caption }) => {
+export const AlbumCard: React.FC<AlbumCardProps> = ({
+  album,
+  onPress,
+  width = 150,
+  caption,
+  subtitle,
+}) => {
   const theme = useTheme();
   return (
     <Pressable
@@ -33,6 +42,11 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ album, onPress, width = 15
         <AppText variant="h3" numberOfLines={1}>
           {caption || album.title}
         </AppText>
+        {!caption && !!subtitle && (
+          <AppText variant="bodySm" color="textMuted" numberOfLines={1}>
+            {subtitle}
+          </AppText>
+        )}
       </View>
     </Pressable>
   );

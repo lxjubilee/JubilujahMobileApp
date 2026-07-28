@@ -103,6 +103,21 @@ export const HomeScreen: React.FC = () => {
     [railsWithArt, filter, showAllChip],
   );
 
+  // The genre line under album titles is a Home-page treatment only — every other
+  // category page keeps the plain title. Match on the STABLE config key, not the
+  // label, so an admin renaming the page can't silently switch it off (the label
+  // also collides with the HOME_FILTER_ALL sentinel). In fallback mode the
+  // synthetic "all" chip is the Home page; with no key at all (older config
+  // payload) the first configured page is Home.
+  const showAlbumGenre = useMemo(() => {
+    if (showAllChip) return filter === HOME_FILTER_ALL;
+    const key = feed?.categoryKeys?.[filter];
+    if (!key) return filter === filters[0];
+    // Backend keys drift between `_` and `-` separators — normalize like the
+    // category localizer does.
+    return key.replace(/-/g, '_') === 'home';
+  }, [showAllChip, filter, filters, feed?.categoryKeys]);
+
   // Animated state for the collapsing header (chips) and its solid background.
   const chipsAnim = useRef(new Animated.Value(1)).current; // 1 = chips visible
   const bgAnim = useRef(new Animated.Value(0)).current; // 0 = gradient, 1 = solid black
@@ -281,6 +296,7 @@ export const HomeScreen: React.FC = () => {
                   onAlbumPress={openAlbum}
                   onArtistPress={openArtist}
                   onSeeAll={openSeeAll}
+                  showAlbumGenre={showAlbumGenre}
                 />
               </View>
             ))}
