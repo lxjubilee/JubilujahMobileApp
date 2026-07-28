@@ -1,6 +1,6 @@
 {
   "name": "jubilujah",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "main": "index.ts",
   "dependencies": {
     "@expo-google-fonts/bebas-neue": "^0.4.1",
