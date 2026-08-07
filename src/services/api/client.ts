@@ -1,12 +1,13 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { CONFIG, ENV } from '@/constants';
 import { logger } from '@/utils';
 
 /**
  * Shared axios instance for the jubileeverse API. Interceptors centralize:
- *  - auth header injection (wired for future auth)
+ *  - auth header injection (kept in sync by tokenStore)
  *  - request/response logging in dev
  *  - error normalization into a consistent ApiError
+ *  - transparent single-flight refresh on 401 (delegated to the auth client)
  */
 export interface ApiError {
   status: number;
@@ -16,9 +17,20 @@ export interface ApiError {
 
 let authToken: string | null = null;
 
-/** Allows the auth slice to register/clear the bearer token later. */
+/** Registers/clears the bearer token. Called by tokenStore on every change. */
 export const setAuthToken = (token: string | null): void => {
   authToken = token;
+};
+
+/**
+ * Renews the access token. Injected by the auth wiring (`initAuthClient`) so this
+ * module stays free of auth/token imports. Resolves to a fresh access token, or
+ * null when the session could not be renewed.
+ */
+type TokenRefresher = () => Promise<string | null>;
+let refreshAccessToken: TokenRefresher | null = null;
+export const configureApiClient = (refresher: TokenRefresher): void => {
+  refreshAccessToken = refresher;
 };
 
 export const apiClient: AxiosInstance = axios.create({
@@ -37,7 +49,26 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
+    const original = error.config as
+      | (InternalAxiosRequestConfig & { _retry?: boolean })
+      | undefined;
+
+    // The access token lives an hour; renew once and replay rather than failing
+    // the call (or, worse, leaving the app on a stale token until the next launch).
+    // The refresher is single-flight in the auth client, so concurrent 401s here
+    // share one round-trip. It never signs the user out on its own — a definitively
+    // dead session is handled by the auth client's own failure path.
+    if (error.response?.status === 401 && original && !original._retry && refreshAccessToken) {
+      original._retry = true;
+      const newToken = await refreshAccessToken();
+      if (newToken) {
+        original.headers = original.headers ?? {};
+        original.headers.Authorization = `Bearer ${newToken}`;
+        return apiClient(original);
+      }
+    }
+
     const apiError: ApiError = {
       status: error.response?.status ?? 0,
       message:

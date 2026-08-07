@@ -31,10 +31,24 @@ interface RotatedTokens {
 }
 interface SessionHandlers {
   getRefreshToken: () => string | null;
-  /** Persist the full token set after a refresh (the refresh token rotates). */
+  /** True when the held access token has lapsed (drives the proactive refresh). */
+  isAccessTokenExpired: () => boolean;
+  /** Persist the token set returned by a refresh. */
   persistTokens: (tokens: RotatedTokens) => void;
   onAuthFailure: () => void;
 }
+
+/**
+ * Outcome of a refresh attempt. The distinction matters: only `invalid` means the
+ * session is genuinely dead and the stored tokens should be discarded. `error` is
+ * transient (no signal, timeout, 5xx) — the tokens MUST be kept, otherwise a
+ * moment of bad connectivity signs the user out of a session that is still valid
+ * server-side for a year.
+ */
+export type RefreshOutcome =
+  | { result: 'ok'; accessToken: string }
+  | { result: 'invalid' }
+  | { result: 'error' };
 let handlers: SessionHandlers | null = null;
 export const configureAuthClient = (h: SessionHandlers): void => {
   handlers = h;
@@ -61,31 +75,81 @@ authClient.interceptors.request.use(async (config) => {
   // the jar is empty by the time the native layer builds the request. The app
   // never sends or needs a CSRF token. See `API docs/API.md`.
   await clearSessionCookies();
+  // Proactive renewal: the access token only lives an hour, and several endpoints
+  // (notably GET /api/auth/me) answer 200 rather than 401 when it has lapsed — so
+  // waiting for a 401 is not enough to keep a session alive. Renew here instead.
+  if (
+    accessToken &&
+    handlers?.isAccessTokenExpired() &&
+    handlers.getRefreshToken() &&
+    !isExempt(config.url)
+  ) {
+    await refreshSession(); // failures fall through; the 401 path below still applies
+  }
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   logger.debug('AUTH →', config.method?.toUpperCase(), config.url);
   return config;
 });
 
 // Single-flight refresh: concurrent 401s share one refresh round-trip.
-let refreshPromise: Promise<string> | null = null;
+let refreshPromise: Promise<RefreshOutcome> | null = null;
 
-async function runRefresh(): Promise<string> {
+async function runRefresh(): Promise<RefreshOutcome> {
   const refreshToken = handlers?.getRefreshToken();
-  if (!refreshToken) throw new Error('no refresh token');
+  if (!refreshToken) return { result: 'invalid' };
   // Bare axios call (no interceptors) to avoid recursive refresh loops — so clear
   // the cookie here too, since the request interceptor doesn't run for it.
   await clearSessionCookies();
-  // The unified API rotates the refresh token and nests both under `tokens`.
-  const res = await axios.post<{ tokens: { accessToken: string; refreshToken: string; expiresAt?: string } }>(
-    `${CONFIG.API_AUTH_BASE}/api/auth/refresh`,
-    { refreshToken },
-    { timeout: CONFIG.API_TIMEOUT_MS, headers: { 'Content-Type': 'application/json' } },
-  );
-  const { accessToken, refreshToken: rotated, expiresAt } = res.data.tokens;
-  setAccessToken(accessToken);
-  // Persist the rotated refresh token too — the old one is now invalid.
-  handlers?.persistTokens({ accessToken, refreshToken: rotated, expiresAt });
-  return accessToken;
+  try {
+    // The API nests both tokens under `tokens`. It does NOT rotate the refresh
+    // token (it echoes the same one back), so fall back to the token we sent if a
+    // response ever omits it rather than dropping the session.
+    const res = await axios.post<{ tokens?: { accessToken?: string; refreshToken?: string; expiresAt?: string } }>(
+      `${CONFIG.API_AUTH_BASE}/api/auth/refresh`,
+      { refreshToken },
+      {
+        timeout: CONFIG.API_TIMEOUT_MS,
+        headers: { 'Content-Type': 'application/json' },
+        // Classify the status ourselves instead of letting axios throw, so a 401
+        // (dead session) is never confused with a 500/network blip (transient).
+        validateStatus: () => true,
+      },
+    );
+    // 401 = the refresh token was rejected; 400 = it was malformed. Both are
+    // definitive — no amount of retrying will help.
+    if (res.status === 401 || res.status === 400) return { result: 'invalid' };
+    if (res.status < 200 || res.status >= 300) return { result: 'error' };
+
+    const accessToken = res.data?.tokens?.accessToken;
+    if (!accessToken) return { result: 'error' };
+    const expiresAt = res.data?.tokens?.expiresAt;
+    setAccessToken(accessToken);
+    handlers?.persistTokens({
+      accessToken,
+      refreshToken: res.data?.tokens?.refreshToken ?? refreshToken,
+      expiresAt,
+    });
+    return { result: 'ok', accessToken };
+  } catch (e) {
+    // Network error / timeout — transient. Keep the tokens.
+    logger.warn('AUTH refresh transient failure — keeping session', e);
+    return { result: 'error' };
+  }
+}
+
+/**
+ * Renew the access token, sharing one in-flight request between all callers.
+ * Exposed so the app can refresh PROACTIVELY on cold start: `GET /api/auth/me`
+ * answers 200 `{ authenticated:false }` (never 401) once the access token has
+ * lapsed, so a reactive-only refresh would never fire at launch.
+ */
+export function refreshSession(): Promise<RefreshOutcome> {
+  if (!refreshPromise) {
+    refreshPromise = runRefresh().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
 }
 
 authClient.interceptors.response.use(
@@ -98,19 +162,22 @@ authClient.interceptors.response.use(
 
     if (status === 401 && original && !original._retry && !isExempt(original.url) && handlers) {
       original._retry = true;
-      try {
-        refreshPromise = refreshPromise ?? runRefresh();
-        const newToken = await refreshPromise;
-        refreshPromise = null;
+      const outcome = await refreshSession();
+      if (outcome.result === 'ok') {
         original.headers = original.headers ?? {};
-        original.headers.Authorization = `Bearer ${newToken}`;
+        original.headers.Authorization = `Bearer ${outcome.accessToken}`;
         return authClient(original);
-      } catch (refreshErr) {
-        refreshPromise = null;
-        logger.warn('AUTH refresh failed — signing out', refreshErr);
-        handlers.onAuthFailure();
-        return Promise.reject(toApiError(error));
       }
+      // Only a definitive rejection ends the session. A transient failure falls
+      // through to the normal error path with the tokens left intact, so the next
+      // request (or the next launch) can try again.
+      if (outcome.result === 'invalid') {
+        logger.warn('AUTH refresh token rejected — signing out');
+        handlers.onAuthFailure();
+      } else {
+        logger.warn('AUTH refresh unavailable — keeping session', original.url);
+      }
+      return Promise.reject(toApiError(error));
     }
 
     // No response AND no connection established (the server's intermittent connect
