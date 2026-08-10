@@ -1,4 +1,4 @@
 export { RootNavigator } from './RootNavigator';
-export { AuthNavigator } from './AuthNavigator';
+export { AuthNavigator, signInRouteName } from './AuthNavigator';
 export { linking } from './linking';
 export * from './types';

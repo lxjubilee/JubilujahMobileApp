@@ -15,7 +15,7 @@ import {
   fetchEntitlement,
 } from '@/redux';
 import { ThemeProvider } from '@/context';
-import { RootNavigator, AuthNavigator } from '@/navigation';
+import { RootNavigator, AuthNavigator, signInRouteName } from '@/navigation';
 import {
   usePlayerSync,
   useListeningAnalytics,
@@ -85,8 +85,8 @@ const RootGate: React.FC = () => {
     return <RootNavigator />;
   }
 
-  // Signed out / never signed in: Sign In (or first-run Welcome slides).
-  return <AuthNavigator initialRoute={hasOnboarded ? 'SignIn' : 'Welcome'} />;
+  // Signed out / never signed in: the Jubilee Door (or first-run Welcome slides).
+  return <AuthNavigator initialRoute={hasOnboarded ? signInRouteName() : 'Welcome'} />;
 };
 
 export default function App() {

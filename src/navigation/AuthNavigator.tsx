@@ -5,8 +5,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '@/context';
 import { storage, STORAGE_KEYS } from '@/services/storage';
+import { CONFIG } from '@/constants';
 import { Welcome } from '@/screens/Onboarding/Welcome';
 import {
+  JubileeDoorScreen,
   SignInScreen,
   TwoFactorScreen,
   SignUpScreen,
@@ -20,22 +22,26 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 type WelcomeNav = NativeStackNavigationProp<AuthStackParamList, 'Welcome'>;
 
-/** Wraps the welcome slides: advancing marks onboarding done + goes to Sign In. */
+/** Where "signed out" lands — the Jubilee Door, or the legacy sign-in screen. */
+export const signInRouteName = (): 'JubileeDoor' | 'SignIn' =>
+  CONFIG.FEATURE_JUBILEE_DOOR ? 'JubileeDoor' : 'SignIn';
+
+/** Wraps the welcome slides: advancing marks onboarding done + opens the door. */
 const WelcomeRoute: React.FC = () => {
   const navigation = useNavigation<WelcomeNav>();
   return (
     <Welcome
       onGetStarted={() => {
         void storage.setItem(STORAGE_KEYS.ONBOARDING_DONE, true);
-        navigation.navigate('SignIn');
+        navigation.navigate(signInRouteName());
       }}
     />
   );
 };
 
 interface AuthNavigatorProps {
-  /** First-run starts at Welcome; returning/signed-out users at Sign In. */
-  initialRoute: 'Welcome' | 'SignIn';
+  /** First-run starts at Welcome; returning/signed-out users at the door. */
+  initialRoute: 'Welcome' | 'JubileeDoor' | 'SignIn';
 }
 
 /**
@@ -60,6 +66,7 @@ export const AuthNavigator: React.FC<AuthNavigatorProps> = ({ initialRoute }) =>
     <NavigationContainer theme={navTheme}>
       <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Welcome" component={WelcomeRoute} />
+        <Stack.Screen name="JubileeDoor" component={JubileeDoorScreen} />
         <Stack.Screen name="SignIn" component={SignInScreen} />
         <Stack.Screen name="TwoFactor" component={TwoFactorScreen} />
         <Stack.Screen name="SignUp" component={SignUpScreen} />

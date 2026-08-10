@@ -1,3 +1,4 @@
+export { JubileeDoorScreen } from './door';
 export { SignInScreen } from './SignInScreen';
 export { TwoFactorScreen } from './TwoFactorScreen';
 export { SignUpScreen } from './SignUpScreen';
