@@ -206,6 +206,19 @@
       "resendIn": "Resend in {{seconds}}s",
       "failed": "Verification failed. Please try again.",
       "resendFailed": "Could not resend the code."
+    },
+    "captcha": {
+      "retry": "Couldn't load verification. Tap to retry."
+    },
+    "door": {
+      "a11y": {
+        "back": "Back",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
+        "dobDay": "Day",
+        "dobMonth": "Month",
+        "dobYear": "Year"
+      }
     }
   },
   "errors": {

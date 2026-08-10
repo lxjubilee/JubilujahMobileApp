@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Screen, AppText, IconButton, PasswordInput } from '@/components/common';
 import { useAppDispatch, useAppSelector } from '@/hooks';
 import { changePassword } from '@/redux';
+import { passwordsMatch } from '@/utils';
 import type { PlaylistsStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<PlaylistsStackParamList>;
@@ -27,7 +28,7 @@ export const ChangePasswordScreen: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
 
-  const matches = next.length >= 8 && next === confirm;
+  const matches = passwordsMatch(next, confirm);
   const canSubmit = current.length > 0 && matches && !submitting;
 
   const onSubmit = async () => {

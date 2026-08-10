@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import { useTranslation } from 'react-i18next';
 import { AppText } from '@/components/common';
 import { CONFIG } from '@/constants';
 import { logger } from '@/utils';
@@ -25,6 +26,7 @@ type Status = 'loading' | 'ready' | 'error';
  * logged, and a visible "couldn't load — tap to retry" state replaces the blank.
  */
 export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({ onToken, onError }) => {
+  const { t } = useTranslation();
   const siteKey = CONFIG.TURNSTILE_SITE_KEY;
   const [status, setStatus] = useState<Status>('loading');
   // Bump to force-remount the WebView for a clean retry.
@@ -127,9 +129,9 @@ export const TurnstileWidget: React.FC<TurnstileWidgetProps> = ({ onToken, onErr
           {status === 'loading' ? (
             <ActivityIndicator color="#8A8A99" />
           ) : (
-            <Pressable hitSlop={8} onPress={retry}>
+            <Pressable hitSlop={8} onPress={retry} accessibilityRole="button">
               <AppText variant="bodySm" color="textMuted">
-                Couldn’t load verification. Tap to retry.
+                {t('auth.captcha.retry')}
               </AppText>
             </Pressable>
           )}

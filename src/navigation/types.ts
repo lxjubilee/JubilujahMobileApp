@@ -44,7 +44,8 @@ export type AuthStackParamList = {
   TwoFactor: undefined;
   SignUp: undefined;
   VerifySignup: { verificationGuid: string; email: string };
-  ForgotPassword: undefined;
+  /** `email` pre-fills the field when the door hands off a typed address. */
+  ForgotPassword: { email?: string } | undefined;
   PrivacyPolicy: undefined;
   TermsOfUse: undefined;
 };

@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { AppText, BrandLogo, IconButton, PasswordInput } from '@/components/common';
 import { useAppDispatch } from '@/hooks';
 import { requestSignup } from '@/redux';
+import { MIN_AGE, isEmail, isOldEnough, passwordsMatch } from '@/utils';
 import type { AuthStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<AuthStackParamList, 'SignUp'>;
@@ -28,16 +29,6 @@ const MUTED = '#8A8A99';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const daysInMonth = (year: number, monthIdx: number) => new Date(year, monthIdx + 1, 0).getDate();
 const formatDob = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
-
-const MIN_AGE = 13;
-/** Whole-year age from a date of birth as of today. */
-const ageFrom = (d: Date): number => {
-  const today = new Date();
-  let age = today.getFullYear() - d.getFullYear();
-  const m = today.getMonth() - d.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age -= 1;
-  return age;
-};
 
 /**
  * Create-account UI. The backend signup contract isn't available yet, so submit
@@ -58,15 +49,15 @@ export const SignUpScreen: React.FC = () => {
   const [notice, setNotice] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const emailValid = /^\S+@\S+\.\S+$/.test(email.trim());
-  const passwordsMatch = password.length >= 8 && password === confirm;
-  const ageOk = dob != null && ageFrom(dob) >= MIN_AGE;
+  const emailValid = isEmail(email);
+  const pwOk = passwordsMatch(password, confirm);
+  const ageOk = dob != null && isOldEnough(dob);
   const canSubmit =
     firstName.trim().length > 0 &&
     lastName.trim().length > 0 &&
     ageOk &&
     emailValid &&
-    passwordsMatch &&
+    pwOk &&
     agreed &&
     !submitting;
 

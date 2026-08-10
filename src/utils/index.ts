@@ -1,6 +1,20 @@
 export { cdnUrl } from './cdn';
 export { formatDuration, formatCount, truncateTitle } from './format';
 export { logger } from './logger';
+export {
+  EMAIL_RE,
+  MAX_EMAIL_LENGTH,
+  MIN_PASSWORD_LENGTH,
+  MIN_AGE,
+  normalizeEmail,
+  isEmail,
+  isPasswordLongEnough,
+  passwordsMatch,
+  ageFrom,
+  isOldEnough,
+  toIsoDate,
+  fromIsoDate,
+} from './validation';
 
 /** Resolve helper: keep entities by an ordered list of ids. */
 export function pickByIds<T extends { id: string }>(items: T[], ids: string[]): T[] {
