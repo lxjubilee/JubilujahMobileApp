@@ -1,16 +1,43 @@
 import { logger } from '@/utils';
 import { configureApiClient } from '@/services/api/client';
 import { authEndpoints } from './authEndpoints';
-import { isTwoFactor } from './authDto';
+import { classifySignin, type LinkedProfile } from './authOutcome';
+import type { LookupResponseDTO } from './authDto';
 import { AuthUser, mapUser } from './authMappers';
 import { tokenStore } from './tokenStore';
 import { buildDeviceInfo } from './deviceInfo';
 import { configureAuthClient, refreshSession } from './authClient';
 import { clearSessionCookies } from './cookieJar';
 
+/**
+ * What a sign-in attempt resolved to. Beyond the original two outcomes, the one
+ * door adds the two 200-with-`success:false` routing answers.
+ */
 export type SignInResult =
   | { kind: 'authenticated'; user: AuthUser }
-  | { kind: '2fa'; verificationGuid: string };
+  | { kind: '2fa'; verificationGuid: string }
+  | { kind: 'needsProfile'; profile: LinkedProfile }
+  | { kind: 'redirectSignup' }
+  | { kind: 'unrecognized'; message?: string };
+
+/** Arguments for `signIn`. The one-door fields are inert outside SSO login mode. */
+export interface SignInArgs {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+  cfTurnstileToken?: string;
+  /** Inline 2FA completion instead of a separate /verify-login call. */
+  verificationGuid?: string;
+  verificationCode?: string;
+  /** Verify the Jubilee ID credential and report where to go, creating nothing. */
+  preview?: true;
+  /** Create the missing local account for a confirmed Jubilee ID. */
+  provision?: true;
+  firstName?: string;
+  lastName?: string;
+  /** `YYYY-MM-DD` — build it with `toIsoDate`, not `toISOString`. */
+  dateOfBirth?: string;
+}
 
 export interface SignupChallenge {
   verificationGuid: string;
@@ -43,28 +70,56 @@ export function initAuthClient(onAuthFailure: () => void): void {
 }
 
 export const authService = {
-  /** Email + password sign-in. Resolves to tokens, or a 2FA challenge. */
-  async signIn(
-    email: string,
-    password: string,
-    rememberMe: boolean,
-    cfTurnstileToken?: string,
-  ): Promise<SignInResult> {
+  /**
+   * Which door the given email should open. Submit-only — see
+   * `authEndpoints.lookup` for why this must not run per keystroke.
+   */
+  lookupEmail(email: string): Promise<LookupResponseDTO> {
+    return authEndpoints.lookup(email.trim());
+  },
+
+  /**
+   * Email + password sign-in. Resolves to tokens, a 2FA challenge, or one of the
+   * one-door routing answers.
+   *
+   * Tokens are persisted ONLY on the authenticated branch: a `preview`, a
+   * `needsProfile` and a `redirectSignup` must all leave the token store alone.
+   */
+  async signIn(args: SignInArgs): Promise<SignInResult> {
     const deviceInfo = await buildDeviceInfo();
     const res = await authEndpoints.signin({
-      email,
-      password,
-      rememberMe,
-      cfTurnstileToken,
+      email: args.email.trim(),
+      password: args.password,
+      rememberMe: args.rememberMe,
+      cfTurnstileToken: args.cfTurnstileToken,
+      verificationGuid: args.verificationGuid,
+      verificationCode: args.verificationCode,
+      preview: args.preview,
+      provision: args.provision,
+      first_name: args.firstName,
+      last_name: args.lastName,
+      date_of_birth: args.dateOfBirth,
       deviceInfo,
     });
-    if (isTwoFactor(res)) {
-      return { kind: '2fa', verificationGuid: res.verificationGuid };
+
+    const outcome = classifySignin(res);
+    switch (outcome.kind) {
+      case 'authenticated': {
+        await tokenStore.save(outcome.tokens);
+        const user = mapUser(outcome.user);
+        await tokenStore.saveUser(user);
+        return { kind: 'authenticated', user };
+      }
+      case '2fa':
+        return { kind: '2fa', verificationGuid: outcome.verificationGuid };
+      case 'needsProfile':
+        return { kind: 'needsProfile', profile: outcome.profile };
+      case 'redirectSignup':
+        return { kind: 'redirectSignup' };
+      default:
+        logger.warn('AUTH signin: unrecognized response shape', outcome.message ?? '');
+        return { kind: 'unrecognized', message: outcome.message };
     }
-    await tokenStore.save(res.tokens);
-    const user = mapUser(res.user);
-    await tokenStore.saveUser(user);
-    return { kind: 'authenticated', user };
   },
 
   /** Complete a 2FA challenge with the emailed OTP code. */
@@ -94,12 +149,23 @@ export const authService = {
     return { verificationGuid: res.verificationGuid, email: res.email };
   },
 
-  /** Phase 2: confirm the code → account created + tokens issued (logged in). */
-  async verifySignup(verificationGuid: string, verificationCode: string): Promise<AuthUser> {
+  /**
+   * Phase 2: confirm the code → account created + tokens issued (logged in).
+   *
+   * Answers 201 with no `success` field, so the presence of tokens is the only
+   * reliable signal. `rememberMe` is threaded through rather than hardcoded —
+   * the web forgets to send it here, which silently downgrades every brand-new
+   * account from a 1-year refresh token to a 30-day one despite the checkbox.
+   */
+  async verifySignup(
+    verificationGuid: string,
+    verificationCode: string,
+    rememberMe: boolean,
+  ): Promise<AuthUser> {
     const res = await authEndpoints.verifySignup({
       verificationGuid,
       verificationCode: verificationCode.trim(),
-      rememberMe: true,
+      rememberMe,
     });
     await tokenStore.save(res.tokens);
     const user = mapUser(res.user);
@@ -110,6 +176,15 @@ export const authService = {
   /** Resend the sign-up code for an in-progress sign-up. */
   resendSignup(verificationGuid: string) {
     return authEndpoints.sendSignupVerification(verificationGuid);
+  },
+
+  /**
+   * Resend the sign-in 2FA code. Note this endpoint answers 423 (not 429) once
+   * the resend cap is hit, and that 423 LOCKS THE ACCOUNT for an hour — callers
+   * must stop offering the button rather than treating it as a normal failure.
+   */
+  resendLoginCode(email: string, verificationGuid: string) {
+    return authEndpoints.sendLoginVerification(email.trim(), verificationGuid);
   },
 
   // --- Password / account ---

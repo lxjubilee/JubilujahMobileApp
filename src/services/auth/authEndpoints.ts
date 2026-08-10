@@ -3,6 +3,7 @@ import {
   ChangePasswordRequest,
   ChangePasswordResponseDTO,
   ForgotPasswordResponseDTO,
+  LookupResponseDTO,
   MeResponseDTO,
   RefreshResponseDTO,
   ResendResponseDTO,
@@ -21,6 +22,18 @@ import {
  * (Bearer auth + transparent 401 refresh).
  */
 export const authEndpoints = {
+  // --- One door ---
+  /**
+   * Identity probe. Unauthenticated and cheap, but it shares the `/api/auth/*`
+   * budget of 50 requests per 15 minutes per IP — and on mobile, carrier CGNAT
+   * puts many users behind one address. Call this on SUBMIT only, never while
+   * the user types.
+   */
+  lookup: (email: string) =>
+    authClient
+      .get<LookupResponseDTO>('/api/auth/lookup', { params: { email } })
+      .then((r) => r.data),
+
   // --- Sign in / 2FA ---
   signin: (body: SigninRequest) =>
     authClient.post<SigninResponseDTO>('/api/auth/signin', body).then((r) => r.data),

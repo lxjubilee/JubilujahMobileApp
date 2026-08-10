@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { authService } from '@/services/auth';
-import type { AuthUser } from '@/services/auth';
+import type { AuthUser, SignInArgs } from '@/services/auth';
 import type { ApiError } from '@/services/api';
 
 export type { AuthUser };
@@ -40,26 +40,24 @@ export const restoreSession = createAsyncThunk('auth/restore', () =>
   authService.restoreSession(),
 );
 
-/** Email + password sign-in. May resolve to a 2FA challenge instead of a user. */
+/**
+ * Email + password sign-in. May resolve to a 2FA challenge, or to one of the
+ * one-door routing answers (`needsProfile` / `redirectSignup`) instead of a user.
+ */
 export const signIn = createAsyncThunk(
   'auth/signIn',
-  (
-    args: { email: string; password: string; rememberMe?: boolean; cfTurnstileToken?: string },
-    { rejectWithValue },
-  ) =>
-    authService
-      .signIn(args.email.trim(), args.password, args.rememberMe ?? true, args.cfTurnstileToken)
-      .catch((e) => rejectWithValue(errMessage(e))),
+  (args: SignInArgs, { rejectWithValue }) =>
+    authService.signIn(args).catch((e) => rejectWithValue(errMessage(e))),
 );
 
 /** Complete a 2FA challenge with the emailed OTP code. Email + guid come from `pending2FA`. */
 export const verify2FA = createAsyncThunk(
   'auth/verify2FA',
-  (args: { code: string; trustDevice?: boolean }, { getState, rejectWithValue }) => {
+  (args: { code: string; rememberMe?: boolean }, { getState, rejectWithValue }) => {
     const { pending2FA } = (getState() as { auth: AuthState }).auth;
     if (!pending2FA) return rejectWithValue('Your verification session expired. Please sign in again.');
     return authService
-      .verify2FA(pending2FA.email, args.code.trim(), pending2FA.verificationGuid, args.trustDevice ?? true)
+      .verify2FA(pending2FA.email, args.code.trim(), pending2FA.verificationGuid, args.rememberMe ?? true)
       .catch((e) => rejectWithValue(errMessage(e)));
   },
 );
@@ -78,9 +76,12 @@ export const requestSignup = createAsyncThunk(
 /** Sign-up phase 2: confirm the code → account created + tokens issued (logged in). */
 export const verifySignup = createAsyncThunk(
   'auth/verifySignup',
-  (args: { verificationGuid: string; verificationCode: string }, { rejectWithValue }) =>
+  (
+    args: { verificationGuid: string; verificationCode: string; rememberMe?: boolean },
+    { rejectWithValue },
+  ) =>
     authService
-      .verifySignup(args.verificationGuid, args.verificationCode)
+      .verifySignup(args.verificationGuid, args.verificationCode, args.rememberMe ?? true)
       .catch((e) => rejectWithValue(errMessage(e))),
 );
 
@@ -118,7 +119,17 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    /** Clears auth locally without a network call (used on refresh failure). */
+    /**
+     * Clears auth locally without a network call (used on refresh failure).
+     *
+     * DO NOT rename, move or re-create this action (or `signOut` /
+     * `deleteAccount`, or the slice's `name: 'auth'`). Four other modules match
+     * on their generated type strings to tear down the rest of the app:
+     * `redux/store/store.ts` (playback queue), `slices/playerSlice.ts`,
+     * `slices/likesSlice.ts` and `slices/entitlementSlice.ts`. A same-named
+     * action on a different slice would emit a different type and silently leave
+     * music playing after sign-out.
+     */
     clearSession(state) {
       state.user = null;
       state.status = 'idle';
@@ -156,19 +167,29 @@ const authSlice = createSlice({
         state.status = 'loading';
         state.error = null;
       })
+      // Exhaustive on purpose. `needsProfile` and `redirectSignup` arrive as HTTP
+      // 200 with `success:false` — they are routing instructions the door acts on
+      // locally, so they must NOT mark the session authenticated and must not
+      // clobber a pending 2FA challenge.
       .addCase(signIn.fulfilled, (state, action) => {
-        if (action.payload.kind === '2fa') {
-          state.status = 'idle';
-          // verify-login needs the email; carry it from the sign-in args.
-          state.pending2FA = {
-            verificationGuid: action.payload.verificationGuid,
-            email: action.meta.arg.email.trim(),
-          };
-        } else {
-          state.user = action.payload.user;
-          state.status = 'authenticated';
-          state.pending2FA = null;
-          state.profileGatePending = false; // fresh sign-in → straight to Home
+        switch (action.payload.kind) {
+          case 'authenticated':
+            state.user = action.payload.user;
+            state.status = 'authenticated';
+            state.pending2FA = null;
+            state.profileGatePending = false; // fresh sign-in → straight to Home
+            break;
+          case '2fa':
+            state.status = 'idle';
+            // verify-login needs the email; carry it from the sign-in args.
+            state.pending2FA = {
+              verificationGuid: action.payload.verificationGuid,
+              email: action.meta.arg.email.trim(),
+            };
+            break;
+          default:
+            state.status = 'idle';
+            break;
         }
       })
       .addCase(signIn.rejected, (state, action) => {

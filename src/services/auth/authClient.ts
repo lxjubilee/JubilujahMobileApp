@@ -54,18 +54,34 @@ export const configureAuthClient = (h: SessionHandlers): void => {
   handlers = h;
 };
 
-const toApiError = (error: AxiosError): ApiError => ({
-  status: error.response?.status ?? 0,
-  message:
-    (error.response?.data as { message?: string; error?: string })?.message ??
-    (error.response?.data as { error?: string })?.error ??
-    error.message ??
-    'Network request failed',
-  raw: error.response?.data,
-});
+const toApiError = (error: AxiosError): ApiError => {
+  const data = error.response?.data;
+  // The global rate limiter answers 429 with a PLAIN TEXT body, so `data` is not
+  // always an object — read the JSON fields only when it actually is one.
+  const body =
+    typeof data === 'object' && data !== null
+      ? (data as { message?: string; error?: string })
+      : null;
+  return {
+    status: error.response?.status ?? 0,
+    message: body?.message ?? body?.error ?? error.message ?? 'Network request failed',
+    raw: data,
+  };
+};
 
-// Paths that must never trigger a refresh-retry (the auth handshake itself).
-const REFRESH_EXEMPT = ['/api/auth/signin', '/api/auth/refresh', '/api/auth/verify-login'];
+// The pre-auth handshake: nothing here has a session to renew, so a refresh-retry
+// would be pointless at best and would spend a request from the shared
+// rate-limit budget at worst.
+const REFRESH_EXEMPT = [
+  '/api/auth/lookup',
+  '/api/auth/signin',
+  '/api/auth/signup',
+  '/api/auth/verify-signup',
+  '/api/auth/verify-login',
+  '/api/auth/send-signup-verification',
+  '/api/auth/send-login-verification',
+  '/api/auth/refresh',
+];
 const isExempt = (url?: string) => !!url && REFRESH_EXEMPT.some((p) => url.includes(p));
 
 authClient.interceptors.request.use(async (config) => {
