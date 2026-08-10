@@ -63,14 +63,44 @@ export const isOldEnough = (dob: Date): boolean => ageFrom(dob) >= MIN_AGE;
 export const toIsoDate = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-/** Parse a `YYYY-MM-DD` string (e.g. the SSO's `profile.date_of_birth`) into a local Date. */
+/**
+ * Parse a date the identity authority sent us (`profile.date_of_birth`) into a
+ * local Date, for pre-filling the date-of-birth field.
+ *
+ * Deliberately permissive. The server normalises to `YYYY-MM-DD`, but its own
+ * fallback path can emit other shapes, and a stricter parser fails in the worst
+ * possible way: it returns null, the field renders empty, and the user is asked
+ * to retype a date the server already knows — with nothing logged.
+ *
+ * A leading `YYYY-MM-DD` is taken **verbatim**, never via `new Date()` + local
+ * parts: `1990-12-10T00:00:00.000Z` parsed as an instant lands on 9 December for
+ * everyone west of UTC. The calendar date the authority stored is the answer,
+ * not the instant it happens to correspond to here.
+ */
 export const fromIsoDate = (value: string | null | undefined): Date | null => {
   if (!value) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
-  if (!m) return null;
-  const [, y, mo, d] = m;
-  const date = new Date(Number(y), Number(mo) - 1, Number(d));
-  // Reject impossible dates that Date silently rolls over (e.g. 2001-02-30).
-  if (date.getFullYear() !== Number(y) || date.getMonth() !== Number(mo) - 1) return null;
-  return date;
+  const raw = String(value).trim();
+  if (!raw) return null;
+
+  // `YYYY-MM-DD` at the start, whatever follows it (a time, a zone, nothing).
+  // `-` and `/` are both accepted as separators.
+  const m = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/.exec(raw);
+  if (m) {
+    const [, y, mo, d] = m;
+    const date = new Date(Number(y), Number(mo) - 1, Number(d));
+    // Reject impossible dates that Date silently rolls over (e.g. 2001-02-30).
+    if (
+      date.getFullYear() === Number(y) &&
+      date.getMonth() === Number(mo) - 1 &&
+      date.getDate() === Number(d)
+    ) {
+      return date;
+    }
+    return null;
+  }
+
+  // Last resort for anything else parseable (e.g. "Dec 10 1990").
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
 };

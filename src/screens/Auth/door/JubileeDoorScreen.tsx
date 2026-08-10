@@ -8,7 +8,15 @@ import { useAppDispatch } from '@/hooks';
 import { signIn, verify2FA, verifySignup } from '@/redux';
 import { authService, readAuthError, type LookupResponseDTO } from '@/services/auth';
 import { CONFIG } from '@/constants';
-import { isEmail, isOldEnough, isPasswordLongEnough, logger, normalizeEmail, toIsoDate } from '@/utils';
+import {
+  fromIsoDate,
+  isEmail,
+  isOldEnough,
+  isPasswordLongEnough,
+  logger,
+  normalizeEmail,
+  toIsoDate,
+} from '@/utils';
 import type { AuthStackParamList } from '@/navigation/types';
 import { backTargetFor, doorReducer, initialDoorState } from './doorMachine';
 import { EmailStep } from './steps/EmailStep';
@@ -239,10 +247,17 @@ export const JubileeDoorScreen: React.FC = () => {
             verificationGuid: result.payload.verificationGuid,
             info: t('auth.door.info.loginCodeSent'),
           });
-        case 'needsProfile':
+        case 'needsProfile': {
+          const { profile } = result.payload;
+          // A date the authority sent but we could not read would silently show
+          // an empty field and ask the user to retype what the server knows.
+          if (profile.dateOfBirth && !fromIsoDate(profile.dateOfBirth)) {
+            logger.warn('door: unparseable date_of_birth from the identity authority', profile.dateOfBirth);
+          }
           heldSsoPassword.current = password;
           setPassword('');
-          return send({ type: 'needsProfile', profile: result.payload.profile });
+          return send({ type: 'needsProfile', profile });
+        }
         case 'redirectSignup':
           setPassword('');
           return send({ type: 'redirectSignup' });

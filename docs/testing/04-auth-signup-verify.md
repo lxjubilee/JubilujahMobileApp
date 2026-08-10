@@ -280,6 +280,38 @@ entered; the code digits are cleared. This is a correction, not a restart.
 
 ---
 
+### JLM-SGNP-026 — A date of birth held by the identity authority pre-fills the field
+**Category:** Functional, Positive, Integration · **Priority:** P0 · **Platform:** Both
+**Preconditions:** `AUTH_LOGIN_MODE=sso`; a Jubilee ID that HAS a date of birth on record
+and no JubiLujah account.
+**Steps:**
+1. Enter that email, tap Continue, enter the Jubilee ID password, tap Continue.
+2. Inspect the `profile.date_of_birth` on the `/signin` response, then the DD/MM/YYYY field.
+**Expected Result:** The three segments are pre-filled with exactly the calendar date the
+response carried — the user is never asked to retype a date the server already knows.
+
+The server normalises to `YYYY-MM-DD`, but its fallback path can emit other shapes, so the
+client accepts a leading `YYYY-MM-DD` from any ISO-ish string. Regression risk: an earlier
+build accepted *only* the exact form and returned null for anything else, silently rendering
+an empty field. If the field is empty here, check the device log for
+"unparseable date_of_birth from the identity authority" — that warning exists so this can
+never fail silently again.
+
+---
+
+### JLM-SGNP-027 — A pre-filled date of birth is not shifted by the device time zone
+**Category:** Boundary, Integration · **Priority:** P1 · **Platform:** Both
+**Preconditions:** As above, with a Jubilee ID whose date of birth is the **1st of a month**.
+Set the device time zone well west of UTC (e.g. America/Los_Angeles).
+**Steps:**
+1. Reach the create-linked step and read the pre-filled date.
+**Expected Result:** The 1st, not the last day of the previous month. If the authority sends
+a timestamp (`2000-01-01T00:00:00.000Z`), the calendar date it names is the answer — parsing
+it as an *instant* and reading local parts lands a day earlier for every user west of UTC,
+which also straddles the 13+ boundary.
+
+---
+
 ### JLM-SGNP-025 — Linked-account creation asks for details but never a password
 **Category:** Functional, Security · **Priority:** P0 · **Platform:** Both
 **Preconditions:** `AUTH_LOGIN_MODE=sso`; reached **Create your JubiLujah account** via
