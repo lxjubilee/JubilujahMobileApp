@@ -37,15 +37,18 @@ export type RootStackParamList = {
   MusicPlayer: undefined;
 };
 
-/** Unauthenticated flow: welcome slides / profile gate → sign in → 2FA; plus sign up. */
+/**
+ * Unauthenticated flow: welcome slides → the Jubilee Door.
+ *
+ * Sign in, sign up, the 2FA challenge and the sign-up verification are all
+ * steps INSIDE JubileeDoor rather than routes, so the flow cannot be entered
+ * halfway through and the Turnstile WebView is never left mounted under a
+ * pushed screen.
+ */
 export type AuthStackParamList = {
   Welcome: undefined;
   /** The email-first Jubilee Door. `email` pre-fills the first step. */
   JubileeDoor: { email?: string } | undefined;
-  SignIn: undefined;
-  TwoFactor: undefined;
-  SignUp: undefined;
-  VerifySignup: { verificationGuid: string; email: string };
   /** `email` pre-fills the field when the door hands off a typed address. */
   ForgotPassword: { email?: string } | undefined;
   PrivacyPolicy: undefined;

@@ -16,8 +16,6 @@ export const CONFIG = {
   TURNSTILE_SITE_KEY: ENV.TURNSTILE_SITE_KEY,
   /** Origin the Turnstile widget runs under (allow-listed for the site key). */
   TURNSTILE_BASE_URL: ENV.TURNSTILE_BASE_URL,
-  /** Email-first Jubilee Door instead of the separate sign-in / sign-up screens. */
-  FEATURE_JUBILEE_DOOR: ENV.FEATURE_JUBILEE_DOOR,
   /**
    * Request timeout. Set high because `api.jubilujah.com` intermittently stalls
    * TCP connect by ~15s (server/infra issue). A single-use Turnstile token means
