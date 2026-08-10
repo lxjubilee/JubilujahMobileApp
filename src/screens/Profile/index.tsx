@@ -82,7 +82,7 @@ export const ProfileScreen: React.FC = () => {
           <AppText variant="h2" style={styles.name}>
             {user?.displayName ?? t('profile.guest')}
           </AppText>
-          <AppText variant="bodySm" color="textMuted">
+          <AppText variant="bodySm" color="textMuted" style={styles.email}>
             {user?.email ?? t('profile.notSignedIn')}
           </AppText>
         </View>
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingTop: 8 },
   title: { marginLeft: 8 },
   scroll: { paddingBottom: 48 },
-  body: { alignItems: 'center', marginTop: 40 },
+  body: { alignItems: 'center', marginTop: 40, paddingHorizontal: 24 },
   avatar: { width: 110, height: 110, borderRadius: 55, alignItems: 'center', justifyContent: 'center' },
   avatarInitial: {
     color: '#0B0B0F',
@@ -263,7 +263,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
   },
-  name: { marginTop: 16 },
+  // `alignSelf: 'stretch'` deliberately opts these two out of the parent's
+  // `alignItems: 'center'`. Centered children are sized to their INTRINSIC width,
+  // and on Android that measurement can round short — clipping the tail at the
+  // last break opportunity, which for an address is the dot before the TLD
+  // ("jaigkv@gmail.com" rendering as "jaigkv@gmail"). Stretching to the full
+  // available width and centering the glyphs instead removes the guesswork; the
+  // display name gets the same treatment because it falls back to the email when
+  // the account has no first/last name.
+  name: { marginTop: 16, alignSelf: 'stretch', textAlign: 'center' },
+  email: { alignSelf: 'stretch', textAlign: 'center' },
   shortcuts: { flexDirection: 'row', gap: 12, marginTop: 28, paddingHorizontal: 16 },
   shortcut: { flex: 1, alignItems: 'center', paddingVertical: 16, paddingHorizontal: 8 },
   shortcutLabel: { marginTop: 8 },
