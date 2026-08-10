@@ -79,8 +79,6 @@ const RootGate: React.FC = () => {
 
   if (status === 'restoring' || hasOnboarded === null) return null;
 
-  // The "Choose your profile" gate is disabled for now (functionality pending);
-  // ChooseProfileScreen is kept but unused. Authenticated users go to Home.
   if (isAuthenticated) {
     return <RootNavigator />;
   }

@@ -8,7 +8,6 @@ export const ROUTES = {
   MUSIC_PLAYER: 'MusicPlayer',
   ALBUM_DETAILS: 'AlbumDetails',
   ARTIST_DETAILS: 'ArtistDetails',
-  AUTH: 'Auth',
 
   // Bottom tabs
   HOME_TAB: 'HomeTab',
@@ -23,8 +22,4 @@ export const ROUTES = {
   PLAYLISTS: 'Playlists',
   DOWNLOADS: 'Downloads',
   PROFILE: 'Profile',
-
-  // Auth
-  LOGIN: 'Login',
-  SIGNUP: 'Signup',
 } as const;

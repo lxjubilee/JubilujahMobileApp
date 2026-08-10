@@ -11,16 +11,10 @@ interface AuthState {
   user: AuthUser | null;
   status: AuthStatus;
   error: string | null;
-  /** Set when sign-in returned a 2FA challenge; drives the TwoFactor screen. */
+  /** Set when sign-in returned a 2FA challenge; carries the email verify-login needs. */
   pending2FA: { verificationGuid: string; email: string } | null;
-  /** Set after sign-up phase 1; drives the VerifySignup screen. */
+  /** Set after sign-up phase 1. */
   pendingSignup: { verificationGuid: string; email: string } | null;
-  /**
-   * True only when a session was *restored* on app launch (cold start) — the
-   * "Choose your profile" gate then shows once. A fresh in-session sign-in skips
-   * the gate and goes straight to Home.
-   */
-  profileGatePending: boolean;
 }
 
 const initialState: AuthState = {
@@ -29,7 +23,6 @@ const initialState: AuthState = {
   error: null,
   pending2FA: null,
   pendingSignup: null,
-  profileGatePending: false,
 };
 
 const errMessage = (e: unknown): string =>
@@ -136,14 +129,9 @@ const authSlice = createSlice({
       state.error = null;
       state.pending2FA = null;
       state.pendingSignup = null;
-      state.profileGatePending = false;
     },
     clearAuthError(state) {
       state.error = null;
-    },
-    /** User picked a profile on the launch gate → proceed to the app. */
-    markProfileSelected(state) {
-      state.profileGatePending = false;
     },
   },
   extraReducers: (builder) => {
@@ -155,8 +143,6 @@ const authSlice = createSlice({
       .addCase(restoreSession.fulfilled, (state, action) => {
         state.user = action.payload;
         state.status = action.payload ? 'authenticated' : 'idle';
-        // Only a restored (cold-start) session shows the profile gate.
-        state.profileGatePending = action.payload != null;
       })
       .addCase(restoreSession.rejected, (state) => {
         state.user = null;
@@ -177,7 +163,6 @@ const authSlice = createSlice({
             state.user = action.payload.user;
             state.status = 'authenticated';
             state.pending2FA = null;
-            state.profileGatePending = false; // fresh sign-in → straight to Home
             break;
           case '2fa':
             state.status = 'idle';
@@ -205,7 +190,6 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.status = 'authenticated';
         state.pending2FA = null;
-        state.profileGatePending = false; // fresh sign-in → straight to Home
       })
       .addCase(verify2FA.rejected, (state, action) => {
         state.status = 'error';
@@ -242,7 +226,6 @@ const authSlice = createSlice({
         state.status = 'authenticated';
         state.pending2FA = null;
         state.pendingSignup = null;
-        state.profileGatePending = false;
       })
       .addCase(verifySignup.rejected, (state, action) => {
         state.status = 'error';
@@ -253,5 +236,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearSession, clearAuthError, markProfileSelected } = authSlice.actions;
+export const { clearSession, clearAuthError } = authSlice.actions;
 export default authSlice.reducer;

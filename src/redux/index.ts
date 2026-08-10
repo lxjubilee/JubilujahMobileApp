@@ -59,6 +59,5 @@ export {
   deleteAccount,
   clearSession,
   clearAuthError,
-  markProfileSelected,
 } from './slices/authSlice';
 export type { AuthUser, AuthStatus } from './slices/authSlice';
