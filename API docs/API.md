@@ -141,8 +141,12 @@ a preview that returns tokens simply finishes the flow.
 ### Turnstile
 `cfTurnstileToken` is read by **`/signin` only** — not by `/lookup` and not by `/signup`.
 In `sso` mode the server does not verify it at all; in `local` mode it fails **closed** when
-`TURNSTILE_SECRET_KEY` is set. The token is single-use, which is why the app mints it on the
-password steps rather than at the door.
+`TURNSTILE_SECRET_KEY` is set.
+
+The app shows the challenge with the email field, matching the web, and carries the token it
+mints into the `/signin` that follows. Because the token is **single-use**, a failed
+`/signin` has spent it — the door then re-shows the challenge on the password step so a
+retry can mint a fresh one without sending the user back to the start.
 
 ---
 

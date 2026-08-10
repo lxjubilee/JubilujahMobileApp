@@ -15,9 +15,11 @@ Two structural consequences for this suite:
 
 - There is no "Sign In screen" with an email AND a password visible at once, so any case
   asserting on both fields together no longer describes a reachable state.
-- Turnstile moved off the first step onto the two password steps. Only `POST /signin`
-  reads `cfTurnstileToken`, and the token is single-use — minting it at the door and
-  spending it two steps later would expire it.
+- Turnstile sits with the email field on the first step, as it does on the web.
+  `GET /api/auth/lookup` does not read `cfTurnstileToken`, so there it is a client-side
+  gate only; the token it mints is carried forward and spent on the following
+  `POST /signin`. Because that token is single-use, a failed sign-in re-shows the
+  challenge on the password step so a retry can mint a fresh one.
 
 **Superseded — do not run as written:** `JLM-AUTH-002` (CTA gated on email *and*
 password on one screen), `JLM-AUTH-017`, `JLM-AUTH-018` (navigation between the separate
@@ -288,14 +290,16 @@ session memo with no further request.
 
 ---
 
-### JLM-AUTH-026 — Turnstile appears on the password step, not the email step
+### JLM-AUTH-026 — Turnstile renders with the email field and unmounts on leaving it
 **Category:** Security, UI/UX · **Priority:** P1 · **Platform:** Both
 **Preconditions:** `turnstileSiteKey` configured.
 **Steps:**
-1. Observe the email step. Continue to **Welcome back** and observe. Go back to the email step.
-**Expected Result:** No challenge on the email step; the widget renders on the password
-step; leaving that step unmounts the WebView. It must not stay alive behind another step —
-that is what stalls the Android UI thread on the Old Architecture.
+1. Observe the email step. 2. Solve the challenge and Continue to **Welcome back**; observe.
+3. Go back to the email step; observe.
+**Expected Result:** The widget renders directly under the email field. On a successful
+Continue the password step shows **no** challenge — the token is carried forward. Leaving
+the email step unmounts the WebView; it must not stay alive behind another step, which is
+what stalls the Android UI thread on the Old Architecture.
 
 ---
 
@@ -304,20 +308,25 @@ that is what stalls the Android UI thread on the Old Architecture.
 **Preconditions:** `turnstileSiteKey` configured. Block `challenges.cloudflare.com`, or use
 a site key not allow-listed for `turnstileBaseUrl`.
 **Steps:**
-1. Reach the password step. Wait 10 seconds. Enter the password and submit.
+1. Open the door. Wait 10 seconds. Enter an email and tap **Continue**.
 **Expected Result:** After ~8s the gate reports ready and submit proceeds without a token;
 the widget still offers "Tap to retry". Rationale: the server does not verify the token in
 SSO mode, so a challenge that silently renders nothing must not become a wall.
 
 ---
 
-### JLM-AUTH-028 — A single-use Turnstile token is refreshed after a failed attempt
-**Category:** Security, Integration · **Priority:** P1 · **Platform:** Both
-**Preconditions:** `turnstileSiteKey` configured; on the password step with a solved challenge.
+### JLM-AUTH-028 — A failed sign-in re-shows the challenge for a fresh token
+**Category:** Security, Integration · **Priority:** P0 · **Platform:** Both
+**Preconditions:** `turnstileSiteKey` configured; challenge solved at the email step; now on
+the password step, which shows no challenge.
 **Steps:**
-1. Enter a WRONG password and submit. Wait for the error. Enter the correct password and submit.
-**Expected Result:** The first attempt fails inline; the widget remounts and mints a fresh
-token; the second succeeds. The same token is never sent twice.
+1. Enter a WRONG password and submit. Observe the step after the error.
+2. Enter the correct password and submit.
+**Expected Result:** The first attempt fails inline AND a Turnstile widget now appears on
+the password step — the token minted at the email step was single-use and has been spent,
+and the widget that produced it is two steps back. The retry uses the fresh token and
+succeeds. The same token is never sent twice, and the user is never forced back to the
+email step to get one.
 
 ---
 

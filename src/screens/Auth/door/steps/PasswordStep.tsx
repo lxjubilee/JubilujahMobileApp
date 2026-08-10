@@ -28,6 +28,13 @@ interface PasswordStepProps {
   onSubmit: () => void;
   busy: boolean;
   disabled: boolean;
+  /**
+   * Re-show the challenge here. The token minted at the email step is spent by
+   * the `/signin` this step makes, so a failed attempt leaves nothing to retry
+   * with — and the widget that produced it is two steps back. Set after a
+   * failure so the user can mint a fresh one without starting over.
+   */
+  showCaptcha: boolean;
   captchaKey: number;
   onCaptchaToken: (token: string | null) => void;
   onCaptchaReady: (ready: boolean) => void;
@@ -37,12 +44,6 @@ interface PasswordStepProps {
  * The two password steps. They differ only in copy and in whether the
  * remember-me checkbox is offered — `confirm` doesn't ask, because the choice is
  * made a step later when the account is actually created.
- *
- * The Turnstile challenge lives HERE rather than on the email step: only
- * `POST /signin` reads the token, it is single-use and short-lived, and the
- * signup branch never needs one. Minting it on the email step and spending it
- * two screens later is how you get `invalid-input-response`, and gating the one
- * screen every user sees on a WebView is the widest blast radius available.
  */
 export const PasswordStep: React.FC<PasswordStepProps> = ({
   mode,
@@ -56,6 +57,7 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
   onSubmit,
   busy,
   disabled,
+  showCaptcha,
   captchaKey,
   onCaptchaToken,
   onCaptchaReady,
@@ -106,11 +108,14 @@ export const PasswordStep: React.FC<PasswordStepProps> = ({
         />
       ) : null}
 
-      <TurnstileGate
-        resetKey={captchaKey}
-        onToken={onCaptchaToken}
-        onReadyChange={onCaptchaReady}
-      />
+      {showCaptcha ? (
+        <TurnstileGate
+          resetKey={captchaKey}
+          onToken={onCaptchaToken}
+          onReadyChange={onCaptchaReady}
+          style={styles.captcha}
+        />
+      ) : null}
 
       <AuthPrimaryButton
         label={t(`${ns}.submit`)}
@@ -128,5 +133,6 @@ const styles = StyleSheet.create({
   subtitle: { marginTop: 10, marginBottom: 18, lineHeight: 20 },
   field: { marginTop: 18 },
   remember: { marginTop: 14 },
+  captcha: { marginTop: 14 },
   cta: { marginTop: 18 },
 });

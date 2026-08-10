@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AppText } from '@/components/common';
-import { AuthPrimaryButton, AuthTextField } from '@/components/auth';
+import { AuthPrimaryButton, AuthTextField, TurnstileGate } from '@/components/auth';
 
 interface EmailStepProps {
   email: string;
@@ -10,11 +10,19 @@ interface EmailStepProps {
   onSubmit: () => void;
   busy: boolean;
   disabled: boolean;
+  captchaKey: number;
+  onCaptchaToken: (token: string | null) => void;
+  onCaptchaReady: (ready: boolean) => void;
 }
 
 /**
  * The door itself: one email field. What the user types here decides which of
  * the three branches opens, so nothing else is asked for yet.
+ *
+ * The Turnstile challenge sits directly under the field, as it does on the web.
+ * Nothing on this step transmits the token — `/api/auth/lookup` does not read
+ * `cfTurnstileToken` — so here it is purely a client-side gate. The token it
+ * mints is carried forward and spent on the `/signin` that follows.
  */
 export const EmailStep: React.FC<EmailStepProps> = ({
   email,
@@ -22,6 +30,9 @@ export const EmailStep: React.FC<EmailStepProps> = ({
   onSubmit,
   busy,
   disabled,
+  captchaKey,
+  onCaptchaToken,
+  onCaptchaReady,
 }) => {
   const { t } = useTranslation();
 
@@ -45,6 +56,13 @@ export const EmailStep: React.FC<EmailStepProps> = ({
         containerStyle={styles.field}
       />
 
+      <TurnstileGate
+        resetKey={captchaKey}
+        onToken={onCaptchaToken}
+        onReadyChange={onCaptchaReady}
+        style={styles.captcha}
+      />
+
       <AuthPrimaryButton
         label={t('auth.door.email.submit')}
         busyLabel={t('auth.door.email.submitting')}
@@ -64,6 +82,7 @@ export const EmailStep: React.FC<EmailStepProps> = ({
 const styles = StyleSheet.create({
   help: { marginTop: 10, lineHeight: 20 },
   field: { marginTop: 22 },
+  captcha: { marginTop: 6 },
   cta: { marginTop: 18 },
   disclaimer: { marginTop: 16, lineHeight: 18 },
 });

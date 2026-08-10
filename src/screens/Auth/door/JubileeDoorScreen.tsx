@@ -52,9 +52,18 @@ export const JubileeDoorScreen: React.FC = () => {
   /** The Jubilee ID password from the confirm step, replayed to provision. */
   const heldSsoPassword = useRef('');
 
+  // Turnstile is shown with the email field, matching the web. The token it
+  // mints is not read by /api/auth/lookup — it is carried forward and spent on
+  // the /signin the next step makes.
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaReady, setCaptchaReady] = useState(!CONFIG.TURNSTILE_SITE_KEY);
   const [captchaKey, setCaptchaKey] = useState(0);
+  /**
+   * A failed /signin consumes the token, and the widget that produced it is back
+   * on the email step. Re-show it on the password step so a retry can mint a
+   * fresh one instead of forcing the user to start over.
+   */
+  const [captchaRetry, setCaptchaRetry] = useState(false);
   const resetCaptcha = () => {
     setCaptchaToken(null);
     setCaptchaKey((k) => k + 1);
@@ -83,7 +92,12 @@ export const JubileeDoorScreen: React.FC = () => {
     Keyboard.dismiss();
     setPassword('');
     setConfirmPassword('');
-    if (target === 'email') heldSsoPassword.current = '';
+    if (target === 'email') {
+      heldSsoPassword.current = '';
+      // The email step mounts its own challenge again; drop the retry flag so
+      // the password step doesn't show a second one on the way back through.
+      setCaptchaRetry(false);
+    }
     send({ type: 'back' });
   }, [navigation, state]);
 
@@ -92,6 +106,7 @@ export const JubileeDoorScreen: React.FC = () => {
     setPassword('');
     setConfirmPassword('');
     heldSsoPassword.current = '';
+    setCaptchaRetry(false);
     resetCaptcha();
     send({ type: 'useDifferentEmail' });
   }, []);
@@ -139,6 +154,11 @@ export const JubileeDoorScreen: React.FC = () => {
     // 400 that still counts against 50 per 15 minutes per IP — and on mobile
     // that budget is shared across everyone behind the same carrier NAT.
     if (!isEmail(email)) return fail(t('auth.door.errors.emailInvalid'));
+    // The gate reports ready once it holds a token, or after its 8s fail-safe,
+    // so this can delay the user briefly but can never strand them.
+    if (CONFIG.TURNSTILE_SITE_KEY && !captchaReady) {
+      return fail(t('auth.door.errors.captchaRequired'));
+    }
     if (lookupInFlight.current) return;
 
     const key = normalizeEmail(email);
@@ -180,7 +200,9 @@ export const JubileeDoorScreen: React.FC = () => {
   const submitPassword = async () => {
     if (busy) return;
     if (!password) return fail(t('auth.door.errors.passwordRequired'));
-    if (CONFIG.TURNSTILE_SITE_KEY && !captchaReady) {
+    // Only gate here when the challenge is actually on screen — i.e. a retry.
+    // On the first attempt the token came from the email step.
+    if (CONFIG.TURNSTILE_SITE_KEY && captchaRetry && !captchaReady) {
       return fail(t('auth.door.errors.captchaRequired'));
     }
     const preview = state.step === 'confirm';
@@ -199,7 +221,9 @@ export const JubileeDoorScreen: React.FC = () => {
       );
 
       if (!signIn.fulfilled.match(result)) {
-        // The token is single-use; mint a fresh one for the next attempt.
+        // The token is single-use and has now been spent. Surface the challenge
+        // on this step so the next attempt has a fresh one.
+        setCaptchaRetry(true);
         resetCaptcha();
         return fail((result.payload as string) ?? t('auth.door.errors.generic'));
       }
@@ -223,6 +247,7 @@ export const JubileeDoorScreen: React.FC = () => {
           setPassword('');
           return send({ type: 'redirectSignup' });
         default:
+          setCaptchaRetry(true);
           resetCaptcha();
           return fail(t('auth.door.errors.generic'));
       }
@@ -399,6 +424,9 @@ export const JubileeDoorScreen: React.FC = () => {
           onSubmit={submitEmail}
           busy={busy === 'lookup'}
           disabled={state.email.trim().length === 0 || busy !== null}
+          captchaKey={captchaKey}
+          onCaptchaToken={setCaptchaToken}
+          onCaptchaReady={setCaptchaReady}
         />
       ) : null}
 
@@ -417,6 +445,7 @@ export const JubileeDoorScreen: React.FC = () => {
           onSubmit={submitPassword}
           busy={submitting}
           disabled={password.length === 0 || busy !== null}
+          showCaptcha={captchaRetry}
           captchaKey={captchaKey}
           onCaptchaToken={setCaptchaToken}
           onCaptchaReady={setCaptchaReady}
