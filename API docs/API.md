@@ -31,20 +31,31 @@ when valid; otherwise `null`.
 
 **Login modes** (env `AUTH_LOGIN_MODE`, see [src/config.js](../app/api/src/config.js)):
 - `local` (default/dev) — credentials verified against the local DB.
-- `ji` (prod) — `/api/auth/signin` delegates to JubileeInspire's `POST /api/auth/login`;
+- `ji` — `/api/auth/signin` delegates to JubileeInspire's `POST /api/auth/login`;
   JI is the credential authority, Jubilujah upserts the user and mints its own session.
+- `sso` — delegates to `sso.jubileeinspire.com`, which becomes the single credential
+  store (no local password row). This is the mode in which the one-door fields
+  (`preview` / `provision` / `needsProfile`) are *active*; see the `/signin` row below.
+
+The mobile client sends the union of all three modes' fields. That is safe because
+the request schema accepts and ignores the ones that don't apply, so the app does
+not need to know which mode the server runs.
 
 ### Tokens
-- **Access session** — TTL `SESSION_TTL_HOURS` (default 12h).
-- **Refresh token** — TTL `REFRESH_TTL_DAYS` (default 30d), rotated on use at `/api/auth/refresh`.
+- **Access token** — TTL `ACCESS_TOKEN_TTL_MS` (default 1h). Not a standard 3-part JWT:
+  `base64url(payload).base64url(HMAC)`, with `exp`/`iat` in **milliseconds**.
+- **Refresh token** — 30d, or 1 year with `rememberMe`. **Non-rotating**: `/api/auth/refresh`
+  echoes back the same token, and its DB expiry is realigned to the token's own signed
+  `exp` rather than slid forward. Concurrent refreshes from several devices therefore do
+  not invalidate one another. (Migration `0008_refresh_tokens.sql` still comments
+  "rotated each use" — that comment is obsolete; the code is authoritative.)
 
 ### CSRF
-Double-submit-cookie protection ([src/middleware/csrf.js](../app/api/src/middleware/csrf.js)):
-- A non-HttpOnly cookie `jv_csrf` is issued; the web client echoes it in the
-  **`X-CSRF-Token`** header on mutating requests.
-- Safe methods (`GET`/`HEAD`/`OPTIONS`) are exempt.
-- CSRF is **only enforced when a `jv_session` cookie is present**. Bearer-only clients
-  and pre-auth calls (login/signup/refresh) carry no ambient cookie authority and are exempt.
+**There is none.** The API is cookie-free and pure Bearer — `middleware/csrf.js` no longer
+exists, and neither does the OIDC cookie handshake. The mobile client still strips any
+`jv_session` / `jv_csrf` cookie the native jar may have kept from an older build
+(`services/auth/cookieJar.ts`), so a stale cookie can't make the server treat a request
+as cookie-authenticated.
 
 ### RBAC roles
 Ordered weakest → strongest ([src/config.js](../app/api/src/config.js#L137)):
@@ -58,9 +69,18 @@ Ordered weakest → strongest ([src/config.js](../app/api/src/config.js#L137)):
 | Service routes (`/api/auth/service`, `/api/auth/admin`) | `ADMIN_SERVICE_RATE_MAX` (default 600) / 15 min, keyed per client |
 
 ### Common error shape
-Errors are returned by [src/middleware/error.js](../app/api/src/middleware/error.js) as JSON,
-e.g. `{ "error": "message" }`, with appropriate HTTP status codes (400, 401, 403,
-404, 409, 422, 429, 503).
+Errors are returned by [src/middleware/error.js](../app/api/src/middleware/error.js) as JSON —
+`{ "error": "<code>", "message": "<human string>" }` — with appropriate HTTP status codes
+(400, 401, 403, 404, 409, 422, 423, 429, 503).
+
+Two shapes the client must tolerate:
+- **429 from the global limiter is PLAIN TEXT**, not JSON. Guard any `res.json()` parse.
+  `services/auth/authOutcome.ts` (`readAuthError`) and `authClient.ts` (`toApiError`) both do.
+- Extra fields ride alongside `error`/`message` and drive the UI: `attemptsRemaining`,
+  `cooldownSeconds`, `resendsRemaining`, `lockedUntil`, `locked`, `exhausted`, `issues`.
+
+**HTTP 200 with `success: false` is not an error.** On `/signin` it is a routing
+instruction — see the `/signin` row. Only 4xx/5xx are failures.
 
 ---
 
@@ -78,22 +98,51 @@ File: [src/routes/auth.js](../app/api/src/routes/auth.js)
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/api/auth/login` | — | Begin OIDC SSO login (Authorization Code + PKCE). Query `?returnTo=/path`. Redirects to IdP. |
-| GET | `/api/auth/callback` | — | OIDC redirect target; exchanges code for tokens, sets session cookie, redirects to web app. |
-| POST | `/api/auth/logout` | — | Revoke current session. Body `{ refreshToken? }` → `{ ok: true }`. Clears session cookie. |
+| GET | `/api/auth/lookup` | — | **The one-door identity probe.** Query `?email=` → `{ exists, existsInSso, existsLocally, available }`. Drives which branch the Jubilee Door opens: `existsLocally` → sign in, else `existsInSso` → confirm an existing Jubilee ID, else register. `available: false` means the identity authority was unreachable and the booleans are unreliable (it fails open). 400 `"A valid email is required."` on a malformed address. |
+| POST | `/api/auth/logout` | — | Revoke current session. Body `{ refreshToken? }` → `{ ok: true }`. |
 | POST | `/api/auth/logout-all` | ✅ | Revoke **all** sessions for the user → `{ ok: true }`. |
 | POST | `/api/auth/refresh` | — | Redeem refresh token. Body `{ refreshToken }` → `{ tokens: { accessToken, refreshToken, expiresAt } }`. |
 | POST | `/api/auth/signup` | — | Signup step 1. Body `{ name, email, password }` (password 8–200) → `{ success, requiresVerification, verificationGuid, email }`. |
-| POST | `/api/auth/verify-signup` | — | Signup step 2 (verify OTP). Body `{ verificationGuid, verificationCode, rememberMe? }` (code 6 digits) → `{ user, tokens }`. |
+| POST | `/api/auth/verify-signup` | — | Signup step 2 (verify OTP). Body `{ verificationGuid, verificationCode, rememberMe? }` (code 6 digits) → **201** `{ user, tokens }` — note the status, and that there is **no `success` field**. Decide "signed in" from `tokens` + `user`, never from `success`. |
 | POST | `/api/auth/send-signup-verification` | — | Resend signup OTP (60s cooldown, max 2). Body `{ verificationGuid }` → `{ success, resendsRemaining }`. |
-| POST | `/api/auth/signin` | — | Email/password sign-in (+ Turnstile + optional 2FA). Body `{ email, password, cfTurnstileToken?, verificationGuid?, verificationCode?, rememberMe? }` → `{ user, tokens }` **or** `{ requires2FA, verificationGuid }`. Delegates to JI when `AUTH_LOGIN_MODE=ji`. |
-| POST | `/api/auth/verify-login` | — | Verify login OTP (2FA step 2). Body `{ email, verificationGuid, verificationCode, rememberMe? }` → `{ user, tokens }`. |
+| POST | `/api/auth/signin` | — | Email/password sign-in, **and** the one-door workhorse. Body `{ email, password, cfTurnstileToken?, verificationGuid?, verificationCode?, rememberMe?, preview?, provision?, first_name?, last_name?, date_of_birth? }`. See the four responses below. Delegates to JI/SSO per `AUTH_LOGIN_MODE`. |
+| POST | `/api/auth/verify-login` | — | Verify login OTP (2FA step 2). Body `{ email, verificationGuid, verificationCode, rememberMe? }` → `{ user, tokens }` — also **no `success` field**. |
 | POST | `/api/auth/send-login-verification` | — | Resend login OTP (60s cooldown; 2 resends → 1h lockout). Body `{ email, verificationGuid }` → `{ success, resendsRemaining }`. |
 | POST | `/api/auth/forgot-password` | — | Email a reset link. Body `{ email }` → `{ ok, message }` (same response whether or not the email exists). |
 | POST | `/api/auth/reset-password` | — | Redeem reset token. Body `{ token, password }` → `{ ok, jiSync }`. Revokes all sessions; syncs to JI best-effort. |
 | POST | `/api/auth/change-password` | ✅ | Body `{ current_password, new_password, refreshToken? }` → `{ ok, jiSync }`. Revokes other sessions. |
 | DELETE | `/api/auth/account` | ✅ | Hard-delete own account (irreversible) → `{ ok: true }`. |
-| GET | `/api/auth/me` | — | `{ authenticated: boolean, user?, roles? }`. |
+| GET | `/api/auth/me` | — | `{ authenticated: boolean, user?, roles? }`. **Answers 200 even when unauthenticated — never 401.** A reactive-only refresh therefore never fires here, which is why the client renews proactively off `expiresAt` (`services/auth/authClient.ts`). |
+
+### `/api/auth/signin` — the four responses
+
+Classified by [`services/auth/authOutcome.ts`](../src/services/auth/authOutcome.ts). The
+check order matters; see that file.
+
+| Response (all HTTP 200) | Meaning | Client does |
+|---|---|---|
+| `{ success: true, user, tokens, trustToken }` | Signed in | Store tokens |
+| `{ success: true, requires2FA: true, email, verificationGuid }` | A 6-digit code was emailed | Go to the code step |
+| `{ success: false, needsProfile: true, profile: { first_name, last_name, date_of_birth } }` | The Jubilee ID is valid but there is no local account | Pre-fill and collect the missing details, then re-POST with `provision: true` |
+| `{ success: false, redirect: "signup" }` | No Jubilee ID either (only from `preview: true`) | Fall through to full registration |
+
+`profile.*` is **snake_case**, unlike the rest of the API — as are `first_name` /
+`last_name` / `date_of_birth` on the request, and `change-password`'s body.
+
+Errors: **401** `"Invalid email or password"`; **423** `{ locked: true, lockedUntil }`
+account lockout; **400** `"Human verification failed. Please retry."` (local mode with a
+Turnstile secret configured) and the OTP errors with `attemptsRemaining`.
+
+`preview` / `provision` / `needsProfile` are only *active* under `AUTH_LOGIN_MODE=sso`.
+In `local`/`ji` they are accepted and ignored — which also means `preview: true` performs a
+**real sign-in** there, not a preview. That is still correct for the confirm step, because
+a preview that returns tokens simply finishes the flow.
+
+### Turnstile
+`cfTurnstileToken` is read by **`/signin` only** — not by `/lookup` and not by `/signup`.
+In `sso` mode the server does not verify it at all; in `local` mode it fails **closed** when
+`TURNSTILE_SECRET_KEY` is set. The token is single-use, which is why the app mints it on the
+password steps rather than at the door.
 
 ---
 

@@ -25,14 +25,14 @@ a paged slide carousel (4 slides), pagination dots, and a fixed "Get Started" CT
 
 ---
 
-### JLM-ONBD-003 — "Get Started" marks onboarding done and goes to Sign In
+### JLM-ONBD-003 — "Get Started" marks onboarding done and opens the Jubilee Door
 **Category:** Functional, Positive · **Priority:** P0 · **Platform:** Both
 **Preconditions:** On Welcome (First run).
 **Steps:**
 1. Tap **Get Started**.
 2. Force-close and relaunch the app while signed out.
-**Expected Result:** Navigates to **Sign In**; `ONBOARDING_DONE` is persisted so the
-relaunch lands directly on Sign In (Welcome no longer appears).
+**Expected Result:** Navigates to the **Jubilee Door** (`JubileeDoor`); `ONBOARDING_DONE` is
+persisted so the relaunch lands directly on the door (Welcome no longer appears).
 
 ---
 
@@ -41,7 +41,7 @@ relaunch lands directly on Sign In (Welcome no longer appears).
 **Preconditions:** On Welcome.
 **Steps:**
 1. Tap the **SIGN IN** link (top-right).
-**Expected Result:** Same as Get Started — sets `ONBOARDING_DONE` and navigates to Sign In.
+**Expected Result:** Same as Get Started — sets `ONBOARDING_DONE` and opens the Jubilee Door.
 
 ---
 
@@ -61,7 +61,7 @@ Returning to the app leaves Welcome state intact.
 **Steps:**
 1. Sign in, then sign out.
 2. Relaunch.
-**Expected Result:** Welcome never reappears once onboarded; user always lands on Sign In
+**Expected Result:** Welcome never reappears once onboarded; user always lands on the door
 while signed out.
 
 ---

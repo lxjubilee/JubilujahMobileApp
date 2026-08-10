@@ -151,3 +151,35 @@ succeeds. (Guards against persisting the old, now-invalid token.)
 1. Inspect AsyncStorage contents (dev tooling).
 **Expected Result:** Access/refresh tokens are in `expo-secure-store` (Keychain/Keystore),
 not in AsyncStorage. The legacy `STORAGE_KEYS.AUTH_TOKEN` is unused/empty.
+
+
+---
+
+### JLM-SESS-020 — Sign-out still tears down playback, likes and entitlement
+**Category:** Integration, Functional · **Priority:** P0 · **Platform:** Both
+**Preconditions:** Signed in, a track playing, at least one liked item, entitlement loaded.
+**Steps:**
+1. Profile → Sign Out. 2. Repeat for Delete Account. 3. Repeat by forcing a refresh
+   failure (revoke the refresh token server-side, then cold start).
+**Expected Result:** In all three cases audio stops, the queue resets, the player state
+clears, likes empty and entitlement resets — not just the auth slice.
+
+Why this case exists: four modules outside the auth slice (`redux/store/store.ts`,
+`playerSlice`, `likesSlice`, `entitlementSlice`) match on the *generated action type
+strings* `auth/signOut/fulfilled`, `auth/deleteAccount/fulfilled` and
+`auth/clearSession`. Renaming or moving any of them, or changing the slice's
+`name: 'auth'`, silently breaks this fan-out with no compile error — music keeps playing
+after sign-out.
+
+---
+
+### JLM-SESS-021 — An existing session survives the Jubilee Door migration
+**Category:** Integration, Functional · **Priority:** P0 · **Platform:** Both
+**Preconditions:** A device already signed in on the previous build. Install the build
+containing the Jubilee Door **over** it, without clearing storage.
+**Steps:**
+1. Cold start.
+**Expected Result:** The session restores from the keychain via the proactive refresh and
+the app opens on Home. The user must never see the door. Tokens live in expo-secure-store
+and the auth slice is not persisted, so nothing about the auth-screen rewrite should touch
+a live session — this case proves it.

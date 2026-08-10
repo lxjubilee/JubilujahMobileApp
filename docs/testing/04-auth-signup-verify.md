@@ -1,10 +1,30 @@
-# 04 — Sign Up & Verification
+# 04 — The Jubilee Door: registration, linked accounts & signup OTP
 
-Covers `SignUpScreen.tsx` (phase 1, `requestSignup`), the custom `DateField` wheel,
-and `VerifySignupScreen.tsx` (phase 2 OTP, `verifySignup` / `resendSignup`).
+Covers the registration steps of `screens/Auth/door/` — `CreateJubileeIdStep.tsx`
+(brand-new account), `CreateLinkedStep.tsx` (a Jubilee ID that has no JubiLujah account
+yet), `CodeStep.tsx`, and `components/auth/DateOfBirthField.tsx` — against
+`POST /api/auth/signup`, `/verify-signup`, `/send-signup-verification` and the
+`provision: true` form of `/signin`.
 
-> Note: sign-up creates a **real account**. Use a fresh, unused email for each run.
+## What changed
 
+`SignUpScreen` and `VerifySignupScreen` are gone; both are steps inside the single
+`JubileeDoor` route, reached by typing an email first (see [03](03-auth-signin-2fa.md)).
+
+- **The date picker no longer uses a `<Modal>`.** `DateOfBirthField` is three inline
+  numeric segments. The old picker mounted its Modal permanently (`visible={open}`), the
+  pattern that wedges the Android UI thread on the Old Architecture.
+- **The 13+ age gate is retained**, diverging from the web, which made date of birth
+  optional and ungated.
+- **Date of birth is still discarded on the brand-new path.** `POST /api/auth/signup`
+  accepts only `{ name, email, password }`. Only the linked-account path
+  (`/signin` with `provision: true`) persists a date, and only to the identity authority.
+  It is collected here solely to enforce the age gate. Known gap, not a defect.
+
+**Superseded — do not run as written:** `JLM-SGNP-003`, `JLM-SGNP-007`, `JLM-SGNP-008`,
+`JLM-SGNP-009`, `JLM-SGNP-015` (they assert on the modal wheel picker, the standalone
+Sign Up screen, or navigation between Sign Up and Verify). Replacements are
+`JLM-SGNP-017` onward.
 ---
 
 ### JLM-SGNP-001 — Successful sign-up end-to-end
@@ -160,3 +180,112 @@ at 0s and a new code is sent (`resendSignup`).
 1. Submit a valid code on a stalled connection.
 **Expected Result:** Timeout (`ECONNABORTED`) is not auto-retried (single-use OTP protection);
 an error is shown and the user may resend/retry manually.
+
+
+---
+
+### JLM-SGNP-017 — Date of birth takes no modal and cannot freeze the next screen
+**Category:** Functional, Performance · **Priority:** P0 · **Platform:** Android
+**Preconditions:** On the registration step of the Jubilee Door. Physical device (not Expo Go).
+**Steps:**
+1. Tap the Day segment and type `07`; confirm focus jumps to Month. Type `03`; confirm focus
+   jumps to Year. Type `1987`.
+2. Press backspace repeatedly from the Year segment.
+3. Background the app, foreground it, then navigate to Terms of Use and back.
+**Expected Result:** No modal or overlay appears at any point. Focus auto-advances on fill
+and steps back on backspace from an empty segment. After returning from Terms of Use the
+screen is fully interactive — no wedged keyboard, no unresponsive taps. This is the
+explicit regression test for the permanently-mounted `<Modal>` the old picker used.
+
+---
+
+### JLM-SGNP-018 — Under-13 is blocked at registration
+**Category:** Negative, Boundary, Security · **Priority:** P0 · **Platform:** Both
+**Preconditions:** On the registration step with every other field valid.
+**Steps:**
+1. Enter a date of birth 12 years ago. Attempt to submit.
+2. Change it to exactly 13 years ago today. Submit.
+**Expected Result:** (1) shows the minimum-age message and does not call `/api/auth/signup`.
+(2) is accepted — the boundary is inclusive.
+
+---
+
+### JLM-SGNP-019 — Date of birth is built from local parts, not UTC
+**Category:** Boundary, Functional · **Priority:** P1 · **Platform:** Both
+**Preconditions:** Device time zone set to something well west of UTC (e.g. America/Los_Angeles).
+Take the linked-account path so the date is actually transmitted.
+**Steps:**
+1. Enter 01/01/2000 and complete the step. Inspect the `date_of_birth` on the
+   `/signin` request.
+**Expected Result:** `2000-01-01`. Not `1999-12-31` — serialising through `toISOString()`
+would shift the date back a day for every user west of UTC, which also straddles the 13+
+boundary.
+
+---
+
+### JLM-SGNP-020 — Live password-match feedback
+**Category:** UI/UX · **Priority:** P2 · **Platform:** Both
+**Preconditions:** On the registration step.
+**Steps:**
+1. Type a password. Observe the confirmation field before typing in it.
+2. Type a mismatching value, then correct it.
+**Expected Result:** Nothing is shown while the confirmation is empty — empty means "not yet
+answered", not "wrong". Then "Passwords don't match" in red, switching to "Passwords
+matched" in green once they agree.
+
+---
+
+### JLM-SGNP-021 — Signing up with an address that already exists returns to the door
+**Category:** Negative, Integration · **Priority:** P0 · **Platform:** Both
+**Preconditions:** An email that has an account, reached on the registration step (force it
+by taking the registration branch for an address claimed between the lookup and the submit).
+**Steps:**
+1. Complete the form and submit.
+**Expected Result:** The 409 sends the user back to the **email step** showing "You already
+have an account — enter your email to sign in.", with the address still filled and the
+passwords cleared.
+
+---
+
+### JLM-SGNP-022 — The signup code step and its resend budget
+**Category:** Functional, Boundary · **Priority:** P0 · **Platform:** Both
+**Preconditions:** Registration submitted; on the code step.
+**Steps:**
+1. Observe the resend link. 2. Wait for the countdown to reach zero and resend twice.
+3. Attempt a third resend.
+**Expected Result:** "Resend in 60s" counting down, then "Resend code". Each resend restarts
+the countdown and reports how many remain. The third is refused by the server and surfaced
+as an error rather than a silent no-op.
+
+---
+
+### JLM-SGNP-023 — Verifying the signup code signs the user straight in
+**Category:** Functional, Positive, Integration · **Priority:** P0 · **Platform:** Both
+**Preconditions:** On the code step with the emailed code to hand.
+**Steps:**
+1. Enter the six digits.
+**Expected Result:** Auto-submits on the last digit. `POST /verify-signup` answers **201**
+with `{ user, tokens }` and **no `success` field**; the app must still treat it as signed in.
+Tokens are stored and RootGate swaps to Home.
+
+---
+
+### JLM-SGNP-024 — "Edit details" returns to the form with its contents intact
+**Category:** Functional, UI/UX · **Priority:** P1 · **Platform:** Both
+**Preconditions:** On the signup code step.
+**Steps:**
+1. Tap "Edit details".
+**Expected Result:** Back to the registration form with names, date of birth and email as
+entered; the code digits are cleared. This is a correction, not a restart.
+
+---
+
+### JLM-SGNP-025 — Linked-account creation asks for details but never a password
+**Category:** Functional, Security · **Priority:** P0 · **Platform:** Both
+**Preconditions:** `AUTH_LOGIN_MODE=sso`; reached **Create your JubiLujah account** via
+`needsProfile` (see JLM-AUTH-022).
+**Steps:**
+1. Inspect the fields. Adjust the pre-filled name. Submit.
+**Expected Result:** First name, last name, date of birth and the remember-me checkbox — and
+**no password field**, because the credential lives at the identity authority. Submitting
+POSTs `/signin` with `provision: true` and the edited names, and signs the user in.

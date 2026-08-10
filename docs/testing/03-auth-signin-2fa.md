@@ -1,7 +1,27 @@
-# 03 — Sign In, Turnstile CAPTCHA & Two-Factor
+# 03 — The Jubilee Door: email lookup, sign in, Turnstile & two-factor
 
-Covers `SignInScreen.tsx`, `TurnstileWidget.tsx`, `TwoFactorScreen.tsx`, and the
-`signIn` / `verify2FA` thunks against `POST /api/auth/signin` and `/verify-login`.
+Covers `screens/Auth/door/` (`JubileeDoorScreen.tsx`, `doorMachine.ts`, `steps/`),
+`components/auth/` (`TurnstileGate.tsx`, `TurnstileWidget.tsx`), and the `signIn` /
+`verify2FA` thunks against `GET /api/auth/lookup`, `POST /api/auth/signin` and
+`/verify-login`.
+
+## What changed
+
+`SignInScreen`, `SignUpScreen`, `VerifySignupScreen` and `TwoFactorScreen` no longer
+exist. They are now **steps inside one route**, `JubileeDoor`, entered through a single
+email field. Sign-up cases live in [04](04-auth-signup-verify.md).
+
+Two structural consequences for this suite:
+
+- There is no "Sign In screen" with an email AND a password visible at once, so any case
+  asserting on both fields together no longer describes a reachable state.
+- Turnstile moved off the first step onto the two password steps. Only `POST /signin`
+  reads `cfTurnstileToken`, and the token is single-use — minting it at the door and
+  spending it two steps later would expire it.
+
+**Superseded — do not run as written:** `JLM-AUTH-002` (CTA gated on email *and*
+password on one screen), `JLM-AUTH-017`, `JLM-AUTH-018` (navigation between the separate
+Sign In / Sign Up / TwoFactor routes). Replacements are `JLM-AUTH-020` onward.
 
 ---
 
@@ -190,3 +210,169 @@ unexpectedly.
 1. Sign in and perform a mutation (e.g. like a song).
 **Expected Result:** `clearSessionCookies` strips the cookies before each request so the
 server treats the app as a pure Bearer client; no 403 on mutations.
+
+
+---
+
+### JLM-AUTH-020 — Email lookup routes a returning member to the password step
+**Category:** Functional, Positive, Integration · **Priority:** P0 · **Platform:** Both
+**Preconditions:** Signed out, on the Jubilee Door; an email with an existing JubiLujah account; Online.
+**Steps:**
+1. Type the email. Tap **Continue**.
+**Expected Result:** `GET /api/auth/lookup?email=` is called once and answers
+`existsLocally: true`. The door shows **Welcome back** with the account chip, a password
+field, "Forgot your password?", the "Keep me signed in on this device" checkbox (checked by
+default) and the Turnstile widget.
+
+---
+
+### JLM-AUTH-021 — Email lookup routes a brand-new address to registration
+**Category:** Functional, Positive · **Priority:** P0 · **Platform:** Both
+**Preconditions:** Signed out, on the Jubilee Door; an email with no account anywhere.
+**Steps:**
+1. Type the email. Tap **Continue**.
+**Expected Result:** Lookup answers all-false and the door shows **Let's create your
+Jubilee ID** with the email pre-filled and read-only.
+
+---
+
+### JLM-AUTH-022 — Email lookup routes a cross-site Jubilee ID to "Confirm it's you"
+**Category:** Functional, Integration · **Priority:** P0 · **Platform:** Both
+**Preconditions:** Server running `AUTH_LOGIN_MODE=sso`; an email with a Jubilee ID but no
+JubiLujah account. In `local`/`ji` mode `existsInSso === existsLocally`, so this branch is
+unreachable — confirm the deployed mode before failing this case.
+**Steps:**
+1. Type the email. Tap **Continue**. Enter the Jubilee ID password. Tap **Continue**.
+**Expected Result:** Step 1 shows **Confirm it's you**. The password POSTs with
+`preview: true`; the server answers 200 `{ success: false, needsProfile: true, profile }`
+and the door advances to **Create your JubiLujah account** with first/last name and date of
+birth **pre-filled from `profile`** and **no password field**.
+
+---
+
+### JLM-AUTH-023 — A failed lookup never advances the door
+**Category:** Negative, Integration · **Priority:** P0 · **Platform:** Both
+**Preconditions:** On the Jubilee Door with a valid email typed. Airplane mode, or block
+`api.jubilujah.com`.
+**Steps:**
+1. Tap **Continue**.
+**Expected Result:** The door STAYS on the email step and shows "We are having trouble
+reaching your account right now. Please try again in a moment." It must **not** fall
+through to registration: "no account found" and "couldn't ask" are indistinguishable here,
+and guessing wrong pushes an existing member into a sign-up they cannot complete.
+
+---
+
+### JLM-AUTH-024 — A malformed email is rejected without a network call
+**Category:** Negative, Boundary, Performance · **Priority:** P1 · **Platform:** Both
+**Preconditions:** On the Jubilee Door. Network inspector attached.
+**Steps:**
+1. Type `not-an-email`. Tap **Continue**.
+**Expected Result:** "That does not look like a complete email address. Please check it."
+and **no request is sent**. `/api/auth/*` allows 50 requests per 15 minutes per IP and
+carrier NAT shares one address across many users, so a locally-rejectable address must not
+spend from that budget.
+
+---
+
+### JLM-AUTH-025 — The lookup is submit-only and fires once per address
+**Category:** Performance, Integration · **Priority:** P1 · **Platform:** Both
+**Preconditions:** On the Jubilee Door. Network inspector attached.
+**Steps:**
+1. Type a full valid email character by character; watch for requests.
+2. Tap **Continue**; then tap it twice in rapid succession.
+3. Tap "Use a different email", then re-submit the same address.
+**Expected Result:** No request while typing. Exactly one request on submit, and a fast
+double-tap produces no second request. Re-submitting the same address is answered from the
+session memo with no further request.
+
+---
+
+### JLM-AUTH-026 — Turnstile appears on the password step, not the email step
+**Category:** Security, UI/UX · **Priority:** P1 · **Platform:** Both
+**Preconditions:** `turnstileSiteKey` configured.
+**Steps:**
+1. Observe the email step. Continue to **Welcome back** and observe. Go back to the email step.
+**Expected Result:** No challenge on the email step; the widget renders on the password
+step; leaving that step unmounts the WebView. It must not stay alive behind another step —
+that is what stalls the Android UI thread on the Old Architecture.
+
+---
+
+### JLM-AUTH-027 — Turnstile never permanently blocks sign-in
+**Category:** Security, Negative · **Priority:** P0 · **Platform:** Both
+**Preconditions:** `turnstileSiteKey` configured. Block `challenges.cloudflare.com`, or use
+a site key not allow-listed for `turnstileBaseUrl`.
+**Steps:**
+1. Reach the password step. Wait 10 seconds. Enter the password and submit.
+**Expected Result:** After ~8s the gate reports ready and submit proceeds without a token;
+the widget still offers "Tap to retry". Rationale: the server does not verify the token in
+SSO mode, so a challenge that silently renders nothing must not become a wall.
+
+---
+
+### JLM-AUTH-028 — A single-use Turnstile token is refreshed after a failed attempt
+**Category:** Security, Integration · **Priority:** P1 · **Platform:** Both
+**Preconditions:** `turnstileSiteKey` configured; on the password step with a solved challenge.
+**Steps:**
+1. Enter a WRONG password and submit. Wait for the error. Enter the correct password and submit.
+**Expected Result:** The first attempt fails inline; the widget remounts and mints a fresh
+token; the second succeeds. The same token is never sent twice.
+
+---
+
+### JLM-AUTH-029 — Android hardware back walks the steps, not the stack
+**Category:** Functional, UI/UX · **Priority:** P0 · **Platform:** Android
+**Preconditions:** Signed out.
+**Steps:**
+1. From the email step, press back.
+2. From **Welcome back**, press back.
+3. From **Confirm it's you** → **Create your JubiLujah account**, press back.
+4. From the code step, press back.
+**Expected Result:** (1) leaves the door. (2) returns to the email step with the address
+still filled and the password cleared. (3) returns to **Confirm it's you** so the password
+can be re-entered — NOT to the email step. (4) returns to **Welcome back** for a login code
+or the registration form for a signup code, clearing the entered digits.
+
+---
+
+### JLM-AUTH-030 — iOS edge-swipe cannot escape a mid-flow step
+**Category:** Functional · **Priority:** P1 · **Platform:** iOS
+**Preconditions:** Signed out, past the email step.
+**Steps:**
+1. Swipe from the left edge on each of the password, create and code steps.
+**Expected Result:** The swipe-back gesture is disabled anywhere except the email step, so
+the door cannot be popped from the middle of the flow.
+
+---
+
+### JLM-AUTH-031 — "Use a different email" keeps the address but clears everything else
+**Category:** Functional, Security · **Priority:** P1 · **Platform:** Both
+**Preconditions:** On any step past the email step, with fields filled.
+**Steps:**
+1. Tap "Use a different email".
+**Expected Result:** Back to the email step with the typed address preserved (a typo is one
+edit, not a retype) and unlocked. Password, confirmation, names, date of birth, the held
+Jubilee ID password and the Turnstile token are all cleared.
+
+---
+
+### JLM-AUTH-032 — Account lockout is surfaced and honoured
+**Category:** Negative, Security · **Priority:** P1 · **Platform:** Both
+**Preconditions:** An account whose `locked_until` is in the future — trip it by exhausting
+sign-in code resends.
+**Steps:**
+1. Reach the password step for that account and submit.
+**Expected Result:** The 423 is shown as an error, with no navigation and no token stored.
+The door must not treat 423 as a generic failure.
+
+---
+
+### JLM-AUTH-033 — The rate limiter's plain-text 429 does not leak into the UI
+**Category:** Negative, Integration · **Priority:** P1 · **Platform:** Both
+**Preconditions:** Trip the limiter — 50 `/api/auth/*` requests within 15 minutes from one IP.
+**Steps:**
+1. Submit an email at the door.
+**Expected Result:** "Too many attempts from this network. Please wait a few minutes and
+try again." No raw body text or HTML is shown, and parsing it does not crash — the limiter
+answers with plain text, not JSON.

@@ -25,12 +25,17 @@ download engine exists; `localUri` is never populated by actual downloads. No of
 
 ---
 
-### JLM-STUB-003 — ChooseProfile gate disabled ⚠ NOT WIRED IN V1
+### JLM-STUB-003 — ChooseProfile gate REMOVED
 **Category:** Functional, Regression · **Priority:** P2 · **Platform:** Both
 **Preconditions:** Sign in.
 **Steps:**
 1. Complete sign-in and observe.
-**Expected Result:** No "Choose your profile" gate appears; `ChooseProfileScreen` exists but
+**Expected Result:** No "Choose your profile" gate appears. The screen, the
+`profileGatePending` flag and the `markProfileSelected` action have all been deleted, so
+this is no longer a stub — it is simply gone. Retained as a regression check that
+nothing reintroduces a gate between sign-in and Home. (Superseded text below.)
+
+~~`ChooseProfileScreen` exists but~~
 is unused (`profileGatePending` is only set on cold-start restore and the gate is bypassed).
 Sign-in goes straight to Home.
 

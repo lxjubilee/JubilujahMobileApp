@@ -24,11 +24,11 @@ form — ID, category, priority, preconditions, numbered steps, and expected res
 | File | Area | Area code |
 |------|------|-----------|
 | [01-app-bootstrap-splash.md](01-app-bootstrap-splash.md) | App bootstrap, splash, RootGate, session restore | BOOT |
-| [02-onboarding-welcome.md](02-onboarding-welcome.md) | Welcome slides, onboarding flag, legacy onboarding | ONBD |
-| [03-auth-signin-2fa.md](03-auth-signin-2fa.md) | Sign in, Turnstile CAPTCHA, two-factor | AUTH |
-| [04-auth-signup-verify.md](04-auth-signup-verify.md) | Sign up, DateField, signup verification OTP | SGNP |
+| [02-onboarding-welcome.md](02-onboarding-welcome.md) | Welcome slides, onboarding flag | ONBD |
+| [03-auth-signin-2fa.md](03-auth-signin-2fa.md) | Jubilee Door: email lookup, sign in, Turnstile, two-factor | AUTH |
+| [04-auth-signup-verify.md](04-auth-signup-verify.md) | Jubilee Door: registration, linked accounts, date of birth, signup OTP | SGNP |
 | [05-auth-forgot-change-pw.md](05-auth-forgot-change-pw.md) | Forgot password, change password | PWD |
-| [06-auth-session-mgmt.md](06-auth-session-mgmt.md) | Sign out, delete account, token refresh/rotation | SESS |
+| [06-auth-session-mgmt.md](06-auth-session-mgmt.md) | Sign out, delete account, token refresh | SESS |
 | [07-home-feed.md](07-home-feed.md) | Home hero carousel, rails, header, states | HOME |
 | [08-language-localization.md](08-language-localization.md) | Language panel, 40 locales, catalog filter | LANG |
 | [09-browse.md](09-browse.md) | Browse album grid | BRWS |

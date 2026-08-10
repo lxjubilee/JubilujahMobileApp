@@ -3,6 +3,10 @@
 Covers `RootNavigator`, `MainTabNavigator` (custom tab bar), `LibraryStackNavigator`,
 the auth tree-swap, mini-player visibility, and modal mount/hand-off timing.
 
+The auth stack is now five routes: `Welcome`, `JubileeDoor`, `ForgotPassword`,
+`PrivacyPolicy`, `TermsOfUse`. Sign in, sign up, two-factor and signup verification are
+**steps inside `JubileeDoor`**, not routes — see [03](03-auth-signin-2fa.md).
+
 ---
 
 ### JLM-NAV-001 — Auth tree-swap on sign-in / sign-out
