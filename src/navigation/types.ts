@@ -40,6 +40,8 @@ export type RootStackParamList = {
 /** Unauthenticated flow: welcome slides / profile gate → sign in → 2FA; plus sign up. */
 export type AuthStackParamList = {
   Welcome: undefined;
+  /** The email-first Jubilee Door. `email` pre-fills the first step. */
+  JubileeDoor: { email?: string } | undefined;
   SignIn: undefined;
   TwoFactor: undefined;
   SignUp: undefined;

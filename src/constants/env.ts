@@ -37,6 +37,12 @@ type AppExtra = {
   turnstileSiteKey: string;
   /** Origin the Turnstile widget runs under (must be allow-listed for the site key). */
   turnstileBaseUrl: string;
+  /**
+   * Route the auth stack through the email-first Jubilee Door instead of the
+   * separate sign-in / sign-up screens. A config-only rollback while the door
+   * is being rolled out; removed once the old screens are deleted.
+   */
+  featureJubileeDoor?: boolean;
 };
 
 const extra = (Constants.expoConfig?.extra ?? {}) as Partial<AppExtra>;
@@ -61,4 +67,5 @@ export const ENV = {
   // Cloudflare Turnstile (sign-in CAPTCHA). Empty disables the widget.
   TURNSTILE_SITE_KEY: extra.turnstileSiteKey ?? '',
   TURNSTILE_BASE_URL: extra.turnstileBaseUrl ?? 'https://jubilujah.com',
+  FEATURE_JUBILEE_DOOR: extra.featureJubileeDoor ?? true,
 } as const;

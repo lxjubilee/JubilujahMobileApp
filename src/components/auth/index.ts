@@ -10,3 +10,4 @@ export { AccountChip } from './AccountChip';
 export { PasswordMatchHint } from './PasswordMatchHint';
 export { DateOfBirthField } from './DateOfBirthField';
 export { TurnstileWidget } from './TurnstileWidget';
+export { TurnstileGate } from './TurnstileGate';
