@@ -76,7 +76,16 @@ export const AuthScreenShell: React.FC<AuthScreenShellProps> = ({
             keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
             showsVerticalScrollIndicator={false}
           >
-            {title ? <AppText style={styles.title}>{title}</AppText> : null}
+            {title ? (
+              // Auth titles hold a single line. `numberOfLines={1}` is the
+              // guarantee; the type size is set small enough that the longest
+              // static title ("Sign in with your Jubilee ID") still fits the
+              // content column on a 375pt phone, so nothing truncates in
+              // practice — only a runaway interpolated site name would.
+              <AppText style={styles.title} numberOfLines={1}>
+                {title}
+              </AppText>
+            ) : null}
             {subtitle ? (
               <AppText variant="body" color="textSecondary" style={styles.subtitle}>
                 {subtitle}
@@ -111,6 +120,6 @@ const styles = StyleSheet.create({
     paddingTop: AUTH_METRICS.contentPaddingTop,
     paddingBottom: AUTH_METRICS.contentPaddingBottom,
   },
-  title: { color: '#FFFFFF', fontSize: 28, lineHeight: 36, fontWeight: '800' },
+  title: { color: '#FFFFFF', fontSize: 24, lineHeight: 32, fontWeight: '800' },
   subtitle: { marginTop: 12, fontSize: 16, lineHeight: 22 },
 });
