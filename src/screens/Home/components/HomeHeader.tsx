@@ -1,5 +1,13 @@
 import React from 'react';
-import { Animated, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Animated,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context';
 import { AppText, BrandLogo, ProfileButton } from '@/components/common';
@@ -13,6 +21,35 @@ export type HomeFilter = string;
 
 /** Height the chips row collapses from / expands to. */
 export const CHIP_ROW_HEIGHT = 48;
+
+/** Diameter shared by both round header actions (language flag + profile),
+ *  so the two circles always match. */
+const ACTION_SIZE = 32;
+/** Spacing between the two round actions. */
+const ACTION_GAP = 8;
+/** Diameter of the circular brand logo in the header. */
+const BRAND_LOGO = 34;
+/** Smallest allowed space between the wordmark and the language flag. */
+const BRAND_CLEARANCE = 14;
+
+// The wordmark is a fixed 13-glyph string in Orbitron, a wide geometric face
+// whose glyphs advance roughly 0.72em. Deriving the size from the width the row
+// actually has left keeps "JubiLujah.com" clear of the flag on narrow phones,
+// where a fixed 26px ran right up against it.
+const WORDMARK_WIDTH_EM = 'JubiLujah.com'.length * 0.72;
+const BRAND_FONT_MAX = 26;
+const BRAND_FONT_MIN = 17;
+
+/** Wordmark size that fits the space left over beside the header actions. */
+const brandFontSize = (screenWidth: number): number => {
+  const free =
+    screenWidth -
+    32 - // `inner` horizontal padding
+    (BRAND_LOGO + 8) - // logo plus its trailing margin
+    (ACTION_SIZE * 2 + ACTION_GAP) - // language flag + profile avatar
+    BRAND_CLEARANCE;
+  return Math.max(BRAND_FONT_MIN, Math.min(BRAND_FONT_MAX, Math.floor(free / WORDMARK_WIDTH_EM)));
+};
 
 interface HomeHeaderProps {
   /** Chips to render, e.g. ['Home', 'Inspire Family', …] derived from the feed. */
@@ -54,6 +91,8 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 }) => {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const brandSize = brandFontSize(width);
 
   return (
     <View style={styles.container} pointerEvents="box-none">
@@ -67,7 +106,14 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
 
       <View style={[styles.inner, { paddingTop: insets.top + 6 }]}>
         <View style={styles.topRow}>
-          <BrandLogo size={34} textStyle={[styles.brand, styles.brandText]} />
+          <BrandLogo
+            size={BRAND_LOGO}
+            textStyle={[
+              styles.brand,
+              styles.brandText,
+              { fontSize: brandSize, lineHeight: Math.round(brandSize * 1.15) },
+            ]}
+          />
 
           <View style={styles.actions}>
             {onPressLanguage ? (
@@ -85,7 +131,7 @@ export const HomeHeader: React.FC<HomeHeaderProps> = ({
                 />
               </Pressable>
             ) : null}
-            <ProfileButton onPress={onPressProfile} />
+            <ProfileButton size={ACTION_SIZE} onPress={onPressProfile} />
           </View>
         </View>
 
@@ -144,17 +190,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    // Floor on the wordmark-to-flag spacing: `space-between` alone collapses to
+    // zero once the brand grows wide enough to fill the row.
+    gap: BRAND_CLEARANCE,
     marginBottom: 12,
   },
   solidBg: { backgroundColor: '#000' },
   brand: { color: '#007FFF' },
   // Bold mixed-case wordmark ("JubiLujah").
-  brandText: { fontSize: 26, lineHeight: 30, fontWeight: '900', letterSpacing: 0.5 },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  // fontSize/lineHeight come from `brandFontSize` at render — see the top row.
+  brandText: { fontWeight: '900', letterSpacing: 0.5 },
+  // `flexShrink: 0` so the two circles keep their size and the brand yields instead.
+  actions: { flexDirection: 'row', alignItems: 'center', gap: ACTION_GAP, flexShrink: 0 },
   langButton: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: ACTION_SIZE,
+    height: ACTION_SIZE,
+    borderRadius: ACTION_SIZE / 2,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.5)',

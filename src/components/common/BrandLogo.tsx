@@ -46,7 +46,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ size = 28, textStyle, styl
         style={[styles.logo, { width: size, height: size }]}
         resizeMode="contain"
       />
-      <Text allowFontScaling={false} style={[textRest, styles.wordmark]}>
+      <Text allowFontScaling={false} numberOfLines={1} style={[textRest, styles.wordmark]}>
         <Text style={styles.white}>Jubi</Text>
         <Text style={styles.gold}>Lujah</Text>
         <Text style={styles.white}>.com</Text>
@@ -56,11 +56,13 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ size = 28, textStyle, styl
 };
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center' },
-  logo: { marginRight: 8 },
+  // `flexShrink` so a narrow header squeezes the wordmark rather than letting it
+  // run into whatever sits beside it; the logo itself keeps its full diameter.
+  row: { flexDirection: 'row', alignItems: 'center', flexShrink: 1 },
+  logo: { marginRight: 8, flexShrink: 0 },
   // Orbitron_600SemiBold already encodes weight 600 — no fontWeight (it makes
   // Android drop the custom font and fall back to the system sans-serif).
-  wordmark: { fontFamily: 'Orbitron_600SemiBold' },
+  wordmark: { fontFamily: 'Orbitron_600SemiBold', flexShrink: 1 },
   white: { color: WHITE },
   gold: { color: GOLD },
 });
