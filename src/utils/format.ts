@@ -22,6 +22,33 @@ export function truncateTitle(title: string, max = 29): string {
   return `${title.slice(0, max)}...`;
 }
 
+/**
+ * Up to two uppercase initials for an avatar — "Sandeep Agarwal" -> "SA".
+ * Prefers the explicit first/last pair, then the first two words of the display
+ * name, then the email's local part (commonly `first.last`). Returns '' when
+ * there is nothing usable, so callers can fall back to a person icon.
+ */
+export function userInitials(
+  user?: { firstName?: string; lastName?: string; displayName?: string; email?: string } | null,
+): string {
+  // `Array.from` so an accented or non-Latin first letter survives intact.
+  const head = (word: string): string => Array.from(word)[0]?.toUpperCase() ?? '';
+
+  const first = user?.firstName?.trim() ?? '';
+  const last = user?.lastName?.trim() ?? '';
+  if (first && last) return head(first) + head(last);
+
+  const raw = (user?.displayName || first || user?.email || '').trim();
+  // Drop any domain: it would otherwise supply the second "word" (…@logix -> "SL").
+  const source = raw.includes('@') ? raw.slice(0, raw.indexOf('@')) : raw;
+  return source
+    .split(/[\s._+-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(head)
+    .join('');
+}
+
 /** Compact number formatting, e.g. 1200 -> "1.2K", 3_400_000 -> "3.4M". */
 export function formatCount(n?: number): string {
   if (n == null) return '';

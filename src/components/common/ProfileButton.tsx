@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { useAppSelector } from '@/hooks';
+import { userInitials } from '@/utils';
 import { AppText } from './AppText';
 import { IconButton } from './IconButton';
 
@@ -14,18 +15,16 @@ interface ProfileButtonProps {
 }
 
 /**
- * Header profile control: shows the first letter of the signed-in user's name
- * in a circle. Falls back to the generic person icon when no name is available.
+ * Header profile control: shows the signed-in user's initials in a circle
+ * ("Sandeep Agarwal" -> "SA"). Falls back to the generic person icon when no
+ * name is available.
  */
 export const ProfileButton: React.FC<ProfileButtonProps> = ({ onPress, size = 32 }) => {
   const user = useAppSelector((s) => s.auth.user);
 
-  const initial = useMemo(() => {
-    const name = user?.firstName || user?.displayName || user?.email || '';
-    return name.trim().charAt(0).toUpperCase();
-  }, [user]);
+  const initials = useMemo(() => userInitials(user), [user]);
 
-  if (!initial) {
+  if (!initials) {
     return <IconButton name="person-circle-outline" size={size - 2} onPress={onPress} />;
   }
 
@@ -43,8 +42,12 @@ export const ProfileButton: React.FC<ProfileButtonProps> = ({ onPress, size = 32
         },
       ]}
     >
-      <AppText style={[styles.text, { fontSize: Math.round(size * 0.47) }]} allowFontScaling={false}>
-        {initial}
+      {/* Two letters need to sit a little smaller to keep the same side margins. */}
+      <AppText
+        style={[styles.text, { fontSize: Math.round(size * (initials.length > 1 ? 0.42 : 0.47)) }]}
+        allowFontScaling={false}
+      >
+        {initials}
       </AppText>
     </Pressable>
   );

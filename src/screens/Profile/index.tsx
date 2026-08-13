@@ -9,6 +9,7 @@ import { Screen, AppText, Button, IconButton, ConfirmDialog } from '@/components
 import { AlbumCard } from '@/components/cards';
 import { MyContributions } from '@/components/reviews';
 import { useAppDispatch, useAppSelector, useLikedAlbums, useLikedSongCount } from '@/hooks';
+import { userInitials } from '@/utils';
 import { signOut, deleteAccount, clearSession } from '@/redux';
 import type { PlaylistsStackParamList, RootStackParamList } from '@/navigation/types';
 
@@ -31,10 +32,7 @@ export const ProfileScreen: React.FC = () => {
   const { albums: savedAlbums } = useLikedAlbums();
   const likedCount = useLikedSongCount();
   const followCount = useAppSelector((s) => s.library.followedArtistIds.length);
-  const initial = (user?.firstName || user?.displayName || user?.email || '')
-    .trim()
-    .charAt(0)
-    .toUpperCase();
+  const initials = userInitials(user);
   const [mode, setMode] = useState<null | 'confirm' | 'success' | 'error'>(null);
   const [deleting, setDeleting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -68,12 +66,15 @@ export const ProfileScreen: React.FC = () => {
           <View
             style={[
               styles.avatar,
-              { backgroundColor: initial ? AVATAR_YELLOW : theme.colors.surface },
+              { backgroundColor: initials ? AVATAR_YELLOW : theme.colors.surface },
             ]}
           >
-            {initial ? (
-              <AppText style={styles.avatarInitial} allowFontScaling={false}>
-                {initial}
+            {initials ? (
+              <AppText
+                style={[styles.avatarInitial, initials.length > 1 && styles.avatarInitialPair]}
+                allowFontScaling={false}
+              >
+                {initials}
               </AppText>
             ) : (
               <Ionicons name="person" size={48} color={theme.colors.iconMuted} />
@@ -263,6 +264,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
   },
+  // Two letters read wider than one; ease the size so they stay clear of the rim.
+  avatarInitialPair: { fontSize: 40, lineHeight: 48 },
   // `alignSelf: 'stretch'` deliberately opts these two out of the parent's
   // `alignItems: 'center'`. Centered children are sized to their INTRINSIC width,
   // and on Android that measurement can round short — clipping the tail at the
