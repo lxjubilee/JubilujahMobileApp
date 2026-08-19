@@ -188,7 +188,14 @@ export const HomeScreen: React.FC = () => {
       // Carry the Home page's genre-under-title treatment into the grid, so
       // "See all" looks like the rail it was opened from.
       const genreLine = showAlbumGenre ? { showAlbumGenre: true } : {};
-      if (rail.seeAllArtistId) {
+      if (rail.itemType === 'artist') {
+        // An artist rail opens the artist grid, not an album list.
+        if (!rail.artists?.length) return;
+        navigation.navigate('ArtistList', {
+          title: rail.title,
+          artistIds: rail.artists.map((a) => a.id),
+        });
+      } else if (rail.seeAllArtistId) {
         navigation.navigate('AlbumList', {
           title: rail.title,
           artistId: rail.seeAllArtistId,

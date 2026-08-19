@@ -32,6 +32,11 @@ export type RootStackParamList = {
     genreByItem?: Record<string, string>;
     showAlbumGenre?: boolean;
   };
+  /** Full grid behind an artist rail's "See all". Ids are carried in rail order. */
+  ArtistList: {
+    title: string;
+    artistIds: string[];
+  };
   PlaylistDetails: { playlistId: string };
   PlaylistAddSongs: { playlistId: string };
   MusicPlayer: undefined;

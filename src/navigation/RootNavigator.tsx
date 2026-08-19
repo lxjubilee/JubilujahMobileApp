@@ -12,6 +12,7 @@ import {
   AlbumReviewsScreen,
   ArtistDetailsScreen,
   AlbumListScreen,
+  ArtistListScreen,
   PlaylistDetailsScreen,
   PlaylistAddSongsScreen,
   MusicPlayerScreen,
@@ -48,6 +49,7 @@ export const RootNavigator: React.FC = () => {
         <Stack.Screen name="AlbumReviews" component={AlbumReviewsScreen} />
         <Stack.Screen name="ArtistDetails" component={ArtistDetailsScreen} />
         <Stack.Screen name="AlbumList" component={AlbumListScreen} />
+        <Stack.Screen name="ArtistList" component={ArtistListScreen} />
         <Stack.Screen name="PlaylistDetails" component={PlaylistDetailsScreen} />
         {/* Player + the song picker slide up as modals. */}
         <Stack.Group screenOptions={{ presentation: 'modal' }}>

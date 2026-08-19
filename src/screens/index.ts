@@ -1,6 +1,7 @@
 export { HomeScreen } from './Home';
 export { BrowseScreen } from './Browse';
 export { AlbumListScreen } from './AlbumList';
+export { ArtistListScreen } from './ArtistList';
 export { SearchScreen } from './Search';
 export { AlbumDetailsScreen } from './AlbumDetails';
 export { AlbumReviewsScreen } from './AlbumReviews';

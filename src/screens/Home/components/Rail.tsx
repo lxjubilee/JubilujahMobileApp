@@ -33,12 +33,22 @@ export const Rail: React.FC<RailProps> = ({
   // Localize dynamic (config-driven) rail titles — genre and section names.
   // Unmapped titles (artist names, custom sections) fall back to the raw string.
   const title = localizeTitle(t, rail.title);
+  // "See all" opens the full grid; it appears once a rail holds more than 3
+  // items — a rail that already fits on screen needs no link. Album rails also
+  // cap the row itself at MAX_PREVIEW; the artist rail scrolls through all of
+  // its artists.
+  const MAX_PREVIEW = 10;
+  const SEE_ALL_MIN = 3;
 
   if (rail.itemType === 'artist') {
     if (!artists.length) return null;
+    const showSeeAll = artists.length > SEE_ALL_MIN;
     return (
       <>
-        <SectionHeader title={title} />
+        <SectionHeader
+          title={title}
+          onSeeAll={showSeeAll ? () => onSeeAll?.(rail) : undefined}
+        />
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -53,12 +63,10 @@ export const Rail: React.FC<RailProps> = ({
   }
 
   if (!albums.length) return null;
-  // Show "See all" when there's a full list to open — an artist rail, or any
-  // section with more than 10 albums. In the >10 case the horizontal row previews
-  // the first 10 and "See all" opens the full grid.
-  const MAX_PREVIEW = 10;
+  // An artist-backed rail always has a full list to open; otherwise the same
+  // >3 rule as above applies.
   const hasMore = albums.length > MAX_PREVIEW;
-  const showSeeAll = !!rail.seeAllArtistId || hasMore;
+  const showSeeAll = !!rail.seeAllArtistId || albums.length > SEE_ALL_MIN;
   const preview = hasMore ? albums.slice(0, MAX_PREVIEW) : albums;
   return (
     <>
